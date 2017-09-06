@@ -77,9 +77,6 @@ class WhiteBoxNode(Node):
 
 class WhiteBoxCommand(object):
 
-    docker = ""
-
-
     def __init__(self, node = WhiteBoxNode()):
         self.node = node
         self.logger = logging.getLogger("WhiteBoxCommand")
