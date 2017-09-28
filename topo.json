@@ -1,0 +1,9 @@
+{
+  "nodes":[
+    {
+      "name": "node1",
+      "type": "vsdn/whitebox",
+      "service": {"22/tcp": null, "6633/tcp": null, "6640/tcp": null, "6653/tcp": null}
+    }
+  ]
+}

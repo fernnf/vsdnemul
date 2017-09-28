@@ -1,231 +1,106 @@
 import logging
-from enum import Enum, unique
-
-import docker
-
-
-@unique
-class NodeType(Enum):
-    Node = ""
-    WhiteBox = "sdnoverlay/whitebox"
+from enum import Enum
+from functions import ApiNode
 
 
+class TypeNode(Enum):
+    Host = "ubuntu:latest"
+    WhiteBox = "vsdn/whitebox"
+
+
+# noinspection PyAttributeOutsideInit
 class Node(object):
-    def __init__(self, name = "", node_type = NodeType.Node):
+    logger = logging.getLogger("node.Node")
+
+    def __init__(self, name = None, type = None, service = {}):
         self.name = name
-        self.type = node_type
+        self.type = type
+        self.service = service
+        self.links = {}
 
     @property
     def name(self):
         return self.__name
 
     @name.setter
-    def name(self, name):
-        if name is not None:
-            self.__name = name
-        else:
-            raise ValueError("The name node cannot be null")
+    def name(self, value):
+        if value is None:
+            raise AttributeError("the name node cannot be null")
+        elif not isinstance(value, str):
+            raise AttributeError("the name must be string")
+        self.__name = value
 
     @property
     def type(self):
         return self.__type
 
     @type.setter
-    def type(self, node_type = NodeType.Node):
+    def type(self, value):
+        if value is None:
+            raise AttributeError("the type node cannot be null")
+        elif not isinstance(value, str):
+            raise AttributeError("the type must be string")
+        self.__type = value
 
-        if node_type in NodeType:
-            print(node_type.name)
-            self.__type = node_type
+    def __str__(self):
+        str = {
+            "name": self.name,
+            "type": self.type,
+            "service": self.service,
+            "links": self.links
+        }
+
+        return str
+
+
+class WhiteBox(Node):
+    def __init__(self, name = None):
+        super().__init__(name = name, type = TypeNode.WhiteBox.value,
+                         service = {'22/tcp': None, '6633/tcp': None, '6640/tcp': None, '6653/tcp': None})
+
+    @classmethod
+    def getNode(cls, subject):
+        node = {
+            "name": None,
+            "type": None
+        }
+        node.update(subject)
+
+        if node["type"] is "WhiteBox":
+            n = cls(name = node["name"])
+            return n
         else:
-            raise ValueError("the type name is not valid")
+            raise ValueError("the type value is unknown")
 
 
-class WhiteBoxNode(Node):
-    def __init__(self, name = "", node_type = NodeType.WhiteBox):
-        super().__init__(name = name, node_type = node_type)
+class NodeCommand(object):
 
-    @property
-    def bridge_oper(self):
-        return "switch0"
+    def __init__(self, node):
+        self.__node = node
+        self.__logger = logging.getLogger("node.NodeCommand")
 
-    @bridge_oper.setter
-    def bridge_oper(self, value):
-        pass
-
-    @property
-    def openflow_ver(self):
-        return "OpenFlow13"
-
-    @openflow_ver.setter
-    def openflow_ver(self, value):
-        pass
-
-    @property
-    def volume_oper(self):
-        return {'/sys/fs/cgroup': {'bind': '/sys/fs/cgroup', 'mode': 'ro'}}
-
-    @volume_oper.setter
-    def volume_oper(self, value):
-        pass
-
-    @property
-    def service_port_opr(self):
-        return {'22/tcp': None, '6633/tcp': None, '6640/tcp': None, '6653/tcp': None}
-
-    @service_port_opr.setter
-    def service_port_opr(self, value):
-        pass
-
-
-class WhiteBoxCommand(object):
-    def __init__(self, node = WhiteBoxNode()):
-        self.node = node
-        self.logger = logging.getLogger("WhiteBoxCommand")
-
-    @property
-    def node(self):
-        return self.__node
-
-    @node.setter
-    def node(self, node = WhiteBoxNode()):
-        if isinstance(node, WhiteBoxNode):
-            self.__node = node
-        else:
-            raise ReferenceError("the node must be instance of whiteboxnode")
-
-    @classmethod
-    def add_node(cls, node = WhiteBoxNode()):
-        n = cls(node = node)
-
+    @staticmethod
+    def create(node):
         try:
-            n._commit()
-            n._create_bridge()
-        except Exception as e:
-            n.logger.error(e.args)
+            ApiNode.create_node(node.name, node.type, node.service)
+        except Exception as ex:
+            print(ex.args)
 
-    @classmethod
-    def del_node(cls, node = WhiteBoxNode()):
-        n = cls(node = node)
+    @staticmethod
+    def delete(node):
         try:
-            n._remove()
-        except Exception as e:
-            n.logger.error(e.args)
+            ApiNode.delete_node(node.name)
+        except Exception as ex:
+            print(ex.args)
 
-    @classmethod
-    def send_cmd(cls, node = WhiteBoxNode(), cmd = ""):
-        n = cls(node = node)
-        try:
-            n._exec(cmd = cmd)
-        except Exception as e:
-            n.logger.error(e.args)
-
-    @classmethod
-    def add_port(cls, node = WhiteBoxNode(), port_name = "", port_idx = ""):
-        n = cls(node = node)
-        try:
-            n._add_port(port_name = port_name, idx = port_idx)
-        except Exception as e:
-            n.logger.error(e.args)
-
-    @classmethod
-    def status(cls, node = WhiteBoxNode()):
-        n = cls(node = node)
-
-        return n.status()
-
-
-    def _commit(self):
-
-        node_type = self.node.type.value
-        node_name = self.node
-        node_vol = self.node.volume_oper
-        node_svc = self.node.service_port_opr
-        node_mgt = docker.from_env()
-
-        node_mgt.containers.run(image = node_type, hostname = node_name, name = node_name, volumes = node_vol,
-                                ports = node_svc, detach = True, tty = True, stdin_open = True, privileged = True)
-
-    def _remove(self):
-        node_name = self.node.name
-        node_env = docker.from_env()
-        node_cont = node_env.containers.get(node_name)
-
-        node_cont.stop()
-        node_cont.remove()
-
-    def _pause(self):
-        node_name = self.node.name
-        node_env = docker.from_env()
-        node_cont = node_env.containers.get(node_name)
-        node_cont.pause()
-
-    def _unpaue(self):
-        node_name = self.node.name
-        node_env = docker.from_env()
-        node_cont = node_env.containers.get(node_name)
-        node_cont.unpause()
-
-    def _status(self):
-        node_env = docker.from_env()
-        node_cont = node_env.containers.get(self.node.name)
-        return node_cont.status
-
-    def _exec(self, cmd):
-        node_name = self.node.name
-        node_env = docker.from_env()
-        node_cont = node_env.containers.get(node_name)
-        return node_cont.exec_run(cmd = cmd, tty = True, privileged = True)
-
-    def _create_bridge(self):
-        if self._exist_bridge(bridge = self.node.bridge_oper):
-            raise ValueError("the bridge already has created")
-
-        node_cmd = "ovs-vsctl add-br {bridge} -- set Bridge {bridge} datapath_type=netdev protocols={of_version}"
-        node_bridge = self.node.bridge_oper
-        node_of_version = self.node.openflow_ver
-
-        self._exec(node_cmd.format(bridge = node_bridge, of_version = node_of_version))
-
-    def _add_port(self, port_name, idx = None):
-        if self._exist_port(port = port_name):
-            raise ValueError("the port already has included")
-
-        node_cmd = "ovs-vsctl add-port {bridge} {port} -- set Interface {port}"
-        if idx is not None:
-            node_cmd = node_cmd + " of_port={idx}"
-
-        self._exec(node_cmd)
-
-    def _del_port(self, port_name):
-        node_cmd = "ovs-vsctl del-port {bridge} {port}"
-        node_bridge = self.node.bridge_oper
-        if self._exist_port(port = port_name):
-            self._exec(node_cmd.format(bridge = node_bridge, port = port_name))
-
-        else:
-            raise ValueError("the port not found")
-
-    def _exist_port(self, port=""):
-        cmd = "ovs-vsctl list-ports {bridge}"
-        ports = self._exec(cmd = cmd.format(bridge = self.node.bridge_oper))
-        p = ports.decode().splitlines()
-
-        if port not in p:
-            return False
-        return True
-
-    def _exist_bridge(self, bridge=""):
-        cmd = "ovs-vsctl list_br"
-        bridges = self._exec(cmd = cmd)
-        b = bridges.decode().splitlines()
-
-        if bridge not in b:
-            return False
-        return True
 
 if __name__ == '__main__':
 
-    node = WhiteBoxNode(name = "whx1")
 
-    WhiteBoxCommand.add_node(node = node)
-    print(WhiteBoxCommand.status(node = node))
+    try:
+        node = WhiteBox(name = "1")
+        print(node.__str__())
+    except Exception as ex:
+        print(ex.args[0])
+
+
