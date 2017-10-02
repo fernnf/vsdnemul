@@ -91,12 +91,12 @@ class LinkCommand(object):
     @staticmethod
     def create(link):
         def _sw_create():
-            ApiLink.create_link_node(link.source, link.target, link.ifSource, link.ifSource)
+            ApiLink.create_link_node(link.source, link.target, link.ifSource, link.ifTarget)
             ApiInterface.add_port_to_bridge(link.source, link.ifSource)
             ApiInterface.add_port_to_bridge(link.target, link.ifTarget)
 
         def _ht_create():
-            ApiLink.create_link_node(link.source, link.target, link.ifSource, link.ifSource)
+            ApiLink.create_link_node(link.source, link.target, link.ifSource, link.ifTarget)
             ApiInterface.add_port_to_bridge(link.target, link.ifTarget)
 
         try:

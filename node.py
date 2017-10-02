@@ -1,6 +1,7 @@
 import logging
 from enum import Enum
-from functions import ApiNode
+
+from functions import ApiNode, ApiService
 
 
 class TypeNode(Enum):
@@ -50,7 +51,7 @@ class Node(object):
             "links": self.links
         }
 
-        return str
+        return str.__str__()
 
 
 class WhiteBox(Node):
@@ -73,34 +74,50 @@ class WhiteBox(Node):
             raise ValueError("the type value is unknown")
 
 
-class NodeCommand(object):
+class Host(Node):
+    def __init__(self, name = None):
+        super().__init__(name = name, type = TypeNode.Host.value)
 
-    def __init__(self, node):
-        self.__node = node
-        self.__logger = logging.getLogger("node.NodeCommand")
+    @classmethod
+    def getNode(cls, subject):
+        node = {
+            "name": None,
+            "type": None
+        }
+        node.update(subject)
+
+        if node["type"] is "Host":
+            n = cls(name = node["name"])
+            return n
+        else:
+            raise ValueError("the type value is unknown")
+
+
+class NodeCommand(object):
+    @staticmethod
+    def setController(node, ip, port):
+        try:
+            ApiService.setController(node.name, ip = ip, port = port)
+        except Exception as ex:
+            print("Error: " + ex.args)
 
     @staticmethod
     def create(node):
         try:
-            ApiNode.create_node(node.name, node.type, node.service)
+            ApiNode.create_node(name = node.name, type = node.type, service = node.service)
         except Exception as ex:
-            print(ex.args)
+            print("Error: " + ex.args)
 
     @staticmethod
     def delete(node):
         try:
-            ApiNode.delete_node(node.name)
+            ApiNode.delete_node(name = node.name)
         except Exception as ex:
-            print(ex.args)
+            print("Error: " + ex.args.__str__())
 
-
-if __name__ == '__main__':
-
-
-    try:
-        node = WhiteBox(name = "1")
-        print(node.__str__())
-    except Exception as ex:
-        print(ex.args[0])
-
-
+    @staticmethod
+    def sendCmd(node, cmd):
+        try:
+            ApiNode.exec_cmd(name = node.name, cmd = cmd)
+        except Exception as ex:
+            print("Error: " + ex.__cause__())
