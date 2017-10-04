@@ -81,8 +81,10 @@ class LinkSwitch(Link):
 
 
 class LinkHost(Link):
-    def __init__(self, host, target):
+    def __init__(self, host, target, ip, mask):
         super().__init__(host, target, TypeLink.Host.value)
+        self.ip = ip
+        self.mask = mask
 
     pass
 
@@ -97,6 +99,7 @@ class LinkCommand(object):
 
         def _ht_create():
             ApiLink.create_link_node(link.source, link.target, link.ifSource, link.ifTarget)
+            ApiInterface.conf_addr_to_port(link.source, link.ip, link.mask)
             ApiInterface.add_port_to_bridge(link.target, link.ifTarget)
 
         try:

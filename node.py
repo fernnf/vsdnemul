@@ -3,6 +3,8 @@ from enum import Enum
 
 from functions import ApiNode, ApiService
 
+import ipaddress
+
 
 class TypeNode(Enum):
     Host = "ubuntu:latest"
@@ -13,7 +15,7 @@ class TypeNode(Enum):
 class Node(object):
     logger = logging.getLogger("node.Node")
 
-    def __init__(self, name = None, type = None, service = {}):
+    def __init__(self, name = None, type = None, service = None):
         self.name = name
         self.type = type
         self.service = service
@@ -75,19 +77,46 @@ class WhiteBox(Node):
 
 
 class Host(Node):
-    def __init__(self, name = None):
-        super().__init__(name = name, type = TypeNode.Host.value)
+    def __init__(self, name = None, ip = None, mask = None):
+        super().__init__(name = name, type = TypeNode.Host.value, service = {'22/tcp': None})
+
+        self.ip = ip
+        self.mask = mask
+
+    @property
+    def ip(self):
+        return self.__ip
+
+    @ip.setter
+    def ip(self, value):
+        try:
+            self.__ip = ipaddress.ip_address(value).__str__()
+        except ValueError as ex:
+            raise ValueError("the address is invalid")
+
+    @property
+    def mask(self):
+        return self.__mask
+
+    @mask.setter
+    def mask(self, value):
+        try:
+            self.__mask = ipaddress.ip_address(value).__str__()
+        except ValueError as ex:
+            raise ValueError("the mask address is invalid")
 
     @classmethod
     def getNode(cls, subject):
         node = {
             "name": None,
-            "type": None
+            "type": None,
+            "ip": None,
+            "mask": None
         }
         node.update(subject)
 
         if node["type"] is "Host":
-            n = cls(name = node["name"])
+            n = cls(name = node["name"], ip = node["ip"], mask = node["mask"])
             return n
         else:
             raise ValueError("the type value is unknown")
@@ -99,14 +128,14 @@ class NodeCommand(object):
         try:
             ApiService.setController(node.name, ip = ip, port = port)
         except Exception as ex:
-            print("Error: " + ex.args)
+            print("Error: " + ex.args.__str__())
 
     @staticmethod
     def create(node):
         try:
             ApiNode.create_node(name = node.name, type = node.type, service = node.service)
         except Exception as ex:
-            print("Error: " + ex.args)
+            print("Error: " + ex.args.__str__())
 
     @staticmethod
     def delete(node):
@@ -120,4 +149,4 @@ class NodeCommand(object):
         try:
             ApiNode.exec_cmd(name = node.name, cmd = cmd)
         except Exception as ex:
-            print("Error: " + ex.__cause__())
+            print("Error: " + ex.args.__str__())

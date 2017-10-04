@@ -7,7 +7,7 @@ _ip = pyroute2.IPRoute()
 
 class ApiNode(object):
     @staticmethod
-    def create_node(name = None, type = None, service = {}):
+    def create_node(name = None, type = None, service = None):
         if name is None:
             raise AttributeError("the name attribute cannot be null")
         elif type is None:
@@ -143,6 +143,23 @@ class ApiInterface(object):
             raise ValueError(ret.decode())
 
     @staticmethod
+    def conf_addr_to_port(name = None, ifname = None, ip = None, mask = None):
+        if ifname is None:
+            raise AttributeError("the ifname attribute cannot be null")
+        elif ip is None:
+            raise AttributeError("the ip attribute cannot be null")
+        elif mask is None:
+            raise AttributeError("the mask attribute cannot be null")
+
+        cmd_add = "ip addr add {ip}/{mask} dev {ifname}"
+        cmd_add = cmd_add.format(ifname = ifname, ip = ip, mask = mask)
+
+        ret = ApiNode.exec_cmd(name = name, cmd = cmd_add)
+
+        if len(ret) !=0:
+            raise ValueError(ret.decode)
+
+    @staticmethod
     def del_port_from_bridge(name = None, port = None, bridge = "switch0"):
 
         if name is None:
@@ -239,4 +256,3 @@ class ApiService(object):
 
         if len(ret) != 0:
             raise ValueError(ret.decode)
-
