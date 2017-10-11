@@ -1,4 +1,4 @@
-from link import LinkCommand
+from link import LinkCommand, LinkHost
 from node import NodeCommand, ApiNode
 
 
@@ -11,9 +11,9 @@ class Dataplane(object):
 
         for n in self._nodes:
             if ApiNode.get_status(name = n.name) == "running":
-                NodeCommand.setController(n, ip = ip, port = port)
-                print("node {node} has set to controller".format(node = n.name))
-
+                if not isinstance(n, LinkHost):
+                    NodeCommand.setController(n, ip = ip, port = port)
+                    print("node {node} has set to controller".format(node = n.name))
             else:
                 raise RuntimeError("the nodes is not initialized")
 

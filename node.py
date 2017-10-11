@@ -3,11 +3,8 @@ from enum import Enum
 
 from functions import ApiNode, ApiService
 
-import ipaddress
-
-
 class TypeNode(Enum):
-    Host = "ubuntu:latest"
+    Host = "vsdn/host"
     WhiteBox = "vsdn/whitebox"
 
 
@@ -90,7 +87,7 @@ class Host(Node):
     @ip.setter
     def ip(self, value):
         try:
-            self.__ip = ipaddress.ip_address(value).__str__()
+            self.__ip = value
         except ValueError as ex:
             raise ValueError("the address is invalid")
 
@@ -101,7 +98,7 @@ class Host(Node):
     @mask.setter
     def mask(self, value):
         try:
-            self.__mask = ipaddress.ip_address(value).__str__()
+            self.__mask = value
         except ValueError as ex:
             raise ValueError("the mask address is invalid")
 

@@ -4,7 +4,6 @@ from dataplane import Dataplane
 
 import time
 
-
 if __name__ == '__main__':
 
     nodes = list()
