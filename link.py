@@ -91,16 +91,36 @@ class LinkHost(Link):
 
 class LinkCommand(object):
     @staticmethod
+    def createHostLink(link):
+
+        def _hostLink():
+            ApiLink.linkCreateVethPeerInterfaces(ifname_src = link.ifSource, ifname_dst = link.ifTarget)
+            ApiLink.linkVethPairingNodes(link.source, link.target, link.ifSource, link.ifTarget)
+            ApiInterface.intfConfgAddressInterface(link.source, link.ip, link.mask)
+            ApiInterface.intfAddInterfaceToBridge(link.target, link.ifTarget)
+
+        try:
+            _hostLink()
+        except Exception as ex:
+            raise ValueError("LinkCommandError:" + ex.args[0])
+
+
+
+
+
+    @staticmethod
     def create(link):
         def _sw_create():
-            ApiLink.create_link_node(link.source, link.target, link.ifSource, link.ifTarget)
-            ApiInterface.add_port_to_bridge(link.source, link.ifSource)
-            ApiInterface.add_port_to_bridge(link.target, link.ifTarget)
+            ApiLink.linkCreateVethPeerInterfaces(ifname_src = link.ifSource, ifname_dst = link.ifTarget)
+            ApiLink.linkVethPairingNodes(link.source, link.target, link.ifSource, link.ifTarget)
+            ApiInterface.intfAddInterfaceToBridge(link.source, link.ifSource)
+            ApiInterface.intfAddInterfaceToBridge(link.target, link.ifTarget)
 
         def _ht_create():
-            ApiLink.create_link_node(link.source, link.target, link.ifSource, link.ifTarget)
-            ApiInterface.conf_addr_to_port(link.source, link.ip, link.mask)
-            ApiInterface.add_port_to_bridge(link.target, link.ifTarget)
+            ApiLink.linkCreateVethPeerInterfaces(ifname_src = link.ifSource, ifname_dst = link.ifTarget)
+            ApiLink.linkVethPairingNodes(link.source, link.target, link.ifSource, link.ifTarget)
+            ApiInterface.intfConfgAddressInterface(link.source, link.ip, link.mask)
+            ApiInterface.intfAddInterfaceToBridge(link.target, link.ifTarget)
 
         try:
             if isinstance(link, LinkSwitch):
@@ -115,13 +135,13 @@ class LinkCommand(object):
     @staticmethod
     def delete(link):
         def _sw_delete():
-            ApiLink.delete_link_node(link.source, link.target, link.ifSource, link.ifTarget)
-            ApiInterface.del_port_from_bridge(link.source, link.ifSource)
-            ApiInterface.del_port_from_bridge(link.target, link.ifTarget)
+            ApiLink.linkVethUnpairingNodes(link.source, link.target, link.ifSource, link.ifTarget)
+            ApiInterface.intfRemoveInterfaceFromBridge(link.source, link.ifSource)
+            ApiInterface.intfRemoveInterfaceFromBridge(link.target, link.ifTarget)
 
         def _ht_delete():
-            ApiLink.delete_link_node(link.source, link.target, link.ifSource, link.ifTarget)
-            ApiInterface.del_port_from_bridge(link.target, link.ifTarget)
+            ApiLink.linkVethUnpairingNodes(link.source, link.target, link.ifSource, link.ifTarget)
+            ApiInterface.intfRemoveInterfaceFromBridge(link.target, link.ifTarget)
 
         try:
             if isinstance(link, LinkSwitch):

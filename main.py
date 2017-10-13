@@ -12,4 +12,4 @@ if __name__ == '__main__':
     image = "fedora/systemd-systemd"
     service = {'22/tcp': None}
 
-    ApiNode.create_node(name = name, type = image, service = service)
+    ApiNode.nodeCreate(name = name, type = image, service = service)

@@ -123,27 +123,27 @@ class NodeCommand(object):
     @staticmethod
     def setController(node, ip, port):
         try:
-            ApiService.setController(node.name, ip = ip, port = port)
+            ApiService.serviceSetNodeController(node.name, ip = ip, port = port)
         except Exception as ex:
             print("Error: " + ex.args.__str__())
 
     @staticmethod
     def create(node):
         try:
-            ApiNode.create_node(name = node.name, type = node.type, service = node.service)
+            ApiNode.nodeCreate(name = node.name, type = node.type, service = node.service)
         except Exception as ex:
             print("Error: " + ex.args.__str__())
 
     @staticmethod
     def delete(node):
         try:
-            ApiNode.delete_node(name = node.name)
+            ApiNode.nodeDelete(name = node.name)
         except Exception as ex:
             print("Error: " + ex.args.__str__())
 
     @staticmethod
     def sendCmd(node, cmd):
         try:
-            ApiNode.exec_cmd(name = node.name, cmd = cmd)
+            ApiNode.nodeSendCmd(name = node.name, cmd = cmd)
         except Exception as ex:
             print("Error: " + ex.args.__str__())

@@ -10,7 +10,7 @@ class Dataplane(object):
     def set_controller(self, ip, port = "6653"):
 
         for n in self._nodes:
-            if ApiNode.get_status(name = n.name) == "running":
+            if ApiNode.nodeGetStatus(name = n.name) == "running":
                 if not isinstance(n, LinkHost):
                     NodeCommand.setController(n, ip = ip, port = port)
                     print("node {node} has set to controller".format(node = n.name))
