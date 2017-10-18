@@ -137,7 +137,7 @@ class ApiInterface(object):
             cmd_add = cmd_add + " ofport={idx}".format(idx = index)
 
         if ApiInterface.intfExistInterfaceOnBridge(name = name, bridge = bridge, port = port):
-            raise AttributeError("the port already has included on bridge oper")
+            raise AttributeError("the port already has included on bridge")
 
         ret = ApiNode.nodeSendCmd(name = name, cmd = cmd_add)
         if len(ret) != 0:
@@ -210,8 +210,6 @@ class ApiLink(object):
         elif ifname_src is None or ifname_dst is None:
             raise AttributeError("the interface name source or destination attributes cannot be null")
 
-        #ApiLink.linkCreateVethPeerInterfaces(ifname_src = ifname_src, ifname_dst = ifname_dst)
-
         pid_src = ApiNode.nodeGetPid(name_src)
         pid_dst = ApiNode.nodeGetPid(name_dst)
 
@@ -240,12 +238,23 @@ class ApiLink(object):
 
 class ApiService(object):
     @staticmethod
-    def serviceSetNodeManager(name = None, port = "6640"):
+    def serviceSetNodeManager(name = None, port = "6640", protocol = "ptcp"):
         if name is None:
             raise AttributeError("the name attribute cannot be null")
 
-        cmd_set_manager = "ovs-vsctl set-manager ptcp:{port}".format(port = port)
+        cmd_set_manager = "ovs-vsctl set-manager {protocol}:{port}".format(protocol = protocol, port = port)
         ret = ApiNode.nodeSendCmd(name = name, cmd = cmd_set_manager)
+
+        if len(ret) != 0:
+            raise ValueError(ret.decode())
+
+    @staticmethod
+    def serviceDelNodeManager(name = None):
+        if name is None:
+            raise AttributeError("the name attribute cannot be null")
+
+        cmd_del_manager = "ovs-vsctl del-manager"
+        ret = ApiNode.nodeSendCmd(name = name, cmd = cmd_del_manager)
 
         if len(ret) != 0:
             raise ValueError(ret.decode())
@@ -257,6 +266,18 @@ class ApiService(object):
 
         cmd_set_controller = "ovs-vsctl set-controller {bridge} tcp:{ip}:{port}"
         ret = ApiNode.nodeSendCmd(name = name, cmd = cmd_set_controller.format(ip = ip, bridge = bridge, port = port))
+
+        if len(ret) != 0:
+            raise ValueError(ret.decode)
+
+    @staticmethod
+    def serviceDelNodeController(name = None, bridge = "swtich0"):
+        if name is None:
+            raise AttributeError("the name attribute cannot be null")
+
+        cmd_del_controller = "ovs-vsctl del-controller {bridge} "
+
+        ret = ApiNode.nodeSendCmd(name = name, cmd = cmd_del_controller.format(bridge = bridge))
 
         if len(ret) != 0:
             raise ValueError(ret.decode)
