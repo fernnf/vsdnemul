@@ -3,6 +3,7 @@ from enum import Enum
 
 from functions import ApiNode, ApiService
 
+
 class TypeNode(Enum):
     Host = "vsdn/host"
     WhiteBox = "vsdn/whitebox"
