@@ -24,13 +24,13 @@ class Dataplane(object):
 
         for l in self._links:
             LinkCommand.create(l)
-            print("new link created between source {src} to destination {dst}".format(src = l.source, dst = l.target))
+            print("new link created between source {src} to destination {dst}".format(src = l.node_source, dst = l.node_target))
 
     def stop(self):
         for l in self._links:
             LinkCommand.delete(l)
-            print("the link between {source} and {target} has deleted from topology".format(source = l.source,
-                                                                                            target = l.target))
+            print("the link between {source} and {target} has deleted from topology".format(source = l.node_source,
+                                                                                            target = l.node_target))
 
         for n in self._nodes:
             NodeCommand.delete(n)

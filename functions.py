@@ -122,7 +122,7 @@ class ApiInterface(object):
             return False
 
     @staticmethod
-    def intfAddInterfaceToBridge(name = None, port = None, index = None, bridge = "switch0"):
+    def intfAddSystemInterfaceToBridge(name = None, port = None, index = None, bridge = "switch0"):
 
         if name is None:
             raise AttributeError("the name attribute cannot be null")
@@ -144,7 +144,7 @@ class ApiInterface(object):
             raise ValueError(ret.decode())
 
     @staticmethod
-    def intfConfgAddressInterface(name = None, ifname = None, ip = None, mask = None):
+    def intfConfgAddressInterface(name = None, ifname = None, ip = None, mask = None, gateway = None):
         if ifname is None:
             raise AttributeError("the ifname attribute cannot be null")
         elif ip is None:
@@ -155,6 +155,7 @@ class ApiInterface(object):
         try:
             ipaddress.ip_address(address = ip)
             ipaddress.ip_address(address = mask)
+            ipaddress.ip_address(address = gateway)
         except ValueError as ex:
             raise AttributeError(ex.args[0])
 
@@ -164,6 +165,12 @@ class ApiInterface(object):
 
         if len(ret) != 0:
             raise ValueError(ret.decode)
+
+        if gateway is not None:
+            cmd_gate = "ip route add default via {address}".format(address = gateway)
+            ret = ApiNode.nodeSendCmd(name = name, cmd = cmd_gate)
+            if len(ret) != 0:
+                raise ValueError(ret.decode)
 
     @staticmethod
     def intfRemoveInterfaceFromBridge(name = None, port = None, bridge = "switch0"):
@@ -219,6 +226,8 @@ class ApiLink(object):
 
         _ipCmdClient.link('set', index = idx_if_src, net_ns_pid = pid_src, state = "up")
         _ipCmdClient.link('set', index = idx_if_dst, net_ns_pid = pid_dst, state = "up")
+
+
 
     @staticmethod
     def linkVethUnpairingNodes(name_src = None, name_dst = None, ifname_src = None, ifname_dst = None):
