@@ -45,6 +45,9 @@ class Port():
             "label": self.label,
             "type": self.type
         }
+    @classmethod
+    def parse_port(self, port_json):
+        pass
 
 
 class VethPort(Port):
