@@ -186,6 +186,7 @@ class ApiInterface(object):
 
 
 class ApiLink(object):
+
     @staticmethod
     def linkCreateVethPeerInterfaces(ifname_src = None, ifname_dst = None):
         if ifname_src is None or ifname_dst is None:
