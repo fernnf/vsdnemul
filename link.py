@@ -72,7 +72,7 @@ class Link(object):
 
 class DirectLinkOvsVeth(Link):
     def __init__(self, node_source = None, node_target = None):
-        super().__init__(type = "direct-link", node_source = node_source, node_target = node_target)
+        super().__init__(type = "direct-link-ovs-veth", node_source = node_source, node_target = node_target)
 
     def create(self):
         pass
@@ -83,7 +83,7 @@ class DirectLinkOvsVeth(Link):
 
 class HostLinkOvsVeth(Link):
     def __init__(self, node_source = None, node_target = None):
-        super().__init__(type = "host-link", node_source = node_source, node_target = node_target)
+        super().__init__(type = "host-link-ovs-veth", node_source = node_source, node_target = node_target)
 
     def create(self):
         pass
