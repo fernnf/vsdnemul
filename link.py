@@ -1,10 +1,21 @@
-import logging
 import ipaddress
 import uuid
-
-from functions import ApiLink, ApiInterface
 from enum import Enum
 
+import docker
+import pyroute2
+
+from functions import ApiLink, ApiInterface
+
+_client_docker = docker.from_env()
+_client_iproute = pyroute2.IPRoute()
+
+
+def CheckNotNull(value, msg):
+    if value is None:
+        raise TypeError(msg)
+    else:
+        return value
 
 class TypeLink(Enum):
     Host = "host-link"
@@ -12,69 +23,42 @@ class TypeLink(Enum):
 
 
 class Link(object):
-    def __init__(self, source = None, target = None, type = TypeLink):
-        self.id = uuid.uuid4()
-        self.source = source
-        self.node_target = target
+    def __init__(self, type, node_source = None, node_target = None):
+        self.node_source = node_source
+        self.node_target = node_target
         self.type = type
-        self.log = logging.getLogger("link.Link")
 
-    def __str__(self):
-        str = {
-            "id": self.id,
-            "node_source": self.node_source,
-            "node_target": self.node_target,
-            "intf_source": self.intf_source,
-            "intf_target": self.intf_target,
-            "type": self.type
-        }
-        return str
-
-    @property
-    def id(self):
-        return self.__id
-
-    @id.setter
-    def id(self, value):
-        if self.__id is None:
-            if isinstance(value, uuid.uuid4()):
-                self.__id = value
-            else:
-                raise AttributeError("the attribute id must be type UUID 4")
     @property
     def node_source(self):
-        return self.__source
+        return self.__label_source
 
     @node_source.setter
     def node_source(self, value):
-        if None:
-            self.log.error("source must be a node object")
-        self.__source = value
+        self.__label_source = CheckNotNull(value = value, msg = "the label of source node cannot be null")
 
     @property
     def node_target(self):
-        return self.__target
+        return self.__label_target
 
     @node_target.setter
     def node_target(self, value):
-        if None:
-            self.log.error("target must be a node object")
-        self.__target = value
+        self.__label_target = CheckNotNull(value = value, msg = "the label of target node cannot be null")
+
 
     @property
-    def intf_source(self):
-        return self.node_source + "-" + self.node_target
+    def port_source(self):
+        return self.node_source.label +"-" + self.node_target.label
 
-    @intf_source.setter
-    def intf_source(self, value):
+    @port_source.setter
+    def port_source(self, value):
         pass
 
     @property
-    def intf_target(self):
-        return self.node_target + "-" + self.node_source
+    def port_target(self):
+        return self.node_target.label+"-"+self.node_source.label
 
-    @intf_target.setter
-    def intf_target(self, value):
+    @port_target.setter
+    def port_target(self, value):
         pass
 
     @property
@@ -83,9 +67,33 @@ class Link(object):
 
     @type.setter
     def type(self, value):
-        if value is None:
-            raise AttributeError("Type cannot be null")
-        self.__type = value
+        self.__type =  CheckNotNull(value = value, msg ="type of link cannot be null")
+
+
+class DirectLinkOvsVeth(Link):
+    def __init__(self, node_source = None, node_target = None):
+        super().__init__(type = "direct-link", node_source = node_source, node_target = node_target)
+
+    def create(self):
+        pass
+
+    def delete(self):
+        pass
+
+
+class HostLinkOvsVeth(Link):
+    def __init__(self, node_source = None, node_target = None):
+        super().__init__(type = "host-link", node_source = node_source, node_target = node_target)
+
+    def create(self):
+        pass
+
+    def delete(self):
+        pass
+
+class ApiLink(object):
+    @staticmethod
+    def create_veth_link(port_source, port_target):
 
 
 class LinkSwitch(Link):
