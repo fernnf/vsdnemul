@@ -10,17 +10,17 @@ class Dataplane(object):
     def set_controller(self, ip, port = "6653"):
 
         for n in self._nodes:
-            if ApiNode.nodeGetStatus(name = n.name) == "running":
+            if ApiNode.nodeGetStatus(name = n.label) == "running":
                 if not isinstance(n, LinkHost):
                     NodeCommand.setController(n, ip = ip, port = port)
-                    print("node {node} has set to controller".format(node = n.name))
+                    print("node {node} has set to controller".format(node = n.label))
             else:
                 raise RuntimeError("the nodes is not initialized")
 
     def run(self):
         for n in self._nodes:
             NodeCommand.create(n)
-            print("new node {node} has created".format(node = n.name))
+            print("new node {node} has created".format(node = n.label))
 
         for l in self._links:
             LinkCommand.create(l)
@@ -34,4 +34,4 @@ class Dataplane(object):
 
         for n in self._nodes:
             NodeCommand.delete(n)
-            print("the node {node} has deleted from topology".format(node = n.name))
+            print("the node {node} has deleted from topology".format(node = n.label))

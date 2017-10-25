@@ -1,8 +1,16 @@
 import logging
+import docker
+import pyroute2
+
 from enum import Enum
+from port import Port
 
 from functions import ApiNode, ApiService
 
+
+
+_client_docker = docker.from_env()
+_client_iproute = pyroute2.IPRoute()
 
 class TypeNode(Enum):
     Host = "vsdn/host"
@@ -13,23 +21,34 @@ class TypeNode(Enum):
 class Node(object):
     logger = logging.getLogger("node.Node")
 
-    def __init__(self, name = None, type = None, service = None):
-        self.name = name
+    def __init__(self, label = None, type = None, service = None, image = None):
+        self.label = label
         self.type = type
         self.service = service
-        self.links = {}
+        self.image = image
+        self._ports = []
 
     @property
-    def name(self):
+    def image(self):
+        return self.__image
+
+    @image.setter
+    def image(self, value):
+        if value is not None:
+            self.__image = value
+        else:
+            raise AttributeError("the image name cannot be null")
+
+    @property
+    def label(self):
         return self.__name
 
-    @name.setter
-    def name(self, value):
-        if value is None:
-            raise AttributeError("the name node cannot be null")
-        elif not isinstance(value, str):
-            raise AttributeError("the name must be string")
-        self.__name = value
+    @label.setter
+    def label(self, value):
+        if value is not None:
+            self.__name = value
+        else:
+            raise AttributeError("the label node cannot be null")
 
     @property
     def type(self):
@@ -37,46 +56,69 @@ class Node(object):
 
     @type.setter
     def type(self, value):
-        if value is None:
+        if value is not None:
+            self.__type = value
+        else:
             raise AttributeError("the type node cannot be null")
-        elif not isinstance(value, str):
-            raise AttributeError("the type must be string")
-        self.__type = value
 
     def __str__(self):
         str = {
-            "name": self.name,
+            "label": self.label,
             "type": self.type,
             "service": self.service,
-            "links": self.links
+            "ports": self._ports
         }
 
         return str.__str__()
 
 
 class WhiteBox(Node):
-    def __init__(self, name = None):
-        super().__init__(name = name, type = TypeNode.WhiteBox.value,
-                         service = {'22/tcp': None, '6633/tcp': None, '6640/tcp': None, '6653/tcp': None})
+    def __init__(self, label = None):
+        super().__init__(label = label,
+                         type = "WhiteBox",
+                         service = {'22/tcp': None, '6633/tcp': None, '6640/tcp': None, '6653/tcp': None},
+                         image = "vsdn/whitebox")
 
-    @classmethod
-    def getNode(cls, subject):
-        node = {
-            "name": None,
-            "type": None
-        }
-        node.update(subject)
+    @property
+    def control_ip(self):
+        return ApiNode.has_node_ip_management(label = self.label)
 
-        if node["type"] is "WhiteBox":
-            n = cls(name = node["name"])
-            return n
-        else:
-            raise ValueError("the type value is unknown")
+    @property
+    def service_exposed_port(self, service_port = None):
+        return ApiNode.has_node_service_exposed_port(label = self.label, service_port = service_port)
+
+    @property
+    def node_pid(self):
+        return ApiNode.has_node_pid(label = self.label)
+
+    def send_cmd(self, cmd = None):
+        return ApiNode.node_send_cmd(self.label, cmd = cmd)
+
+    def has_port(self, label = None):
+        for p in self._ports:
+            if p.label == label:
+                return True
+        return False
+
+    def add_port(self, port = Port()):
+        self._ports.append(port)
+
+    def get_ports(self):
+        return self._ports
+
+    def create(self):
+        pass
+
+    def delete(self):
+        pass
+
+    def __ovs_add_port_to_bridge(self, port):
+        c
 
 
 class Host(Node):
-    def __init__(self, name = None, ip = None, mask = None):
-        super().__init__(name = name, type = TypeNode.Host.value, service = {'22/tcp': None})
+    def __init__(self, label = None, ip = None, mask = None):
+        super().__init__(label = label, type = TypeNode.Host.value, service = {'22/tcp': None})
 
         self.ip = ip
         self.mask = mask
@@ -106,7 +148,7 @@ class Host(Node):
     @classmethod
     def getNode(cls, subject):
         node = {
-            "name": None,
+            "label": None,
             "type": None,
             "ip": None,
             "mask": None
@@ -114,7 +156,7 @@ class Host(Node):
         node.update(subject)
 
         if node["type"] is "Host":
-            n = cls(name = node["name"], ip = node["ip"], mask = node["mask"])
+            n = cls(name = node["label"], ip = node["ip"], mask = node["mask"])
             return n
         else:
             raise ValueError("the type value is unknown")
@@ -124,27 +166,81 @@ class NodeCommand(object):
     @staticmethod
     def setController(node, ip, port):
         try:
-            ApiService.serviceSetNodeController(node.name, ip = ip, port = port)
+            ApiService.serviceSetNodeController(node.label, ip = ip, port = port)
         except Exception as ex:
             print("Error: " + ex.args.__str__())
 
     @staticmethod
     def create(node):
         try:
-            ApiNode.nodeCreate(name = node.name, type = node.type, service = node.service)
+            ApiNode.nodeCreate(name = node.label, type = node.type, service = node.service)
         except Exception as ex:
             print("Error: " + ex.args.__str__())
 
     @staticmethod
     def delete(node):
         try:
-            ApiNode.nodeDelete(name = node.name)
+            ApiNode.nodeDelete(name = node.label)
         except Exception as ex:
             print("Error: " + ex.args.__str__())
 
     @staticmethod
     def sendCmd(node, cmd):
         try:
-            ApiNode.nodeSendCmd(name = node.name, cmd = cmd)
+            ApiNode.nodeSendCmd(name = node.label, cmd = cmd)
         except Exception as ex:
             print("Error: " + ex.args.__str__())
+
+
+class ApiNode(object):
+
+    @staticmethod
+    def create_node(label, type, service):
+        _client_docker.containers \
+            .run(image = type,
+                 hostname = label,
+                 name = label,
+                 ports = service,
+                 detach = True,
+                 tty = True,
+                 stdin_open = True,
+                 privileged = True)
+
+    @staticmethod
+    def delete_node(label):
+        container = _client_docker.containers.get(label)
+        container.stop()
+        container.remove()
+
+    @staticmethod
+    def node_pause(label):
+        container = _client_docker.containers.get(label)
+        container.pause()
+
+    @staticmethod
+    def node_resume(label):
+        container = _client_docker.containers.get(label)
+        container.unpause()
+
+    @staticmethod
+    def has_node_pid(label):
+        container = _client_docker.containers.get(label)
+        return container.attrs["State"]["Pid"]
+
+    @staticmethod
+    def has_node_ip_management(label):
+        container = _client_docker.containers.get(label)
+        return  container.attrs['NetworkSettings']['IPAddress']
+
+    @staticmethod
+    def has_node_service_exposed_port(label, service_port):
+        container = _client_docker.containers.get(label)
+        return container.attrs['NetworkSettings']['Ports'][service_port + "/tcp"][0]['HostPort']
+
+    @staticmethod
+    def node_send_cmd(label, cmd):
+        container = _client_docker.containers.get(name)
+        ret = container.exec_run(cmd = cmd, tty = True, privileged = True)
+
+        return ret
+

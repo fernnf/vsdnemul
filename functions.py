@@ -11,7 +11,7 @@ class ApiNode(object):
     @staticmethod
     def nodeCreate(name = None, type = None, service = None):
         if name is None:
-            raise AttributeError("the name attribute cannot be null")
+            raise AttributeError("the label attribute cannot be null")
         elif type is None:
             raise AttributeError("the type attribute cannot be null")
 
@@ -28,7 +28,7 @@ class ApiNode(object):
     @staticmethod
     def nodeDelete(name = None):
         if name is None:
-            raise AttributeError("the name attribute cannot be null")
+            raise AttributeError("the label attribute cannot be null")
 
         container = _dockerClient.containers.get(name)
         container.stop()
@@ -37,7 +37,7 @@ class ApiNode(object):
     @staticmethod
     def nodeStatusPause(name = None):
         if name is None:
-            raise AttributeError("the name attribute cannot be null")
+            raise AttributeError("the label attribute cannot be null")
 
         container = _dockerClient.containers.get(name)
         container.pause()
@@ -45,7 +45,7 @@ class ApiNode(object):
     @staticmethod
     def nodeStatusResume(name = None):
         if name is None:
-            raise AttributeError("the name attribute cannot be null")
+            raise AttributeError("the label attribute cannot be null")
 
         container = _dockerClient.containers.get(name)
         container.unpause()
@@ -53,7 +53,7 @@ class ApiNode(object):
     @staticmethod
     def nodeGetStatus(name = None):
         if name is None:
-            raise AttributeError("the name attribute cannot be null")
+            raise AttributeError("the label attribute cannot be null")
 
         container = _dockerClient.containers.get(name)
         return container.status
@@ -61,7 +61,7 @@ class ApiNode(object):
     @staticmethod
     def nodeGetPid(name = None):
         if name is None:
-            raise AttributeError("the name attribute cannot be null")
+            raise AttributeError("the label attribute cannot be null")
 
         container = _dockerClient.containers.get(name)
         return container.attrs["State"]["Pid"]
@@ -69,7 +69,7 @@ class ApiNode(object):
     @staticmethod
     def nodeGetIPMngt(name = None):
         if name is None:
-            raise AttributeError("the name attribute cannot be null")
+            raise AttributeError("the label attribute cannot be null")
 
         container = _dockerClient.containers.get(name)
         return container.attrs['NetworkSettings']['IPAddress']
@@ -77,7 +77,7 @@ class ApiNode(object):
     @staticmethod
     def nodeSendCmd(name = None, cmd = None):
         if cmd is None or name is None:
-            raise AttributeError("the name or command attribute cannot be null")
+            raise AttributeError("the label or command attribute cannot be null")
 
         container = _dockerClient.containers.get(name)
         ret = container.exec_run(cmd = cmd, tty = True, privileged = True)
@@ -87,7 +87,7 @@ class ApiNode(object):
     @staticmethod
     def nodeGetServicePortExposed(name = None, port = None):
         if name is None or port is None:
-            raise AttributeError("the name or port attribute cannot be null")
+            raise AttributeError("the label or port attribute cannot be null")
 
         container = _dockerClient.containers.get(name)
         return container.attrs['NetworkSettings']['Ports'][port + "/tcp"][0]['HostPort']
@@ -97,7 +97,7 @@ class ApiInterface(object):
     @staticmethod
     def intfExistBridge(name = None, bridge = None):
         if bridge and name is None:
-            raise AttributeError("the bridge or name attribute cannot be null")
+            raise AttributeError("the bridge or label attribute cannot be null")
 
         cmd_get = "ovs-vsctl list-br"
         ret = ApiNode.nodeSendCmd(name = name, cmd = cmd_get)
@@ -110,7 +110,7 @@ class ApiInterface(object):
     @staticmethod
     def intfExistInterfaceOnBridge(name = None, bridge = "switch0", port = None):
         if bridge is None or name is None or port is None:
-            raise AttributeError("the bridge, name or port attributes cannot be null")
+            raise AttributeError("the bridge, label or port attributes cannot be null")
 
         cmd_get = "ovs-vsctl list-ports {bridge}".format(bridge = bridge)
         ret = ApiNode.nodeSendCmd(name = name, cmd = cmd_get)
@@ -125,7 +125,7 @@ class ApiInterface(object):
     def intfAddSystemInterfaceToBridge(name = None, port = None, index = None, bridge = "switch0"):
 
         if name is None:
-            raise AttributeError("the name attribute cannot be null")
+            raise AttributeError("the label attribute cannot be null")
         elif bridge is None:
             raise AttributeError("the bridge attribute cannot be null")
         elif port is None:
@@ -175,7 +175,7 @@ class ApiInterface(object):
     @staticmethod
     def intfRemoveInterfaceFromBridge(name = None, port = None, bridge = "switch0"):
         if name is None:
-            raise AttributeError("the name attribute cannot be null")
+            raise AttributeError("the label attribute cannot be null")
         elif bridge is None:
             raise AttributeError("the bridge attribute cannot be null")
         elif port is None:
@@ -197,7 +197,7 @@ class ApiLink(object):
     @staticmethod
     def linkCreateVethPeerInterfaces(ifname_src = None, ifname_dst = None):
         if ifname_src is None or ifname_dst is None:
-            raise AttributeError("the port name source or destination attributes cannot be null")
+            raise AttributeError("the port label source or destination attributes cannot be null")
 
         _ipCmdClient.link('add', ifname = ifname_src, peer = ifname_dst, kind = 'veth')
 
@@ -214,9 +214,9 @@ class ApiLink(object):
     def linkVethPairingNodes(name_src = None, name_dst = None, ifname_src = None, ifname_dst = None):
 
         if name_src is None or name_dst is None:
-            raise AttributeError("the node name source or destination attributes cannot be null")
+            raise AttributeError("the node label source or destination attributes cannot be null")
         elif ifname_src is None or ifname_dst is None:
-            raise AttributeError("the interface name source or destination attributes cannot be null")
+            raise AttributeError("the interface label source or destination attributes cannot be null")
 
         pid_src = ApiNode.nodeGetPid(name_src)
         pid_dst = ApiNode.nodeGetPid(name_dst)
@@ -233,9 +233,9 @@ class ApiLink(object):
     def linkVethUnpairingNodes(name_src = None, name_dst = None, ifname_src = None, ifname_dst = None):
 
         if name_src is None or name_dst is None:
-            raise AttributeError("the node name source or destination attributes cannot be null")
+            raise AttributeError("the node label source or destination attributes cannot be null")
         elif ifname_src is None or ifname_dst is None:
-            raise AttributeError("the interface name source or destination attributes cannot be null")
+            raise AttributeError("the interface label source or destination attributes cannot be null")
 
         cmd_del_port = "ip link del {port}".format(port = ifname_src)
 
@@ -250,7 +250,7 @@ class ApiService(object):
     @staticmethod
     def serviceSetNodeManager(name = None, port = "6640", protocol = "ptcp"):
         if name is None:
-            raise AttributeError("the name attribute cannot be null")
+            raise AttributeError("the label attribute cannot be null")
 
         cmd_set_manager = "ovs-vsctl set-manager {protocol}:{port}".format(protocol = protocol, port = port)
         ret = ApiNode.nodeSendCmd(name = name, cmd = cmd_set_manager)
@@ -261,7 +261,7 @@ class ApiService(object):
     @staticmethod
     def serviceDelNodeManager(name = None):
         if name is None:
-            raise AttributeError("the name attribute cannot be null")
+            raise AttributeError("the label attribute cannot be null")
 
         cmd_del_manager = "ovs-vsctl del-manager"
         ret = ApiNode.nodeSendCmd(name = name, cmd = cmd_del_manager)
@@ -272,7 +272,7 @@ class ApiService(object):
     @staticmethod
     def serviceSetNodeController(name = None, ip = None, port = "6653", bridge = "switch0"):
         if name is None or ip is None:
-            raise AttributeError("the name or ip attribute cannot be null")
+            raise AttributeError("the label or ip attribute cannot be null")
 
         cmd_set_controller = "ovs-vsctl set-controller {bridge} tcp:{ip}:{port}"
         ret = ApiNode.nodeSendCmd(name = name, cmd = cmd_set_controller.format(ip = ip, bridge = bridge, port = port))
@@ -283,7 +283,7 @@ class ApiService(object):
     @staticmethod
     def serviceDelNodeController(name = None, bridge = "swtich0"):
         if name is None:
-            raise AttributeError("the name attribute cannot be null")
+            raise AttributeError("the label attribute cannot be null")
 
         cmd_del_controller = "ovs-vsctl del-controller {bridge} "
 
