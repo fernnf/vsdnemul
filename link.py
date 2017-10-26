@@ -1,12 +1,11 @@
 import ipaddress
-import uuid
 from enum import Enum
-from utils import CheckNotNull
 
 import docker
 import pyroute2
 
 from functions import ApiLink, ApiInterface
+from utils import check_not_null
 
 _client_docker = docker.from_env()
 _client_iproute = pyroute2.IPRoute()
@@ -29,7 +28,7 @@ class Link(object):
 
     @node_source.setter
     def node_source(self, value):
-        self.__label_source = CheckNotNull(value = value, msg = "the label of source node cannot be null")
+        self.__label_source = check_not_null(value = value, msg = "the label of source node cannot be null")
 
     @property
     def node_target(self):
@@ -37,7 +36,7 @@ class Link(object):
 
     @node_target.setter
     def node_target(self, value):
-        self.__label_target = CheckNotNull(value = value, msg = "the label of target node cannot be null")
+        self.__label_target = check_not_null(value = value, msg = "the label of target node cannot be null")
 
 
     @property
@@ -62,7 +61,7 @@ class Link(object):
 
     @type.setter
     def type(self, value):
-        self.__type =  CheckNotNull(value = value, msg ="type of link cannot be null")
+        self.__type =  check_not_null(value = value, msg = "type of link cannot be null")
 
 
 class DirectLinkOvsVeth(Link):
@@ -90,8 +89,8 @@ class ApiLinkVeth(object):
     @staticmethod
     def create_veth_link(port_source, port_target):
 
-        CheckNotNull(value = port_source, msg = "the port source name cannot be null")
-        CheckNotNull(value = port_target, msg = "the port target name cannot be null")
+        check_not_null(value = port_source, msg = "the port source name cannot be null")
+        check_not_null(value = port_target, msg = "the port target name cannot be null")
 
         _client_iproute.link("add", ifname = port_source, peer = port_target, kind = "veth")
 
