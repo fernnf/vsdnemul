@@ -1,21 +1,14 @@
 import logging
-from enum import Enum
 
 import docker
 import pyroute2
 
+from utils import CheckNotNull, CreateNamspace
 from functions import ApiNode
-from port import Port
 
 _client_docker = docker.from_env()
 _client_iproute = pyroute2.IPRoute()
 
-
-def CheckNotNull(value, msg):
-    if value is None:
-        raise TypeError(msg)
-    else:
-        return value
 
 
 # noinspection PyAttributeOutsideInit
@@ -157,6 +150,8 @@ class ApiNode(object):
         status = ApiNode.node_status(label = label)
 
         if status == "running":
+            pid = ApiNode.has_node_pid(label = label)
+            CreateNamspace(pid = pid)
             return True
         else:
             return False

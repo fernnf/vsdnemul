@@ -1,6 +1,7 @@
 import ipaddress
 import uuid
 from enum import Enum
+from utils import CheckNotNull
 
 import docker
 import pyroute2
@@ -10,12 +11,6 @@ from functions import ApiLink, ApiInterface
 _client_docker = docker.from_env()
 _client_iproute = pyroute2.IPRoute()
 
-
-def CheckNotNull(value, msg):
-    if value is None:
-        raise TypeError(msg)
-    else:
-        return value
 
 class TypeLink(Enum):
     Host = "host-link"
@@ -91,9 +86,26 @@ class HostLinkOvsVeth(Link):
     def delete(self):
         pass
 
-class ApiLink(object):
+class ApiLinkVeth(object):
     @staticmethod
     def create_veth_link(port_source, port_target):
+
+        CheckNotNull(value = port_source, msg = "the port source name cannot be null")
+        CheckNotNull(value = port_target, msg = "the port target name cannot be null")
+
+        _client_iproute.link("add", ifname = port_source, peer = port_target, kind = "veth")
+
+        idx_src = _client_iproute.link_lookup(ifname = port_source)[0]
+        idx_tgt = _client_iproute.link_lookup(ifname = port_target)[0]
+
+        _client_iproute.link("set", index = idx_src, mtu = 9000)
+        _client_iproute.link("set", index = idx_tgt, mtu = 9000)
+
+
+    @staticmethod
+    def delete_veth_link():
+    @staticmethod
+    def pairing_nodes():
 
 
 class LinkSwitch(Link):
