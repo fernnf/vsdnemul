@@ -76,8 +76,10 @@ class DirectLinkOvsVeth(Link):
 
 
 class HostLinkOvsVeth(Link):
-    def __init__(self, node_source = None, node_target = None):
+    def __init__(self, node_source = None, node_target = None, ip = None, gateway = None):
         super().__init__(type = "host-link-ovs-veth", node_source = node_source, node_target = node_target)
+        self._ip = ip
+        self._gateway = gateway
 
     def create(self):
         pass

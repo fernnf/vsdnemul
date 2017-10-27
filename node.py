@@ -328,7 +328,7 @@ class ApiWhiteboxOVS(object):
 
         ret = ApiNode.node_send_cmd(label = label, cmd = cmd_del_bridge)
 
-        if len(ret) != 0
+        if len(ret) != 0:
             raise ValueError(ret.decode())
 
 
