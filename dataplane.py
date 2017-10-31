@@ -1,3 +1,4 @@
+"""
 from link import LinkCommand, LinkHost
 from node import NodeCommand, ApiNode
 
@@ -35,3 +36,4 @@ class Dataplane(object):
         for n in self._nodes:
             NodeCommand.delete(n)
             print("the node {node} has deleted from topology".format(node = n.label))
+"""

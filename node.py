@@ -30,11 +30,11 @@ class Node(object):
 
     @property
     def label(self):
-        return self.__name
+        return self.__label
 
     @label.setter
     def label(self, value):
-        self.__image = check_not_null(value = value, msg = "the label node cannot be null")
+        self.__label = check_not_null(value = value, msg = "the label node cannot be null")
 
     @property
     def type(self):
@@ -333,11 +333,12 @@ class ApiWhiteboxOVS(object):
 
 
 class NodeGroup(object):
-    def __init__(self):
+    def __init__(self) -> object:
         self.__nodes = {}
 
     def add_node(self, node):
-        self.__nodes = self.__nodes + {node.label: node}
+        label = node.label
+        self.__nodes.update({label: node})
 
     def rem_node(self, node):
         del self.__nodes[node.label]

@@ -1,15 +1,24 @@
-import argparse
-import json
-from node import WhiteBox, NodeCommand
-from link import LinkSwitch, LinkCommand
+from node import WhiteBox, NodeGroup, ApiNode
+from link import DirectLinkOvsVeth, HostLinkOvsVeth, LinkGroup
+from utils import create_veth_link_containers
+import pprint
 
-from functions import ApiNode
-
+from pyroute2 import IPDB, netns, NetNS
 
 if __name__ == '__main__':
 
-    name = "host1"
-    image = "fedora/systemd-systemd"
-    service = {'22/tcp': None}
 
-    ApiNode.nodeCreate(name = name, type = image, service = service)
+
+    pid_n1 = 12704
+    pid_n2 = 12913
+
+    #create_veth_link_containers(src_pid = pid_n1, tgt_pid = pid_n2, src_ifname = "pn1", tgt_ifname = "pn2")
+
+    print(netns.listnetns())
+
+    with IPDB(nl = NetNS(str(pid_n2))) as nsdb:
+        pprint.pprint(nsdb.interfaces)
+        with nsdb.interfaces["pn2"] as source:
+            source.up()
+            source.set_mtu(9000)
+        pprint.pprint(nsdb.interfaces)

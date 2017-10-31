@@ -1,27 +1,36 @@
 from utils import check_not_null, create_veth_link_containers, delete_veth_link_containers, config_interface_address
-
+import uuid
 
 class Link(object):
     def __init__(self, type, node_source = None, node_target = None):
         self.node_source = node_source
         self.node_target = node_target
         self.type = type
+        self.__id = uuid.uuid4()
+
+    @property
+    def id(self):
+        return self.__id
+
+    @id.setter
+    def id(self, value):
+        pass
 
     @property
     def node_source(self):
-        return self.__label_source
+        return self.__node_source
 
     @node_source.setter
     def node_source(self, value):
-        self.__label_source = check_not_null(value = value, msg = "the label of source node cannot be null")
+        self.__node_source = check_not_null(value = value, msg = "the label of source node cannot be null")
 
     @property
     def node_target(self):
-        return self.__label_target
+        return self.__node_target
 
     @node_target.setter
     def node_target(self, value):
-        self.__label_target = check_not_null(value = value, msg = "the label of target node cannot be null")
+        self.__node_target = check_not_null(value = value, msg = "the label of target node cannot be null")
 
     @property
     def port_source(self):
@@ -63,7 +72,7 @@ class DirectLinkOvsVeth(Link):
             self.node_source.add_port(port = if_src)
             self.node_target.add_port(port = if_dst)
         except Exception as ex:
-            print("Error: " + ex.args[0])
+            print("Error: " + str(ex.args[0]))
 
     def delete(self):
         pid_src = self.node_source.node_pid
@@ -115,23 +124,25 @@ class LinkGroup(object):
         self.__links = {}
 
     def add_link(self, link):
-        self.__links = self.__links + {link.port_source: link}
+        label = link.id
+        self.__links.update({label: link})
 
     def rem_link(self, link):
-        del self.__links[link.label]
+        link.delete()
+        del self.__links[link.id]
 
-    def get_nodes(self):
+    def get_links(self):
         return self.__links.copy()
 
-    def get_node(self, label):
-        return self.__links[label]
+    def get_link(self, id):
+        return self.__links[id]
 
     def commit(self):
         if len(self.__links) <= 0:
-            raise RuntimeError("there is not node to commit")
+            raise RuntimeError("there is not link to commit")
         else:
             for k, v in self.__links.items():
-                print("creating node ({label})".format(label = k), )
+                print("creating link {key} from {a} to {b}".format(key= k, a = v.port_source, b= v.port_target))
                 v.create()
 
     def remove(self):
@@ -139,5 +150,5 @@ class LinkGroup(object):
             raise RuntimeError("there is not node to commit")
         else:
             for k, v in self.__links.items():
-                print("removing node ({label})".format(label = k), )
+                print("removing link ({label})".format(label = k), )
                 v.delete()
