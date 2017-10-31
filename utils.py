@@ -1,4 +1,5 @@
 import os
+import ipaddress
 from pyroute2 import IPDB, NetNS
 
 
@@ -65,3 +66,10 @@ def config_interface_address(pid, if_name, addr, gateway = None):
         if gateway is not None:
             with nsdb.routes['default'] as route:
                 route.gateway = gateway
+
+def is_valid_ip(addr):
+    try:
+        ipaddress.ip_address(address = addr)
+        return True
+    except Exception as ex:
+        raise ValueError("Error: "+ex.args[0])

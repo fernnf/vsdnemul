@@ -1,19 +1,4 @@
-import ipaddress
-from enum import Enum
-
-import docker
-import pyroute2
-
-from functions import ApiLink, ApiInterface
-from utils import check_not_null
-
-_client_docker = docker.from_env()
-_client_iproute = pyroute2.IPRoute()
-
-
-class TypeLink(Enum):
-    Host = "host-link"
-    Direct = "direct-link"
+from utils import check_not_null, create_veth_link_containers, delete_veth_link_containers, config_interface_address
 
 
 class Link(object):
@@ -38,10 +23,9 @@ class Link(object):
     def node_target(self, value):
         self.__label_target = check_not_null(value = value, msg = "the label of target node cannot be null")
 
-
     @property
     def port_source(self):
-        return self.node_source.label +"-" + self.node_target.label
+        return self.node_source.label + "-" + self.node_target.label
 
     @port_source.setter
     def port_source(self, value):
@@ -49,7 +33,7 @@ class Link(object):
 
     @property
     def port_target(self):
-        return self.node_target.label+"-"+self.node_source.label
+        return self.node_target.label + "-" + self.node_source.label
 
     @port_target.setter
     def port_target(self, value):
@@ -61,7 +45,7 @@ class Link(object):
 
     @type.setter
     def type(self, value):
-        self.__type =  check_not_null(value = value, msg = "type of link cannot be null")
+        self.__type = check_not_null(value = value, msg = "type of link cannot be null")
 
 
 class DirectLinkOvsVeth(Link):
@@ -69,10 +53,29 @@ class DirectLinkOvsVeth(Link):
         super().__init__(type = "direct-link-ovs-veth", node_source = node_source, node_target = node_target)
 
     def create(self):
-        pass
+        pid_src = self.node_source.node_pid
+        pid_dst = self.node_target.node_pid
+        if_src = self.port_source
+        if_dst = self.port_target
+
+        try:
+            create_veth_link_containers(src_pid = pid_src, tgt_pid = pid_dst, src_ifname = if_src, tgt_ifname = if_dst)
+            self.node_source.add_port(port = if_src)
+            self.node_target.add_port(port = if_dst)
+        except Exception as ex:
+            print("Error: " + ex.args[0])
 
     def delete(self):
-        pass
+        pid_src = self.node_source.node_pid
+        pid_dst = self.node_target.node_pid
+        if_src = self.port_source
+        if_dst = self.port_target
+        try:
+            delete_veth_link_containers(src_pid = pid_src, tgt_pid = pid_dst, src_ifname = if_src, tgt_ifname = if_dst)
+            self.node_source.del_port(port = if_src)
+            self.node_source.del_port(port = if_dst)
+        except Exception as ex:
+            print("Error: " + ex.args[0])
 
 
 class HostLinkOvsVeth(Link):
@@ -82,136 +85,59 @@ class HostLinkOvsVeth(Link):
         self._gateway = gateway
 
     def create(self):
-        pass
+        pid_src = self.node_source.node_pid
+        pid_dst = self.node_target.node_pid
+        if_src = self.port_source
+        if_dst = self.port_target
+
+        try:
+            create_veth_link_containers(src_pid = pid_src, tgt_pid = pid_dst, src_ifname = if_src, tgt_ifname = if_dst)
+            config_interface_address(pid = pid_src, if_name = if_src, addr = self._ip, gateway = self._gateway)
+            self.node_target.add_port(port = if_dst)
+        except Exception as ex:
+            print("Error: " + ex.args[0])
 
     def delete(self):
-        pass
-
-class ApiLinkVeth(object):
-    @staticmethod
-    def create_veth_link(port_source, port_target):
-
-        check_not_null(value = port_source, msg = "the port source name cannot be null")
-        check_not_null(value = port_target, msg = "the port target name cannot be null")
-
-        _client_iproute.link("add", ifname = port_source, peer = port_target, kind = "veth")
-
-        idx_src = _client_iproute.link_lookup(ifname = port_source)[0]
-        idx_tgt = _client_iproute.link_lookup(ifname = port_target)[0]
-
-        _client_iproute.link("set", index = idx_src, mtu = 9000)
-        _client_iproute.link("set", index = idx_tgt, mtu = 9000)
-
-
-    @staticmethod
-    def delete_veth_link():
-    @staticmethod
-    def pairing_nodes():
-
-
-class LinkSwitch(Link):
-    def __init__(self, source, target):
-        super().__init__(source, target, TypeLink.Switch.value)
-
-    def create(self):
-        ApiLink.linkCreateVethPeerInterfaces(ifname_src = self.intf_source, ifname_dst = self.intf_target)
-        ApiLink.linkVethPairingNodes(self.node_source, self.node_target, self.intf_source, self.intf_target)
-        ApiInterface.intfAddSystemInterfaceToBridge(self.node_source, self.intf_source)
-        ApiInterface.intfAddSystemInterfaceToBridge(self.node_target, self.intf_target)
-
-    def delete(self):
-        ApiLink.linkVethUnpairingNodes(self.node_source, self.node_target, self.intf_source, self.intf_target)
-        ApiInterface.intfRemoveInterfaceFromBridge(self.node_source, self.intf_source)
-        ApiInterface.intfRemoveInterfaceFromBridge(self.node_target, self.intf_target)
-
-class LinkHost(Link):
-    def __init__(self, host, target, ip, mask, gateway):
-        super().__init__(host, target, TypeLink.Host.value)
-        self.ip = ip
-        self.mask = mask
-        self.gateway = gateway
-
-    @property
-    def ip(self):
-        return self.__ip
-
-    @ip.setter
-    def ip(self, value):
+        pid_src = self.node_source.node_pid
+        pid_dst = self.node_target.node_pid
+        if_src = self.port_source
+        if_dst = self.port_target
         try:
-            ipaddress.ip_address(value)
-            self.__ip = value
+
+            delete_veth_link_containers(src_pid = pid_src, tgt_pid = pid_dst, src_ifname = if_src, tgt_ifname = if_dst)
+            self.node_target.del_port(port = if_dst)
         except Exception as ex:
-            raise ValueError("The atributed ip is not valid")
+            print("Error: " + ex.args[0])
 
-    @property
-    def mask(self):
-        return self.__mask
 
-    @mask.setter
-    def mask(self, value):
-        try:
-            ipaddress.ip_address(value)
-            self.__mask = value
-        except Exception as ex:
-            raise ValueError("The atributed mask is not valid")
+class LinkGroup(object):
+    def __init__(self):
+        self.__links = {}
 
-    @property
-    def gateway(self):
-        return self.__gateway
+    def add_link(self, link):
+        self.__links = self.__links + {link.port_source: link}
 
-    @gateway.setter
-    def gateway(self, value):
-        try:
-            ipaddress.ip_address(value)
-            self.__gateway = value
-        except Exception as ex:
-            raise ValueError("The atributed gateway is not valid")
+    def rem_link(self, link):
+        del self.__links[link.label]
 
-    def create(self):
-        ApiLink.linkCreateVethPeerInterfaces(ifname_src = self.intf_source, ifname_dst = self.intf_target)
-        ApiLink.linkVethPairingNodes(self.node_source, self.node_target, self.intf_source, self.intf_target)
-        ApiInterface.intfConfgAddressInterface(self.node_source, self.ip, self.mask)
-        ApiInterface.intfAddSystemInterfaceToBridge(self.node_target, self.intf_target)
+    def get_nodes(self):
+        return self.__links.copy()
 
-    def delete(self):
-        ApiLink.linkVethUnpairingNodes(self.node_source, self.node_target, self.intf_source, self.intf_target)
-        ApiInterface.intfRemoveInterfaceFromBridge(self.node_source, self.intf_source)
-        ApiInterface.intfRemoveInterfaceFromBridge(self.node_target, self.intf_target)
+    def get_node(self, label):
+        return self.__links[label]
 
-class LinkCommand(object):
-    @staticmethod
-    def createHostLink(link = LinkHost):
-        try:
-           link.create()
-        except Exception as ex:
-            raise ValueError("LinkCommandError:" + ex.args[0])
+    def commit(self):
+        if len(self.__links) <= 0:
+            raise RuntimeError("there is not node to commit")
+        else:
+            for k, v in self.__links.items():
+                print("creating node ({label})".format(label = k), )
+                v.create()
 
-    def deleteHostLink
-
-    @staticmethod
-    def createSwitchLink(link = LinkSwitch):
-        try:
-            link.create()
-        except Exception as ex:
-            print("LinkCommandError:" + ex.args[0])
-
-    @staticmethod
-    def delete(link):
-        def _sw_delete():
-            ApiLink.linkVethUnpairingNodes(link.node_source, link.node_target, link.intf_source, link.intf_target)
-            ApiInterface.intfRemoveInterfaceFromBridge(link.node_source, link.intf_source)
-            ApiInterface.intfRemoveInterfaceFromBridge(link.node_target, link.intf_target)
-
-        def _ht_delete():
-            ApiLink.linkVethUnpairingNodes(link.node_source, link.node_target, link.intf_source, link.intf_target)
-            ApiInterface.intfRemoveInterfaceFromBridge(link.node_target, link.intf_target)
-
-        try:
-            if isinstance(link, LinkSwitch):
-                _sw_delete()
-            elif isinstance(link, LinkHost):
-                _ht_delete()
-            else:
-                raise ValueError("the link object is unknown")
-        except Exception as ex:
-            print(ex.args[0])
+    def remove(self):
+        if len(self.__links) <= 0:
+            raise RuntimeError("there is not node to commit")
+        else:
+            for k, v in self.__links.items():
+                print("removing node ({label})".format(label = k), )
+                v.delete()
