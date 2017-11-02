@@ -113,7 +113,7 @@ class WhiteBox(Node):
 
     def del_port(self, bridge = "switch0", port = None):
         try:
-            ApiWhiteboxOVS.service_del_port(label = self.label, bridge = bridge, port_name = port);
+            ApiWhiteboxOVS.service_del_port(label = self.label, bridge = bridge, port_name = port)
         except Exception as ex:
             print("Error: {error}".format(error = ex.args[0]))
 
