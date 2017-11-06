@@ -1,4 +1,4 @@
-import logging
+from log import Logger
 
 import docker
 import pyroute2
@@ -12,7 +12,7 @@ _client_iproute = pyroute2.IPRoute()
 
 # noinspection PyAttributeOutsideInit
 class Node(object):
-    logger = logging.getLogger("node.Node")
+    logger = Logger.logger("Node")
 
     def __init__(self, label = None, type = None, service = None, image = None):
         self.label = label
@@ -49,37 +49,39 @@ class Node(object):
         try:
             return ApiNode.has_node_ip_management(label = self.label)
         except Exception as ex:
-            print("Error: {error}".format(error = ex.args[0]))
+            self.logger.error(ex.args[0])
 
     @property
     def service_exposed_port(self, service_port = None):
         try:
             return ApiNode.has_node_service_exposed_port(label = self.label, service_port = service_port)
         except Exception as ex:
-            print("Error: {error}".format(error = ex.args[0]))
+            self.logger.error(ex.args[0])
 
     @property
     def node_pid(self):
         try:
             return ApiNode.has_node_pid(label = self.label)
         except Exception as ex:
-            print("Error: {error}".format(error = ex.args[0]))
+            self.logger.error(ex.args[0])
 
     @property
     def node_status(self):
         try:
             return ApiNode.node_status(label = self.label)
         except Exception as ex:
-            print("Error: {error}".format(error = ex.args[0]))
+            self.logger.error(ex.args[0])
 
     def send_cmd(self, cmd = None):
         try:
             return ApiNode.node_send_cmd(self.label, cmd = cmd)
         except Exception as ex:
-            print("Error: {error}".format(error = ex.args[0]))
+            self.logger.error(ex.args[0])
 
 
 class WhiteBox(Node):
+    logger = Logger.logger("WhiteBox")
+
     def __init__(self, label = None):
         super().__init__(label = label,
                          type = "WhiteBox",
@@ -91,63 +93,62 @@ class WhiteBox(Node):
             ApiWhiteboxOVS.service_set_bridge_controller(label = self.label, bridge_name = bridge, ip = ip,
                                                          service_port = port, type = type)
         except Exception as ex:
-            print("Error: {error}".format(error = ex.args[0]))
+            self.logger.error(ex.args[0])
 
     def del_controller(self, bridge = "switch0"):
         try:
             ApiWhiteboxOVS.service_del_bridge_controller(label = self.label, bridge_name = bridge)
         except Exception as ex:
-            print("Error: {error}".format(error = ex.args[0]))
+            self.logger.error(ex.args[0])
 
     def set_manager(self, ip = None, port = "6640", type = "tcp"):
         try:
             ApiWhiteboxOVS.service_set_ovs_manager(label = self.label, ip = ip, service_port = port, type = type)
         except Exception as ex:
-            print("Error: {error}".format(error = ex.args[0]))
+            self.logger.error(ex.args[0])
 
     def add_port(self, bridge = "switch0", port = None):
         try:
             ApiWhiteboxOVS.service_add_port(label = self.label, bridge = bridge, port_name = port)
         except Exception as ex:
-            print("Error: {error}".format(error = ex.args[0]))
+            self.logger.error(ex.args[0])
 
     def del_port(self, bridge = "switch0", port = None):
         try:
             ApiWhiteboxOVS.service_del_port(label = self.label, bridge = bridge, port_name = port);
         except Exception as ex:
-            print("Error: {error}".format(error = ex.args[0]))
+            self.logger.error(ex.args[0])
 
     def set_openflow_version(self, bridge = "switch0", version = "OpenFlow13"):
         try:
             ApiWhiteboxOVS.service_set_openflow_ver(label = self.label, bridge = bridge, version = version)
         except Exception as ex:
-            print("Error: {error}".format(error = ex.args[0]))
+            self.logger.error(ex.args[0])
 
     def set_bridge(self, bridge = None, dpid = None, version = "OpenFlow13", datapath_type = "netdev"):
         try:
             ApiWhiteboxOVS.service_set_bridge(label = self.label, bridge = bridge, dpid = dpid, version = version,
                                               datapath_type = datapath_type)
         except Exception as ex:
-            print("Error: {error}".format(error = ex.args[0]))
+            self.logger.error(ex.args[0])
 
     def rem_bridge(self, bridge = None):
         try:
             ApiWhiteboxOVS.service_rem_bridge(label = self.label, bridge = bridge)
         except Exception as ex:
-            print("Error: {error}".format(error = ex.args[0]))
+            self.logger.error(ex.args[0])
 
     def create(self):
         try:
             return ApiNode.create_node(label = self.label, image = self.image, service = self.service)
         except Exception as ex:
-            print("Error: A error occurred on create of node {error}".format(error = ex.args[0]))
+            self.logger.error(ex.args[0])
 
     def delete(self):
         try:
             return ApiNode.delete_node(label = self.label)
         except Exception as ex:
-            print("Error: A error occurred on delete of node {error}".format(error = ex.args[0]))
-
+            self.logger.error(ex.args[0])
 
 class Host(Node):
     def __init__(self, label = None):
@@ -333,6 +334,8 @@ class ApiWhiteboxOVS(object):
 
 
 class NodeGroup(object):
+    logger = Logger.logger("NodeGroup")
+
     def __init__(self) -> object:
         self.__nodes = {}
 
@@ -354,7 +357,7 @@ class NodeGroup(object):
             raise RuntimeError("there is not node to commit")
         else:
             for k, v in self.__nodes.items():
-                print("creating node ({label})".format(label = k), )
+                self.logger.debug("creating node ({label})".format(label = k))
                 v.create()
 
     def remove(self):
@@ -362,5 +365,5 @@ class NodeGroup(object):
             raise RuntimeError("there is not node to commit")
         else:
             for k, v in self.__nodes.items():
-                print("removing node ({label})".format(label = k), )
+                self.logger.debug("removing node ({label})".format(label = k))
                 v.delete()

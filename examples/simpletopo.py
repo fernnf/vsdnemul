@@ -1,10 +1,17 @@
 from node import WhiteBox, NodeGroup
 from link import DirectLinkOvsVeth, HostLinkOvsVeth, LinkGroup
+from log import Logger
+import logging
 #from dataplane import Dataplane
 
 import time
 
 if __name__ == '__main__':
+
+
+    log = Logger.logger(name = "simpletopo", level = "debug")
+
+
 
     nodes = NodeGroup()
 
@@ -22,7 +29,7 @@ if __name__ == '__main__':
 
     links = LinkGroup()
 
-    l1 = DirectLinkOvsVeth(node_source = n1 , node_target = n2)
+    l1 = DirectLinkOvsVeth(node_source = n1, node_target = n2)
     #l2 = DirectLinkOvsVeth(node_source = n2 , node_target = n3)
 
     #lh1 = LinkHost(host = h1.label, target = n1.label, ip = h1.ip, mask = h1.mask)
@@ -37,9 +44,12 @@ if __name__ == '__main__':
 
     #dp.set_controller(ip = "10.126.1.231")
 
-    print("Creating Nodes")
+
+    log.info("Creating Nodes")
+    #print("Creating Nodes")
     nodes.commit()
-    print("Creating Links")
+    log.debug("Creating Links")
+    #print("Creating Links")
     links.commit()
 
 
