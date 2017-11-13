@@ -36,9 +36,9 @@ def create_veth_link_containers(src_pid, tgt_pid, src_ifname, tgt_ifname):
     with IPDB() as ipdb:
         ipdb.create(kind = "veth", ifname = src_ifname, peer = tgt_ifname).commit()
         with ipdb.interfaces[src_ifname] as source:
-            source.net_ns_fd = str(src_pid)
+            source.net_ns_pid = src_pid
         with ipdb.interfaces[tgt_ifname] as target:
-            target.net_ns_fd = str(tgt_pid)
+            target.net_ns_pid = tgt_pid
 
     with IPDB(nl = NetNS(str(src_pid))) as nsdb:
         with nsdb.interfaces[src_ifname] as source:
