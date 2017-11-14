@@ -72,7 +72,7 @@ class WhiteBox(Node):
         try:
             return ApiNode.delete_node(label = self.label)
         except Exception as ex:
-            self.logger.error(ex.args[0])
+            self.logger.error(str(ex.args))
 
 
 class ApiWhiteboxOVS(object):

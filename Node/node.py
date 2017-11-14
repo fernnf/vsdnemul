@@ -15,7 +15,7 @@ class Node(object):
 
     def __init__(self, label = None, type = None, service = None, image = None):
         self.label = label
-        self.type = type
+        self.node_type = type
         self.service = service
         self.image = image
 
@@ -36,11 +36,11 @@ class Node(object):
         self.__label = check_not_null(value = value, msg = "the label node cannot be null")
 
     @property
-    def type(self):
+    def node_type(self):
         return self.__type
 
-    @type.setter
-    def type(self, value):
+    @node_type.setter
+    def node_type(self, value):
         self.__type = check_not_null(value = value, msg = "the type node cannot be null")
 
     @property
@@ -51,9 +51,9 @@ class Node(object):
             self.logger.error(ex.args[0])
 
     @property
-    def service_exposed_port(self, service_port = None):
+    def service_exposed_port(self):
         try:
-            return ApiNode.has_node_service_exposed_port(label = self.label, service_port = service_port)
+            return ApiNode.has_node_service_exposed_port(label = self.label, service_port = self.service)
         except Exception as ex:
             self.logger.error(ex.args[0])
 
@@ -133,8 +133,14 @@ class ApiNode(object):
 
     @staticmethod
     def has_node_service_exposed_port(label, service_port):
+
         container = _client_docker.containers.get(label)
-        return container.attrs['NetworkSettings']['Ports'][service_port + "/tcp"][0]['HostPort']
+        service = service_port
+
+        for k, v in service_port.items():
+            service[k] = container.attrs['NetworkSettings']['Ports'][k][0]['HostPort']
+
+        return service
 
     @staticmethod
     def node_send_cmd(label, cmd):

@@ -3,6 +3,7 @@ from Link.link import LinkGroup
 from Node.node import NodeGroup
 from Node.host import Host
 from Node.whitebox import WhiteBox
+from Command.command import Prompt
 from log import Logger
 
 #from dataplane import Dataplane
@@ -46,9 +47,13 @@ if __name__ == '__main__':
 
     log.info("Creating Topology")
 
-    Topology()
+    nodes, links = Topology()
 
     log.info("Topology initialized")
+
+    cmd = Prompt(links = links, nodes = nodes)
+    cmd.cmdloop()
+
 
 
 

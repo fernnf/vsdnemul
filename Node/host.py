@@ -12,10 +12,10 @@ class Host(Node):
         try:
             ApiNode.create_node(label = self.label, image = self.image, service = self.service)
         except Exception as ex:
-            self.logger.error(ex.args[0])
+            self.logger.error(str(ex.args))
 
     def delete(self):
         try:
             ApiNode.delete_node(self.label)
         except Exception as ex:
-            self.logger.error(ex.args[0])
+            self.logger.error(str(ex.args))

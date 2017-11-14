@@ -25,7 +25,7 @@ def create_namespace(pid=int):
 def delete_namespace(pid=int):
         if os.path.exists("/var/run/netns"):
             if os.path.exists("/var/run/netns/{pid}".format(pid = pid)):
-                os.rmdir("/var/run/netns/{pid}".format(pid = pid))
+                os.remove("/var/run/netns/{pid}".format(pid = pid))
             else:
                 OSError("namespace with pid not exist")
         else:
@@ -68,9 +68,14 @@ def config_interface_address(pid, if_name, addr, gateway = None):
             with nsdb.routes['default'] as route:
                 route.gateway = gateway
 
+
 def is_valid_ip(addr):
     try:
         ipaddress.ip_address(address = addr)
         return True
     except Exception as ex:
         raise ValueError("Error: "+ex.args[0])
+
+
+def equals_ignore_case(a, b):
+    return a.upper() == b.upper()
