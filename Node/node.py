@@ -159,14 +159,18 @@ class NodeGroup(object):
         label = node.label
         self.__nodes.update({label: node})
 
-    def rem_node(self, node):
-        del self.__nodes[node.label]
+    def rem_node(self, label):
+        if label in self.__nodes.keys():
+            del self.__nodes[label]
 
     def get_nodes(self):
         return self.__nodes.copy()
 
     def get_node(self, label):
-        return self.__nodes[label]
+        if label in self.__nodes.keys():
+            return self.__nodes[label]
+        else:
+            return None
 
     def commit(self):
         if len(self.__nodes) <= 0:

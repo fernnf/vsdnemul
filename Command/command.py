@@ -1,5 +1,6 @@
 from cmd2 import Cmd, make_option, options
 from Link.link import LinkGroup
+from Link.vethlink import HostLinkOvsVeth, DirectLinkOvsVeth
 from Node.node import NodeGroup
 from Node.whitebox import WhiteBox
 from Node.host import Host
@@ -89,5 +90,106 @@ class Prompt(Cmd):
 
         else:
             print("the type node is unknown")
+
+    @options([
+        make_option("-l", "--label", action = "store", type = "string", help = "the label used by node")
+    ])
+    def do_delete_node(self, arg, opts):
+        """Remove a node of topology
+
+        """
+        node = self.nodes.get_node(opts.label)
+
+        if node is not None:
+            node.delete()
+            self.nodes.rem_node(node)
+            print("the node has removed")
+        else:
+            print("the type node is unknown")
+
+    @options([
+        make_option("-s", "--source", action = "store", type= "string", help=""),
+        make_option("-t", "--target", action = "store", type= "string", help=""),
+    ])
+    def do_create_direct_link(self, arg, opts):
+        """Create a link between two nodes
+        """
+        source = self.nodes.get_node(opts.source)
+        tartget = self.nodes.get_node(opts.target)
+
+        if source is not None and tartget is not None:
+
+            link = DirectLinkOvsVeth(node_source = source, node_target = tartget)
+            link.create()
+
+            self.links.add_link(link = link)
+            print("the link has created")
+
+        else:
+            print("source or target node not found")
+
+    @options([
+        make_option("-s", "--host", action = "store", type = "string", help = ""),
+        make_option("-t", "--target", action = "store", type = "string", help = ""),
+    ])
+    def do_create_host_link(self, arg, opts):
+
+        source = self.nodes.get_node(opts.host)
+        tartget = self.nodes.get_node(opts.target)
+
+        if source is not None and tartget is not None:
+            link = HostLinkOvsVeth(node_host = opts.host, node_target = opts.target)
+            link.create()
+            self.links.add_link(link = link)
+            print("the link has created")
+        else:
+            print("host or target node not found")
+
+    @options([
+        make_option("-i", "--id", action = "store", type = "string", help = ""),
+    ])
+    def do_list_links(self, arg, opts):
+
+        output = """
+        ID: {id}
+        Source Node: {src_node}
+        Target Node: {tgt_node}
+        Source Port: {src_port}
+        Target Port: {tgt_port}
+        """
+
+        def print_link(link):
+            print("[{i}]".format(i = link.id))
+
+            print(output.format(id = link.id,
+                                src_node = link.node_source.label,
+                                tgt_node = link.node_target.label,
+                                src_port = link.port_source,
+                                tgt_port = link.port_target))
+
+        def list_link():
+            link = self.links.get_link(opts.id)
+            print_link(link = link)
+
+        def list_links():
+            l = self.links.get_links()
+            for k, v in l.items():
+                print_link(link = v)
+
+        if opts.id is not None:
+            list_link()
+        else:
+            list_links()
+
+
+
+
+
+
+
+
+
+
+
 
 
