@@ -1,8 +1,7 @@
-from log import Logger
-
 import docker
 import pyroute2
 
+from log import Logger
 from utils import check_not_null, create_namespace, delete_namespace
 
 _client_docker = docker.from_env()
@@ -13,11 +12,12 @@ _client_iproute = pyroute2.IPRoute()
 class Node(object):
     logger = Logger.logger("Node")
 
-    def __init__(self, label = None, type = None, service = None, image = None):
+    def __init__(self, label = None, type = None, service = None, image = None, volume = None):
         self.label = label
         self.node_type = type
         self.service = service
         self.image = image
+        self.volume = volume
 
     @property
     def image(self):
@@ -77,19 +77,41 @@ class Node(object):
         except Exception as ex:
             self.logger.error(ex.args[0])
 
+    @property
+    def volume(self):
+        return self.__volume
+
+    @volume.setter
+    def volume(self, value):
+        self.__volume = value
+
 
 class ApiNode(object):
     @staticmethod
-    def create_node(label, image, service):
-        _client_docker.containers \
-            .run(image = image,
-                 hostname = label,
-                 name = label,
-                 ports = service,
-                 detach = True,
-                 tty = True,
-                 stdin_open = True,
-                 privileged = True)
+    def create_node(label, image, service, volume):
+        if volume is not None:
+            _client_docker.containers \
+                .run(image = image,
+                     hostname = label,
+                     name = label,
+                     ports = service,
+                     volumes = volume,
+                     detach = True,
+                     tty = True,
+                     stdin_open = True,
+                     privileged = True)
+
+        else:
+            _client_docker.containers \
+                .run(image = image,
+                     hostname = label,
+                     name = label,
+                     ports = service,
+                     detach = True,
+                     tty = True,
+                     stdin_open = True,
+                     privileged = True)
+
         status = ApiNode.node_status(label = label)
 
         if status == "running":

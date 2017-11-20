@@ -10,7 +10,7 @@ class WhiteBox(Node):
         super().__init__(label = label,
                          type = "WhiteBox",
                          service = {'22/tcp': None, '6633/tcp': None, '6640/tcp': None, '6653/tcp': None},
-                         image = "vsdn/whitebox")
+                         image = "vsdn/whitebox", volume = None)
 
     def set_controller(self, ip = None, port = "6653", bridge = "switch0", type = "tcp"):
         try:
@@ -64,7 +64,8 @@ class WhiteBox(Node):
 
     def create(self):
         try:
-            return ApiNode.create_node(label = self.label, image = self.image, service = self.service)
+            return ApiNode.create_node(label = self.label, image = self.image, service = self.service,
+                                       volume = self.volume)
         except Exception as ex:
             self.logger.error(ex.args[0])
 

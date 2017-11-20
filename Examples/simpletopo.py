@@ -48,22 +48,23 @@ def Topology():
 
 def Controller():
 
-    ctl = None
-
     def exist_ctl():
         for k, node in _nodes.get_nodes().items():
-            if isinstance(Onos, node):
-                ctl = node
+            if isinstance(node, Onos):
+                return node
 
-    def set_controller():
-        for k, node in _nodes.get_nodes().items():
-            if isinstance(WhiteBox, node):
-                node.set_controller(ip = ctl.control_ip)
+    def set_controller(ctl_ip):
+        if ctl is not None:
+            for k, node in _nodes.get_nodes().items():
+                if isinstance(node, WhiteBox):
+                    node.set_controller(ip = ctl_ip)
+        else:
+            log.warn("No controller setting")
 
-    exist_ctl()
-    set_controller()
+    ctl = exist_ctl()
+    set_controller(ctl_ip = ctl.control_ip)
 
-    log.info("Controller IP: {ip}".format(ip=ctl.control_ip))
+    log.info("Controller IP: http://{ip}:8181/onos/ui/login.html".format(ip=ctl.control_ip))
 
 
 if __name__ == '__main__':
