@@ -19,7 +19,8 @@ class Onos(Node):
 
     def create(self):
         try:
-            return ApiNode.create_node(label = self.label, image = self.image, service = self.service,volume = self.volume)
+            return ApiNode.create_node(label = self.label, image = self.image, service = self.service,
+                                       volume = self.volume, cap_add = self.cap_add)
         except Exception as ex:
             self.logger.error(ex.args[0])
 

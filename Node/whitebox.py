@@ -10,7 +10,7 @@ class WhiteBox(Node):
         super().__init__(label = label,
                          type = "WhiteBox",
                          service = {'22/tcp': None, '6633/tcp': None, '6640/tcp': None, '6653/tcp': None},
-                         image = "vsdn/whitebox", volume = None)
+                         image = "vsdn/whitebox", volume = None, cap_add = "NET_ADMIN")
 
     def set_controller(self, ip = None, port = "6653", bridge = "switch0", type = "tcp"):
         try:
@@ -65,7 +65,7 @@ class WhiteBox(Node):
     def create(self):
         try:
             return ApiNode.create_node(label = self.label, image = self.image, service = self.service,
-                                       volume = self.volume)
+                                       volume = self.volume, cap_add = self.cap_add)
         except Exception as ex:
             self.logger.error(ex.args[0])
 
@@ -128,7 +128,7 @@ class ApiWhiteboxOVS(object):
         check_not_null(value = label, msg = "the label cannot be null")
         check_not_null(value = port_name, msg = "the port name cannot be null")
 
-        cmd_add_interface = "ovs-vsctl add-port {bridge} {port} -- set Interface {port} type=system" \
+        cmd_add_interface = "ovs-vsctl add-port {bridge} {port}" \
             .format(bridge = bridge, port = port_name)
 
         ret = ApiNode.node_send_cmd(label = label, cmd = cmd_add_interface)

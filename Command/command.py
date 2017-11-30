@@ -1,7 +1,7 @@
 from cmd2 import Cmd, make_option, options
 from Link.link import LinkGroup
 from Link.vethlink import HostLinkOvsVeth, DirectLinkOvsVeth
-from Node.node import NodeGroup
+from Node.node import NodeGroup, ApiNode
 from Node.whitebox import WhiteBox
 from Node.host import Host
 from utils import equals_ignore_case
@@ -181,8 +181,16 @@ class Prompt(Cmd):
         else:
             list_links()
 
+    @options(
+        make_option("-l", "--label", action = "store", type = "string", help = "the label used by node")
+    )
+    def do_cli_node(self, arg, opts):
 
-
+        node = self.nodes.get_node(opts.label)
+        if node is not None:
+            node.get_cli_prompt()
+        else:
+            print("the node was not found")
 
 
 

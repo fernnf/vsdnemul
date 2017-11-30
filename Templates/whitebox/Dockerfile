@@ -1,6 +1,6 @@
 FROM fedora:latest
 
-RUN dnf -y update &&  dnf install -y openvswitch hostname iputils
+RUN dnf -y update &&  dnf install -y openvswitch hostname iputils iproute tcpdump nano net-tools
 
 VOLUME /etc/openvswitch/
 

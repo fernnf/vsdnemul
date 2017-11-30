@@ -10,7 +10,7 @@ class Link(object):
         self.node_source = node_source
         self.node_target = node_target
         self.type = type
-        self.__id = str(uuid.uuid4())
+        self.__id = str(uuid.uuid4())[0:8]
 
     @property
     def id(self):

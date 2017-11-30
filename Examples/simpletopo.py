@@ -17,10 +17,10 @@ _links = LinkGroup()
 def Topology():
 
     n1 = WhiteBox(label = "node1")
-    n2 = WhiteBox(label = "node2")
+    #n2 = WhiteBox(label = "node2")
 
     _nodes.add_node(node = n1)
-    _nodes.add_node(node = n2)
+    #_nodes.add_node(node = n2)
 
     h1 = Host(label = "host1")
     h2 = Host(label = "host2")
@@ -32,15 +32,15 @@ def Topology():
 
     _nodes.add_node(ctl)
 
-    n1_n2 = DirectLinkOvsVeth(node_source = n1, node_target = n2)
+    #n1_n2 = DirectLinkOvsVeth(node_source = n1, node_target = n2)
 
-    _links.add_link(n1_n2)
+    #_links.add_link(n1_n2)
 
     h1_n1 = HostLinkOvsVeth(node_host = h1, node_target = n1, ip = "192.168.0.1/24")
-    h2_n2 = HostLinkOvsVeth(node_host = h2, node_target = n2, ip = "192.168.0.2/24")
+    h2_n1 = HostLinkOvsVeth(node_host = h2, node_target = n1, ip = "192.168.0.2/24")
 
     _links.add_link(h1_n1)
-    _links.add_link(h2_n2)
+    _links.add_link(h2_n1)
 
     _nodes.commit()
     _links.commit()
