@@ -200,7 +200,7 @@ class DockerNode(object):
     def delete(self):
         try:
             if DockerNodeApi.status(name = self.name) == "runnig":
-            DockerNodeApi.delete(name = self.name)
+                DockerNodeApi.delete(name = self.name)
             return True
         except Exception as ex:
             return False
