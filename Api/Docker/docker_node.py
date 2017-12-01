@@ -6,112 +6,117 @@ import docker
 from Api.utils import check_not_null, create_namespace
 
 
-class DockerNodeApi(object):
+def _create(name, image, ports = None, volumes = None, cap_app = None):
+    check_not_null(name, "the name cannot be null")
+    check_not_null(image, "the image name cannot be null")
 
-    @staticmethod
-    def create(name, image, ports = None, volumes = None, cap_app = None):
+    client = docker.from_env()
+    client.containers.get()
 
-        check_not_null(name, "the name cannot be null")
-        check_not_null(image, "the image name cannot be null")
+    kwargs = dict()
 
-        client = docker.from_env()
-        client.containers.get()
+    if ports is not None:
+        kwargs.update(ports = ports)
 
-        kwargs = dict()
+    if volumes is not None:
+        kwargs.update(volumes = volumes)
 
-        if ports is not None:
-            kwargs.update(ports = ports)
+    if cap_app is not None:
+        kwargs.update(cap_app = cap_app)
 
-        if volumes is not None:
-            kwargs.update(volumes = volumes)
+    kwargs.update(
+        name = name,
+        hostname = name,
+        detach = True,
+        tty = True,
+        privileged = True,
+        stdin_open = True,
+        network_mode = "none"
+    )
 
-        if cap_app is not None:
-            kwargs.update(cap_app = cap_app)
+    container = client.containers.run(image = image, **kwargs)
+    status = container.attrs["State"]["Status"]
 
-        kwargs.update(
-            name = name,
-            hostname = name,
-            detach = True,
-            tty = True,
-            privileged = True,
-            stdin_open = True,
-            network_mode = "none"
-        )
+    if status.__eq__("running"):
+        pid = container.attrs["State"]["Pid"]
+        create_namespace(pid = pid)
+        return True
+    else:
+        return False
 
-        container = client.containers.run(image = image, **kwargs)
-        status = container.attrs["State"]["Status"]
 
-        if status.__eq__("running"):
-            pid = container.attrs["State"]["Pid"]
-            create_namespace(pid = pid)
-            return True
-        else:
-            return False
+def _delete(name):
+    check_not_null(name, "the container name cannot be null")
+    client = docker.from_env()
+    container = client.containers.get(container_id = name)
+    container.stop()
+    container.remove()
 
-    @staticmethod
-    def delete(name):
-        check_not_null(name, "the container name cannot be null")
-        client = docker.from_env()
-        container = client.containers.get(container_id = name)
-        container.stop()
-        container.remove()
 
-    @staticmethod
-    def pause(name):
-        check_not_null(name, "the container name cannot be null")
-        client = docker.from_env()
-        container = client.containers.get(container_id = name)
-        container.pause()
+def _pause(name):
+    check_not_null(name, "the container name cannot be null")
+    client = docker.from_env()
+    container = client.containers.get(container_id = name)
+    container.pause()
 
-    @staticmethod
-    def resume(name):
-        check_not_null(name, "the container name cannot be null")
-        client = docker.from_env()
-        container = client.containers.get(container_id = name)
-        container.unpause()
 
-    @staticmethod
-    def exec(name, cmd):
-        check_not_null(name, "the container name cannot be null")
-        check_not_null(cmd, "the command cannot be null")
-        client = docker.from_env()
-        container = client.containers.get(container_id = name)
+def _resume(name):
+    check_not_null(name, "the container name cannot be null")
+    client = docker.from_env()
+    container = client.containers.get(container_id = name)
+    container.unpause()
 
-        return container.exec_run(cmd = cmd, tty = True, privileged = True)
 
-    @staticmethod
-    def pid(name):
-        check_not_null(name, "the container name cannot be null")
-        client = docker.from_env()
-        container = client.containers.get(container_id = name)
-        return container.attrs["State"]["Pid"]
+def _exec(name, cmd):
+    check_not_null(name, "the container name cannot be null")
+    check_not_null(cmd, "the command cannot be null")
+    client = docker.from_env()
+    container = client.containers.get(container_id = name)
 
-    @staticmethod
-    def status(name):
-        check_not_null(name, "the container name cannot be null")
-        client = docker.from_env()
-        container = client.containers.get(container_id = name)
-        return container.attrs["State"]["Pid"]
+    return container.exec_run(cmd = cmd, tty = True, privileged = True)
 
-    @staticmethod
-    def id(name):
-        check_not_null(name, "the container name cannot be null")
-        client = docker.from_env()
-        container = client.containers.get(container_id = name)
-        container.rename()
-        return container.short_id
 
-    @staticmethod
-    def shell(name, shell = "bash"):
-        check_not_null(name, "the container name cannot be null")
+def _pid(name):
+    check_not_null(name, "the container name cannot be null")
+    client = docker.from_env()
+    container = client.containers.get(container_id = name)
+    return container.attrs["State"]["Pid"]
 
-        terminal_cmd = "/usr/bin/xterm"
-        docker_cmd = "/usr/bin/docker"
-        if os.path.exists(terminal_cmd) and os.path.exists(docker_cmd):
-            cmd = [terminal_cmd, "-fg", "white", "-bg", "black", "-e", docker_cmd, "exec", "-it", name, shell]
-            subprocess.Popen(cmd)
-        else:
-            raise ValueError("xterm or docker not found")
+
+def _status(name):
+    check_not_null(name, "the container name cannot be null")
+    client = docker.from_env()
+    container = client.containers.get(container_id = name)
+    return container.attrs["State"]["Pid"]
+
+
+def _id(name):
+    check_not_null(name, "the container name cannot be null")
+    client = docker.from_env()
+    container = client.containers.get(container_id = name)
+    container.rename()
+    return container.short_id
+
+
+def _shell(name, shell = "bash"):
+    check_not_null(name, "the container name cannot be null")
+
+    terminal_cmd = "/usr/bin/xterm"
+    docker_cmd = "/usr/bin/docker"
+    if os.path.exists(terminal_cmd) and os.path.exists(docker_cmd):
+        cmd = [terminal_cmd, "-fg", "white", "-bg", "black", "-e", docker_cmd, "exec", "-it", name, shell]
+        subprocess.Popen(cmd)
+    else:
+        raise ValueError("xterm or docker not found")
+
+
+def _rename(name, new_name):
+    check_not_null(name, "the container name cannot be null")
+    check_not_null(new_name, "the container new name cannot be null")
+
+    client = docker.from_env()
+    container = client.containers.get(container_id = name)
+    container.rename(new_name)
 
 
 class DockerNode(object):
@@ -132,9 +137,7 @@ class DockerNode(object):
     def name(self, value):
         if self.__name is not None:
             if self.__name != value:
-                client = docker.from_env()
-                container = client.containers.get(container_id = self.__name)
-                container.rename(value)
+                _rename(name = self.__name, new_name = value)
                 self.__name = value
         else:
             self.__name = value
@@ -185,62 +188,62 @@ class DockerNode(object):
 
     def id(self):
         try:
-            if DockerNodeApi.status(name = self.name) == "running":
-                return DockerNodeApi.id(name = self.name)
+            if _status(name = self.name) == "running":
+                return _id(name = self.name)
         except Exception as ex:
             return None
 
     def add(self):
         try:
-            return DockerNodeApi.create(name = self.name, image = self.image, ports = self.ports,
+            return _create(name = self.name, image = self.image, ports = self.ports,
                                         volumes = self.volumes, cap_app = self.cap_app)
         except Exception as ex:
             return False
 
     def delete(self):
         try:
-            if DockerNodeApi.status(name = self.name) == "runnig":
-                DockerNodeApi.delete(name = self.name)
+            if _status(name = self.name) == "runnig":
+                _delete(name = self.name)
             return True
         except Exception as ex:
             return False
 
     def shell(self, shell = "bash"):
         try:
-            DockerNodeApi.shell(name = self.name, shell = shell)
+            _shell(name = self.name, shell = shell)
         except Exception as ex:
             pass
 
     def status(self):
         try:
-            return DockerNodeApi.status(name = self.name)
+            return _status(name = self.name)
         except Exception as ex:
             return None
 
     def pid(self):
         try:
-            if DockerNodeApi.status(name = self.name) == "running":
-                return DockerNodeApi.pid(name = self.name)
+            if _status(name = self.name) == "running":
+                return _pid(name = self.name)
         except Exception as ex:
             return None
 
     def pause(self):
         try:
-            if DockerNodeApi.status(name = self.name) == "running":
-                DockerNodeApi.pause(name = self.name)
+            if _status(name = self.name) == "running":
+                _pause(name = self.name)
         except Exception as ex:
             pass
 
     def unpause(self):
         try:
-            if DockerNodeApi.status(name = self.name) == "paused":
-                DockerNodeApi.resume(name = self.name)
+            if _status(name = self.name) == "paused":
+                _resume(name = self.name)
         except Exception as ex:
             pass
 
     def exec(self, cmd):
         try:
-            if DockerNodeApi.status(name = self.name) == "running":
-                return DockerNodeApi.exec(name = self.name, cmd = cmd)
+            if _status(name = self.name) == "running":
+                return _exec(name = self.name, cmd = cmd)
         except Exception as ex:
             pass
