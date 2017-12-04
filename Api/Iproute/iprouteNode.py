@@ -118,7 +118,7 @@ class IpRouteNode(object):
     def create_pair(ifname, peer, netns = None, mtu = 1500):
         try:
             _create_pair(ifname, peer, netns, mtu)
-            return True
+            return
         except Exception as ex:
             return False
 

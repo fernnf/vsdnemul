@@ -76,21 +76,21 @@ def _exec(name, cmd):
     return container.exec_run(cmd = cmd, tty = True, privileged = True)
 
 
-def _pid(name):
+def pid(name):
     check_not_null(name, "the container name cannot be null")
     client = docker.from_env()
     container = client.containers.get(container_id = name)
     return container.attrs["State"]["Pid"]
 
 
-def _status(name):
+def status(name):
     check_not_null(name, "the container name cannot be null")
     client = docker.from_env()
     container = client.containers.get(container_id = name)
-    return container.attrs["State"]["Pid"]
+    return container.attrs["State"]["Status"]
 
 
-def _id(name):
+def id(name):
     check_not_null(name, "the container name cannot be null")
     client = docker.from_env()
     container = client.containers.get(container_id = name)
@@ -98,7 +98,7 @@ def _id(name):
     return container.short_id
 
 
-def _shell(name, shell = "bash"):
+def shell(name, shell = "bash"):
     check_not_null(name, "the container name cannot be null")
 
     terminal_cmd = "/usr/bin/xterm"
@@ -110,7 +110,7 @@ def _shell(name, shell = "bash"):
         raise ValueError("xterm or docker not found")
 
 
-def _rename(name, new_name):
+def rename(name, new_name):
     check_not_null(name, "the container name cannot be null")
     check_not_null(new_name, "the container new name cannot be null")
 
@@ -137,7 +137,7 @@ class DockerNode(object):
     def name(self, value):
         if self.__name is not None:
             if self.__name != value:
-                _rename(name = self.__name, new_name = value)
+                rename(name = self.__name, new_name = value)
                 self.__name = value
         else:
             self.__name = value
@@ -188,62 +188,99 @@ class DockerNode(object):
 
     def id(self):
         try:
-            if _status(name = self.name) == "running":
-                return _id(name = self.name)
+            if status(name = self.name) == "running":
+                return id(name = self.name)
         except Exception as ex:
             return None
 
     def add(self):
         try:
             return _create(name = self.name, image = self.image, ports = self.ports,
-                                        volumes = self.volumes, cap_app = self.cap_app)
+                           volumes = self.volumes, cap_app = self.cap_app)
         except Exception as ex:
             return False
 
     def delete(self):
         try:
-            if _status(name = self.name) == "runnig":
+            if status(name = self.name) == "runnig":
                 _delete(name = self.name)
             return True
         except Exception as ex:
             return False
 
-    def shell(self, shell = "bash"):
+    def shell(self, prompt = "bash"):
         try:
-            _shell(name = self.name, shell = shell)
+            shell(name = self.name, shell = prompt)
         except Exception as ex:
             pass
 
     def status(self):
         try:
-            return _status(name = self.name)
+            return status(name = self.name)
         except Exception as ex:
             return None
 
     def pid(self):
         try:
-            if _status(name = self.name) == "running":
-                return _pid(name = self.name)
+            if status(name = self.name) == "running":
+                return pid(name = self.name)
         except Exception as ex:
             return None
 
     def pause(self):
         try:
-            if _status(name = self.name) == "running":
+            if status(name = self.name) == "running":
                 _pause(name = self.name)
         except Exception as ex:
             pass
 
     def unpause(self):
         try:
-            if _status(name = self.name) == "paused":
+            if status(name = self.name) == "paused":
                 _resume(name = self.name)
         except Exception as ex:
             pass
 
     def exec(self, cmd):
         try:
-            if _status(name = self.name) == "running":
+            if status(name = self.name) == "running":
                 return _exec(name = self.name, cmd = cmd)
+        except Exception as ex:
+            pass
+
+
+    @staticmethod
+    def create_node(name, image, ports = None, volumes = None, cap_app = None):
+        try:
+            return _create(name = name, image = image, ports = ports, volumes = volumes, cap_app = cap_app)
+        except Exception as ex:
+            pass
+
+    @staticmethod
+    def delete_node(name):
+        try:
+            _delete(name = name)
+
+        except Exception as ex:
+            pass
+
+    @staticmethod
+    def pause_node(name):
+        try:
+            _pause(name = name)
+        except Exception as ex:
+            pass
+
+    @staticmethod
+    def resume_node(name):
+        try:
+            _resume(name = name)
+        except Exception as ex:
+            pass
+
+    @staticmethod
+    def exec_cmd_node(name, cmd):
+        try:
+            return _exec(name = name, cmd = cmd)
         except Exception as ex:
             pass
