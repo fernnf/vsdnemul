@@ -1,25 +1,25 @@
-import docker
-import pyroute2
 import subprocess
 
+import docker
+
+from Api.Utils import check_not_null, create_namespace, delete_namespace
 from log import Logger
-from utils import check_not_null, create_namespace, delete_namespace
 
-_client_docker = docker.from_env()
-_client_iproute = pyroute2.IPRoute()
 
+def _get_client_docker():
+    return docker.from_env()
 
 # noinspection PyAttributeOutsideInit
 class Node(object):
     logger = Logger.logger("Node")
 
-    def __init__(self, label = None, type = None, service = None, image = None, volume = None, cap_add=None):
-        self.label = label
-        self.node_type = type
-        self.service = service
-        self.image = image
-        self.volume = volume
-        self.cap_add= cap_add
+    def __init__(self, label = None, type = None, service = None, image = None, volume = None, cap_add = None):
+        self.__label = label
+        self.__type = type
+        self.__service = service
+        self.__image = image
+        self.__volume = volume
+        self.__cap_add = cap_add
 
     @property
     def image(self):
@@ -38,11 +38,11 @@ class Node(object):
         self.__label = check_not_null(value = value, msg = "the label node cannot be null")
 
     @property
-    def node_type(self):
+    def type(self):
         return self.__type
 
-    @node_type.setter
-    def node_type(self, value):
+    @type.setter
+    def type(self, value):
         self.__type = check_not_null(value = value, msg = "the type node cannot be null")
 
     @property
@@ -55,7 +55,7 @@ class Node(object):
     @property
     def service_exposed_port(self):
         try:
-            return ApiNode.has_node_service_exposed_port(label = self.label, service_port = self.service)
+            return ApiNode.has_node_service_exposed_port(label = self.label, service_port = self.__service)
         except Exception as ex:
             self.logger.error(ex.args[0])
 
@@ -97,8 +97,10 @@ class Node(object):
 class ApiNode(object):
     @staticmethod
     def create_node(label, image, service, volume, cap_add):
+        client = _get_client_docker()
         if volume is not None:
-            _client_docker.containers \
+
+            client.containers \
                 .run(image = image,
                      hostname = label,
                      name = label,
@@ -107,7 +109,7 @@ class ApiNode(object):
                      detach = True,
                      tty = True,
                      cap_add = cap_add,
-                     network_mode= "bridge",
+                     network_mode = "bridge",
                      stdin_open = True,
                      privileged = True)
 
@@ -184,7 +186,7 @@ class ApiNode(object):
 
     @staticmethod
     def get_node_prompt(label):
-        cmd = ["/usr/bin/xterm","-fg","white","-bg","black", "-e","/usr/bin/docker","exec","-it",label,"bash"]
+        cmd = ["/usr/bin/xterm", "-fg", "white", "-bg", "black", "-e", "/usr/bin/docker", "exec", "-it", label, "bash"]
         subprocess.Popen(cmd)
 
 

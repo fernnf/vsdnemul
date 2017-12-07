@@ -1,8 +1,11 @@
 import os
 import subprocess
 
-from Api.Docker import dockerNode
-from Api.utils import check_not_null
+from Api.Log.LogApi import logging
+from Api.Docker import DockerApi
+from Api.Utils import check_not_null
+
+logger = logging.getLogger("OvsdbApi")
 
 
 def _exec_action(ctl, cmd, netns = None):
@@ -21,7 +24,7 @@ def _exec_action(ctl, cmd, netns = None):
             raise EnvironmentError("command not found")
 
     else:
-        ret = dockerNode._exec(name = netns, cmd = cmd)
+        ret = DockerApi._exec(name = netns, cmd = cmd)
         if len(ret) is not 0:
             raise RuntimeError("error: {err}".format(err = ret.decode()))
 
@@ -77,7 +80,7 @@ def _del_bridge(bridge, netns = None):
     _exec_action(ctl = ovsctl, cmd = cmd_del_bridge, netns = netns)
 
 
-def _add_port(bridge, port_name, netns = None):
+def _add_port_br(bridge, port_name, netns = None):
     check_not_null(bridge, "the bridge name cannot be null")
     check_not_null(port_name, "the port name cannot be null")
     ovsctl = "/usr/bin/ovs-vsctl"
@@ -86,7 +89,7 @@ def _add_port(bridge, port_name, netns = None):
     _exec_action(ctl = ovsctl, cmd = cmd_add_port, netns = netns)
 
 
-def _rem_port(bridge, port_name, netns = None):
+def _rem_port_br(bridge, port_name, netns = None):
     check_not_null(bridge, "the bridge name cannot be null")
     check_not_null(port_name, "the port name cannot be null")
     ovsctl = "/usr/bin/ovs-vsctl"
@@ -114,7 +117,7 @@ def _add_port_ns(bridge, netns, intf_name, ip = None, gateway = None, mtu = 1500
     if mtu is not None:
         cmd_add_port_ns = cmd_add_port_ns + "--mtu={mtu} ".format(mtu = mtu)
 
-    if dockerNode.status(name = netns) is "running":
+    if DockerApi._status(name = netns) is "running":
 
         ret = subprocess.Popen(cmd_add_port_ns, shell = True)
         ret.wait()
@@ -137,7 +140,7 @@ def _del_port_ns(bridge, netns, intf_name):
                                                                          ctl = ovsdocker,
                                                                          ifname = intf_name,
                                                                          netns = netns)
-    if dockerNode.status(name = netns) is "running":
+    if DockerApi._status(name = netns) is "running":
 
         ret = subprocess.Popen(cmd_del_port_ns, shell = True)
         ret.wait()
@@ -166,6 +169,7 @@ class OvsdbNode(object):
             _del_manager(netns = netns)
             return True
         except Exception as ex:
+            logger.error(ex.args[1])
             return False
 
     @staticmethod
@@ -196,23 +200,23 @@ class OvsdbNode(object):
     def del_bridge(bridge, netns = None):
         try:
             _del_bridge(bridge = bridge, netns = netns)
-
+            return True
         except Exception as ex:
             return False
 
     @staticmethod
-    def add_port(bridge, port_name, netns = None):
+    def add_port_br(bridge, port_name, netns = None):
         try:
-            _add_port(bridge = bridge, port_name = port_name, netns = netns)
+            _add_port_br(bridge = bridge, port_name = port_name, netns = netns)
             return True
 
         except Exception as ex:
             return False
 
     @staticmethod
-    def rem_port(bridge, port_name, netns = None):
+    def rem_port_br(bridge, port_name, netns = None):
         try:
-            _rem_port(bridge = bridge, port_name = port_name, netns = netns)
+            _rem_port_br(bridge = bridge, port_name = port_name, netns = netns)
             return True
 
         except Exception as ex:
@@ -234,4 +238,5 @@ class OvsdbNode(object):
 
         except Exception as ex:
             return False
+
 

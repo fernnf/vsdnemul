@@ -3,7 +3,10 @@ import subprocess
 
 import docker
 
-from Api.utils import check_not_null, create_namespace
+from Api.Log.LogApi import get_logger
+from Api.Utils import check_not_null, create_namespace
+
+logger = get_logger("DockerApi")
 
 
 def _create(name, image, ports = None, volumes = None, cap_app = None):
@@ -76,29 +79,28 @@ def _exec(name, cmd):
     return container.exec_run(cmd = cmd, tty = True, privileged = True)
 
 
-def pid(name):
+def _pid(name):
     check_not_null(name, "the container name cannot be null")
     client = docker.from_env()
     container = client.containers.get(container_id = name)
     return container.attrs["State"]["Pid"]
 
 
-def status(name):
+def _status(name):
     check_not_null(name, "the container name cannot be null")
     client = docker.from_env()
     container = client.containers.get(container_id = name)
     return container.attrs["State"]["Status"]
 
 
-def id(name):
+def _id(name):
     check_not_null(name, "the container name cannot be null")
     client = docker.from_env()
     container = client.containers.get(container_id = name)
-    container.rename()
     return container.short_id
 
 
-def shell(name, shell = "bash"):
+def _shell(name, shell = "bash"):
     check_not_null(name, "the container name cannot be null")
 
     terminal_cmd = "/usr/bin/xterm"
@@ -110,7 +112,7 @@ def shell(name, shell = "bash"):
         raise ValueError("xterm or docker not found")
 
 
-def rename(name, new_name):
+def _rename(name, new_name):
     check_not_null(name, "the container name cannot be null")
     check_not_null(new_name, "the container new name cannot be null")
 
@@ -119,134 +121,14 @@ def rename(name, new_name):
     container.rename(new_name)
 
 
-class DockerNode(object):
+class DockerApi(object):
 
-    def __init__(self, name, image, ports = None, volumes = None, cap_app = None):
-
-        self.name = name
-        self.image = image
-        self.ports = ports
-        self.volumes = volumes
-        self.cap_app = cap_app
-
-    @property
-    def name(self):
-        return self.__name
-
-    @name.setter
-    def name(self, value):
-        if self.__name is not None:
-            if self.__name != value:
-                rename(name = self.__name, new_name = value)
-                self.__name = value
-        else:
-            self.__name = value
-
-    @property
-    def image(self):
-        return self.__image
-
-    @image.setter
-    def image(self, value):
-        if self.__image is None:
-            self.__image = value
-        else:
-            pass
-
-    @property
-    def ports(self):
-        return self.__ports
-
-    @ports.setter
-    def ports(self, value):
-        if self.__ports is None:
-            self.__ports = value
-        else:
-            pass
-
-    @property
-    def volumes(self):
-        return self.__volumes
-
-    @volumes.setter
-    def volumes(self, value):
-        if self.__volumes is None:
-            self.__volumes = value
-        else:
-            pass
-
-    @property
-    def cap_app(self):
-        return self.__cap_app
-
-    @cap_app.setter
-    def cap_app(self, value):
-        if self.__cap_app is None:
-            self.__cap_app = value
-        else:
-            pass
-
-    def id(self):
+    @staticmethod
+    def get_id(name):
         try:
-            if status(name = self.name) == "running":
-                return id(name = self.name)
+            return _id(name = name)
         except Exception as ex:
-            return None
-
-    def add(self):
-        try:
-            return _create(name = self.name, image = self.image, ports = self.ports,
-                           volumes = self.volumes, cap_app = self.cap_app)
-        except Exception as ex:
-            return False
-
-    def delete(self):
-        try:
-            if status(name = self.name) == "runnig":
-                _delete(name = self.name)
-            return True
-        except Exception as ex:
-            return False
-
-    def shell(self, prompt = "bash"):
-        try:
-            shell(name = self.name, shell = prompt)
-        except Exception as ex:
-            pass
-
-    def status(self):
-        try:
-            return status(name = self.name)
-        except Exception as ex:
-            return None
-
-    def pid(self):
-        try:
-            if status(name = self.name) == "running":
-                return pid(name = self.name)
-        except Exception as ex:
-            return None
-
-    def pause(self):
-        try:
-            if status(name = self.name) == "running":
-                _pause(name = self.name)
-        except Exception as ex:
-            pass
-
-    def unpause(self):
-        try:
-            if status(name = self.name) == "paused":
-                _resume(name = self.name)
-        except Exception as ex:
-            pass
-
-    def exec(self, cmd):
-        try:
-            if status(name = self.name) == "running":
-                return _exec(name = self.name, cmd = cmd)
-        except Exception as ex:
-            pass
+            logger.error(str(ex.args[1]))
 
 
     @staticmethod
@@ -254,7 +136,7 @@ class DockerNode(object):
         try:
             return _create(name = name, image = image, ports = ports, volumes = volumes, cap_app = cap_app)
         except Exception as ex:
-            pass
+            logger.error(str(ex.args[1]))
 
     @staticmethod
     def delete_node(name):
@@ -262,25 +144,25 @@ class DockerNode(object):
             _delete(name = name)
 
         except Exception as ex:
-            pass
+            logger.error(str(ex.args[1]))
 
     @staticmethod
     def pause_node(name):
         try:
             _pause(name = name)
         except Exception as ex:
-            pass
+            logger.error(str(ex.args[1]))
 
     @staticmethod
     def resume_node(name):
         try:
             _resume(name = name)
         except Exception as ex:
-            pass
+            logger.error(str(ex.args[1]))
 
     @staticmethod
-    def exec_cmd_node(name, cmd):
+    def run_cmd(name, cmd):
         try:
             return _exec(name = name, cmd = cmd)
         except Exception as ex:
-            pass
+            logger.error(str(ex.args[1]))

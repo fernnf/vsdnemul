@@ -1,6 +1,18 @@
 from pyroute2 import IPDB, NetNS
 
-from Api.utils import check_not_null
+from Api.Utils import check_not_null
+
+
+def _add_port_ns(ifname, netns):
+    check_not_null(ifname, "the interface name cannot be null")
+    check_not_null(netns, "the namespace node cannot be null")
+
+    ip = IPDB()
+
+    with ip.interfaces[ifname] as ns:
+        ns.net_ns_fd = ifname
+
+    ip.release()
 
 
 def _create_pair(ifname, peer, netns = None, mtu = 1500):
@@ -18,9 +30,10 @@ def _create_pair(ifname, peer, netns = None, mtu = 1500):
         veth.set_mtu(mtu)
         veth.up()
 
-    with ip.interfaces[peer] as veth_peer:
-        veth_peer.set_mtu(mtu)
-        veth_peer.up()
+    if peer is not None:
+        with ip.interfaces[peer] as veth_peer:
+            veth_peer.set_mtu(mtu)
+            veth_peer.up()
 
     ip.release()
 
@@ -39,7 +52,7 @@ def _create_bridge(ifname, slaves = [], mtu = 1500, netns = None):
     with ip.interfaces[ifname] as bridge:
         if len(slaves) > 0:
             for intf in slaves:
-                bridge.add_port(intf)
+                bridge.add_port_br(intf)
 
             bridge.set_mtu(mtu)
             bridge.up()
@@ -61,7 +74,7 @@ def _bridge_add_port(master, slaves = [], netns = None):
     with ip.interfaces[master] as bridge:
         if len(slaves) > 0:
             for interface in slaves:
-                bridge.add_port(interface)
+                bridge.add_port_br(interface)
 
     ip.release()
 
@@ -112,7 +125,7 @@ def _config_ip_address(ifname, ip_addr, gateway = None, netns = None):
     ip.release()
 
 
-class IpRouteNode(object):
+class IpRouteApi(object):
 
     @staticmethod
     def create_pair(ifname, peer, netns = None, mtu = 1500):
@@ -159,6 +172,14 @@ class IpRouteNode(object):
     def config_ip_address(ifname, ip_addr, gateway = None, netns = None):
         try:
             _config_ip_address(ifname, ip_addr, gateway, netns)
+            return True
+        except Exception as ex:
+            return False
+
+    @staticmethod
+    def add_port_ns(ifname, netns):
+        try:
+            _add_port_ns(ifname = ifname, netns = netns)
             return True
         except Exception as ex:
             return False

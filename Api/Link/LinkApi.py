@@ -46,7 +46,7 @@ class Link(object):
 
     @property
     def port_target(self):
-        return self.node_target.label + "-" + self.node_source.label
+        return self.node_target + "-" + self.node_source
 
     @port_target.setter
     def port_target(self, value):
