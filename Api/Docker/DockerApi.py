@@ -4,7 +4,7 @@ import subprocess
 import docker
 
 from Api.Log.LogApi import get_logger
-from Api.Utils import check_not_null, create_namespace
+from Api.Utils import check_not_null, create_namespace, delete_namespace
 
 logger = get_logger("DockerApi")
 
@@ -52,6 +52,8 @@ def _delete(name):
     check_not_null(name, "the container name cannot be null")
     client = docker.from_env()
     container = client.containers.get(container_id = name)
+    pid = container.attrs["State"]["Pid"]
+    delete_namespace(pid = pid)
     container.stop()
     container.remove()
 
@@ -103,11 +105,12 @@ def _id(name):
 def _shell(name, shell = "bash"):
     check_not_null(name, "the container name cannot be null")
 
-    terminal_cmd = "/usr/bin/xterm"
-    docker_cmd = "/usr/bin/docker"
+    terminal_cmd = "/usr/bin/xterm "
+    docker_cmd = "/usr/bin/docker "
     if os.path.exists(terminal_cmd) and os.path.exists(docker_cmd):
-        cmd = [terminal_cmd, "-fg", "white", "-bg", "black", "-e", docker_cmd, "exec", "-it", name, shell]
-        subprocess.Popen(cmd)
+        cmd = ["{cmd} -fg white -bg black -fa 'Liberation Mono' -fs 10 -e  {d_cmd} exec -it {node_name} {shell}"
+                   .format(cmd = terminal_cmd, d_cmd = docker_cmd, node_name = name, shell = shell)]
+        subprocess.Popen(cmd, shell = True)
     else:
         raise ValueError("xterm or docker not found")
 
@@ -129,7 +132,6 @@ class DockerApi(object):
             return _id(name = name)
         except Exception as ex:
             logger.error(str(ex.args[1]))
-
 
     @staticmethod
     def create_node(name, image, ports = None, volumes = None, cap_app = None):
@@ -166,3 +168,31 @@ class DockerApi(object):
             return _exec(name = name, cmd = cmd)
         except Exception as ex:
             logger.error(str(ex.args[1]))
+
+    @staticmethod
+    def get_pid_node(name):
+        try:
+            return _pid(name = name)
+        except Exception as ex:
+            logger.error(str(ex.args[1]))
+
+    @staticmethod
+    def get_status_node(name):
+        try:
+            return _status(name = name)
+        except Exception as ex:
+            logger.error(ex.args[1])
+
+    @staticmethod
+    def get_shell(name, shell = "bash"):
+        try:
+            _shell(name = name, shell = shell)
+        except Exception as ex:
+            logger.error(ex.args[1])
+
+    @staticmethod
+    def rename_node(name, new_name):
+        try:
+            _rename(name = name, new_name = new_name)
+        except Exception as ex:
+            logger.error(ex.args[1])

@@ -1,19 +1,15 @@
-import subprocess
 
-import docker
 
 from Api.Utils import check_not_null, create_namespace, delete_namespace
 from log import Logger
 
+logger = Logger.logger("Node")
 
-def _get_client_docker():
-    return docker.from_env()
 
-# noinspection PyAttributeOutsideInit
 class Node(object):
     logger = Logger.logger("Node")
 
-    def __init__(self, label = None, type = None, service = None, image = None, volume = None, cap_add = None):
+    def __init__(self, label, type = None, service = None, image = None, volume = None, cap_add = None):
         self.__label = label
         self.__type = type
         self.__service = service
@@ -92,102 +88,6 @@ class Node(object):
     @volume.setter
     def volume(self, value):
         self.__volume = value
-
-
-class ApiNode(object):
-    @staticmethod
-    def create_node(label, image, service, volume, cap_add):
-        client = _get_client_docker()
-        if volume is not None:
-
-            client.containers \
-                .run(image = image,
-                     hostname = label,
-                     name = label,
-                     ports = service,
-                     volumes = volume,
-                     detach = True,
-                     tty = True,
-                     cap_add = cap_add,
-                     network_mode = "bridge",
-                     stdin_open = True,
-                     privileged = True)
-
-        else:
-            _client_docker.containers \
-                .run(image = image,
-                     hostname = label,
-                     name = label,
-                     ports = service,
-                     detach = True,
-                     tty = True,
-                     cap_add = cap_add,
-                     network_mode = "bridge",
-                     stdin_open = True,
-                     privileged = True)
-
-        status = ApiNode.node_status(label = label)
-
-        if status == "running":
-            pid = ApiNode.has_node_pid(label = label)
-            create_namespace(pid = pid)
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def delete_node(label):
-        container = _client_docker.containers.get(label)
-        delete_namespace(ApiNode.has_node_pid(label = label))
-        container.stop()
-        container.remove()
-
-    @staticmethod
-    def node_pause(label):
-        container = _client_docker.containers.get(label)
-        container.pause()
-
-    @staticmethod
-    def node_resume(label):
-        container = _client_docker.containers.get(label)
-        container.unpause()
-
-    @staticmethod
-    def node_status(label):
-        container = _client_docker.containers.get(label)
-        return container.status
-
-    @staticmethod
-    def has_node_pid(label):
-        container = _client_docker.containers.get(label)
-        return container.attrs["State"]["Pid"]
-
-    @staticmethod
-    def has_node_ip_management(label):
-        container = _client_docker.containers.get(label)
-        return container.attrs['NetworkSettings']['IPAddress']
-
-    @staticmethod
-    def has_node_service_exposed_port(label, service_port):
-
-        container = _client_docker.containers.get(label)
-        service = service_port
-
-        for k, v in service_port.items():
-            service[k] = container.attrs['NetworkSettings']['Ports'][k][0]['HostPort']
-
-        return service
-
-    @staticmethod
-    def node_send_cmd(label, cmd):
-        container = _client_docker.containers.get(label)
-        ret = container.exec_run(cmd = cmd, tty = True, privileged = True)
-        return ret
-
-    @staticmethod
-    def get_node_prompt(label):
-        cmd = ["/usr/bin/xterm", "-fg", "white", "-bg", "black", "-e", "/usr/bin/docker", "exec", "-it", label, "bash"]
-        subprocess.Popen(cmd)
 
 
 class NodeGroup(object):

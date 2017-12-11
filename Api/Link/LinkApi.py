@@ -1,15 +1,17 @@
-from utils import check_not_null
+from Api.Utils import check_not_null
 import uuid
 from log import Logger
+
+from Api.Node.NodeApi import Node
 
 
 class Link(object):
     logger = Logger.logger("Link")
 
-    def __init__(self, type, node_source = None, node_target = None):
-        self.node_source = node_source
-        self.node_target = node_target
-        self.type = type
+    def __init__(self, type, node_source: Node, node_target: Node):
+        self.__node_source = node_source
+        self.__node_target = node_target
+        self.__type = type
         self.__id = str(uuid.uuid4())[0:8]
 
     @property
