@@ -131,7 +131,7 @@ class IpRouteApi(object):
     def create_pair(ifname, peer, netns = None, mtu = 1500):
         try:
             _create_pair(ifname, peer, netns, mtu)
-            return
+            return True
         except Exception as ex:
             return False
 
@@ -183,3 +183,4 @@ class IpRouteApi(object):
             return True
         except Exception as ex:
             return False
+

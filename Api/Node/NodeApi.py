@@ -1,13 +1,12 @@
 
 
 from Api.Utils import check_not_null, create_namespace, delete_namespace
+from Api.Docker.DockerApi import DockerApi
 from log import Logger
 
 logger = Logger.logger("Node")
 
-
 class Node(object):
-    logger = Logger.logger("Node")
 
     def __init__(self, label, type = None, service = None, image = None, volume = None, cap_add = None):
         self.__label = label
@@ -42,32 +41,25 @@ class Node(object):
         self.__type = check_not_null(value = value, msg = "the type node cannot be null")
 
     @property
-    def control_ip(self):
+    def service_exposed(self):
         try:
-            return ApiNode.has_node_ip_management(label = self.label)
+            return DockerApi.services_node(name = self.label)
         except Exception as ex:
-            self.logger.error(ex.args[0])
-
-    @property
-    def service_exposed_port(self):
-        try:
-            return ApiNode.has_node_service_exposed_port(label = self.label, service_port = self.__service)
-        except Exception as ex:
-            self.logger.error(ex.args[0])
+            logger.error(ex.args[0])
 
     @property
     def node_pid(self):
         try:
-            return ApiNode.has_node_pid(label = self.label)
+            return DockerApi.get_pid_node(name = self.label)
         except Exception as ex:
-            self.logger.error(ex.args[0])
+            logger.error(ex.args[0])
 
     @property
     def node_status(self):
         try:
-            return ApiNode.node_status(label = self.label)
+            return DockerApi.get_status_node(name = self.label)
         except Exception as ex:
-            self.logger.error(ex.args[0])
+            logger.error(ex.args[0])
 
     def send_cmd(self, cmd = None):
         try:

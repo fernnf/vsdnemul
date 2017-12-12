@@ -2,7 +2,7 @@ import os
 import subprocess
 
 from Api.Log.LogApi import logging
-from Api.Docker import DockerApi
+from Api.Docker.DockerApi import DockerApi
 from Api.Utils import check_not_null
 
 logger = logging.getLogger("OvsdbApi")
@@ -24,7 +24,7 @@ def _exec_action(ctl, cmd, netns = None):
             raise EnvironmentError("command not found")
 
     else:
-        ret = DockerApi._exec(name = netns, cmd = cmd)
+        ret = DockerApi.run_cmd(name = netns, cmd = cmd)
         if len(ret) is not 0:
             raise RuntimeError("error: {err}".format(err = ret.decode()))
 
@@ -117,7 +117,7 @@ def _add_port_ns(bridge, netns, intf_name, ip = None, gateway = None, mtu = 1500
     if mtu is not None:
         cmd_add_port_ns = cmd_add_port_ns + "--mtu={mtu} ".format(mtu = mtu)
 
-    if DockerApi._status(name = netns) is "running":
+    if DockerApi.get_status_node(name = netns) is "running":
 
         ret = subprocess.Popen(cmd_add_port_ns, shell = True)
         ret.wait()

@@ -77,7 +77,6 @@ def _exec(name, cmd):
     check_not_null(cmd, "the command cannot be null")
     client = docker.from_env()
     container = client.containers.get(container_id = name)
-
     return container.exec_run(cmd = cmd, tty = True, privileged = True)
 
 
@@ -124,6 +123,13 @@ def _rename(name, new_name):
     container.rename(new_name)
 
 
+def _services(name):
+    check_not_null(name, "the container name cannot be null")
+    client = docker.from_env()
+    container = client.containers.get(container_id = name)
+    return container.attrs["Config"]["ExposedPorts"]
+
+
 class DockerApi(object):
 
     @staticmethod
@@ -132,6 +138,7 @@ class DockerApi(object):
             return _id(name = name)
         except Exception as ex:
             logger.error(str(ex.args[1]))
+            return None
 
     @staticmethod
     def create_node(name, image, ports = None, volumes = None, cap_app = None):
@@ -139,6 +146,7 @@ class DockerApi(object):
             return _create(name = name, image = image, ports = ports, volumes = volumes, cap_app = cap_app)
         except Exception as ex:
             logger.error(str(ex.args[1]))
+            return None
 
     @staticmethod
     def delete_node(name):
@@ -168,6 +176,7 @@ class DockerApi(object):
             return _exec(name = name, cmd = cmd)
         except Exception as ex:
             logger.error(str(ex.args[1]))
+            return None
 
     @staticmethod
     def get_pid_node(name):
@@ -175,24 +184,35 @@ class DockerApi(object):
             return _pid(name = name)
         except Exception as ex:
             logger.error(str(ex.args[1]))
+            return None
 
     @staticmethod
     def get_status_node(name):
         try:
             return _status(name = name)
         except Exception as ex:
-            logger.error(ex.args[1])
+            logger.error(str(ex.args[1]))
+            return None
 
     @staticmethod
     def get_shell(name, shell = "bash"):
         try:
             _shell(name = name, shell = shell)
         except Exception as ex:
-            logger.error(ex.args[1])
+            logger.error(str(ex.args[1]))
 
     @staticmethod
     def rename_node(name, new_name):
         try:
             _rename(name = name, new_name = new_name)
         except Exception as ex:
-            logger.error(ex.args[1])
+            logger.error(str(ex.args[1]))
+
+    @staticmethod
+    def services_node(name):
+        try:
+            return _services(name = name)
+        except Exception as ex:
+            logger.error(str(ex.args[1]))
+            return None
+
