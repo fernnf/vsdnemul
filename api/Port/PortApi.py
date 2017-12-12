@@ -1,4 +1,4 @@
-from Api.Utils import check_not_null
+from api.utils import check_not_null
 
 
 class Port(object):

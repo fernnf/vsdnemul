@@ -1,12 +1,12 @@
-from Api.Utils import check_not_null
+from api.utils import check_not_null
 import uuid
 from log import Logger
 
-from Api.Node.NodeApi import Node
+from api.node.nodeapi import Node
 
 
 class Link(object):
-    logger = Logger.logger("Link")
+    logger = Logger.logger("link")
 
     def __init__(self, type, node_source: Node, node_target: Node):
         self.__node_source = node_source

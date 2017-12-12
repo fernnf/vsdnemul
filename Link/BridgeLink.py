@@ -1,7 +1,7 @@
 
-from Api.Link.LinkApi import Link
-from Api.Iproute.IprouteApi import IpRouteApi
-from Api.Ovsdb.OvsdbApi import OvsdbNode
+from api.link.linkapi import Link
+from api.iproute.iprouteapi import IpRouteApi
+from api.ovsdb.ovsdbapi import OvsdbNode
 
 
 class DirectLinkBridge(Link):

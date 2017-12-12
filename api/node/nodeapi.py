@@ -1,10 +1,10 @@
 
 
-from Api.Utils import check_not_null, create_namespace, delete_namespace
-from Api.Docker.DockerApi import DockerApi
+from api.utils import check_not_null, create_namespace, delete_namespace
+from api.docker.dockerapi import DockerApi
 from log import Logger
 
-logger = Logger.logger("Node")
+logger = Logger.logger("node")
 
 class Node(object):
 

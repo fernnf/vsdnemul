@@ -1,7 +1,7 @@
-from Api.Link.LinkApi import Link
+from api.link.linkapi import Link
 from log import Logger
-from Api.Ovsdb.OvsdbApi import OvsdbNode
-from Api.Utils import check_not_null
+from api.ovsdb.ovsdbapi import OvsdbNode
+from api.utils import check_not_null
 
 
 class DirectLinkOvs(Link):

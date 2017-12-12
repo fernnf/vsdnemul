@@ -3,8 +3,8 @@ import subprocess
 
 import docker
 
-from Api.Log.LogApi import get_logger
-from Api.Utils import check_not_null, create_namespace, delete_namespace
+from api.log.logapi import get_logger
+from api.utils import check_not_null, create_namespace, delete_namespace
 
 logger = get_logger("DockerApi")
 

@@ -1,6 +1,6 @@
 from pyroute2 import IPDB, NetNS
 
-from Api.Utils import check_not_null
+from api.utils import check_not_null
 
 
 def _add_port_ns(ifname, netns):

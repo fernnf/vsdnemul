@@ -1,6 +1,6 @@
-from Api.Port.PortApi import Port
-from Api.Iproute.IprouteApi import IpRouteApi
-from Api.Log.LogApi import get_logger
+from api.Port.PortApi import Port
+from api.iproute.iprouteapi import IpRouteApi
+from api.log.logapi import get_logger
 
 
 class VethPort(Port):

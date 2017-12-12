@@ -1,9 +1,9 @@
 import os
 import subprocess
 
-from Api.Log.LogApi import logging
-from Api.Docker.DockerApi import DockerApi
-from Api.Utils import check_not_null
+from api.log.logapi import logging
+from api.docker.dockerapi import DockerApi
+from api.utils import check_not_null
 
 logger = logging.getLogger("OvsdbApi")
 
