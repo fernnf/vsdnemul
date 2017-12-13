@@ -1,12 +1,12 @@
-from Link.vethlink import DirectLinkOvsVeth, HostLinkOvsVeth
-from Link.link import LinkGroup
-from Node.node import NodeGroup
-from Node.host import Host
-from Node.whitebox import WhiteBox
+from link.vethlink import DirectLinkOvsVeth, HostLinkOvsVeth
+from link.link import LinkGroup
+from node.node import NodeGroup
+from node.host import Host
+from node.whitebox import WhiteBox
 from Command.command import Prompt
 from log import Logger
 
-from Node.onos import Onos
+from node.onos import Onos
 
 #from dataplane import Dataplane
 

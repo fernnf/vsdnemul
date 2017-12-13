@@ -1,4 +1,4 @@
-from api.Port.PortApi import Port
+from api.port.portapi import Port
 from api.iproute.iprouteapi import IpRouteApi
 from api.log.logapi import get_logger
 
@@ -28,9 +28,9 @@ class VethPort(Port):
     def delete_port(self, netns=None):
         try:
             if netns is None:
-                IpRouteApi.delete_interface(self.ifname)
+                IpRouteApi.delete_port(self.ifname)
             else:
-                IpRouteApi.delete_interface(self.ifname, netns = netns)
+                IpRouteApi.delete_port(self.ifname, netns = netns)
         except Exception as ex:
             self.logger.error(ex.args[0])
 

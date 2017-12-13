@@ -1,9 +1,9 @@
 from cmd2 import Cmd, make_option, options
-from Link.link import LinkGroup
-from Link.vethlink import HostLinkOvsVeth, DirectLinkOvsVeth
-from Node.node import NodeGroup, ApiNode
-from Node.whitebox import WhiteBox
-from Node.host import Host
+from link.link import LinkGroup
+from link.vethlink import HostLinkOvsVeth, DirectLinkOvsVeth
+from node.node import NodeGroup, ApiNode
+from node.whitebox import WhiteBox
+from node.host import Host
 from utils import equals_ignore_case
 
 
@@ -152,10 +152,10 @@ class Prompt(Cmd):
 
         output = """
         ID: {id}
-        Source Node: {src_node}
-        Target Node: {tgt_node}
-        Source Port: {src_port}
-        Target Port: {tgt_port}
+        Source node: {src_node}
+        Target node: {tgt_node}
+        Source port: {src_port}
+        Target port: {tgt_port}
         """
 
         def print_link(link):

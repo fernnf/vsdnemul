@@ -1,14 +1,17 @@
 from pyroute2 import IPDB, NetNS
 
+from api.log.logapi import get_logger
+
 from api.utils import check_not_null
 
+
+logger =  get_logger("IpRouteApi")
 
 def _add_port_ns(ifname, netns):
     check_not_null(ifname, "the interface name cannot be null")
     check_not_null(netns, "the namespace node cannot be null")
 
     ip = IPDB()
-
     with ip.interfaces[ifname] as ns:
         ns.net_ns_fd = ifname
 
@@ -18,6 +21,7 @@ def _add_port_ns(ifname, netns):
 def _create_pair(ifname, peer, netns = None, mtu = 1500):
     check_not_null(ifname, "the interface name cannot be null")
     check_not_null(ifname, "the peer interface name cannot be null")
+
     ip = None
     if netns is None:
         ip = IPDB()
@@ -38,7 +42,7 @@ def _create_pair(ifname, peer, netns = None, mtu = 1500):
     ip.release()
 
 
-def _create_bridge(ifname, slaves = [], mtu = 1500, netns = None):
+def _create_bridge(ifname, slaves = [], netns = None, mtu = 1500):
     check_not_null(ifname, "the interface name cannot be null")
 
     ip = None
@@ -55,7 +59,6 @@ def _create_bridge(ifname, slaves = [], mtu = 1500, netns = None):
                 bridge.add_port_br(intf)
 
             bridge.set_mtu(mtu)
-            bridge.up()
 
         bridge.up()
 
@@ -130,50 +133,47 @@ class IpRouteApi(object):
     @staticmethod
     def create_pair(ifname, peer, netns = None, mtu = 1500):
         try:
-            _create_pair(ifname, peer, netns, mtu)
+            _create_pair(ifname = ifname, peer = peer, netns = netns, mtu = mtu)
             return True
         except Exception as ex:
+            logger.error(str(ex.args[1]))
             return False
 
     @staticmethod
-    def create_bridge(ifname, slaves = [], mtu = 1500, netns = None):
+    def create_bridge(ifname, slaves = [], netns = None, mtu = 1500):
 
         try:
-            _create_bridge(ifname, slaves, mtu, netns)
+            _create_bridge(ifname = ifname, slaves = slaves, netns = netns, mtu = mtu)
             return True
         except Exception as ex:
+            logger.error(str(ex.args[1]))
             return False
 
     @staticmethod
     def bridge_add_port(master, slaves = [], netns = None):
         try:
-            _bridge_add_port(master, slaves, netns)
+            _bridge_add_port(master = master, slaves = slaves, netns = netns)
             return True
         except Exception as ex:
+            logger.error(str(ex.args[1]))
             return False
 
     @staticmethod
     def bridge_del_port(master, slaves = [], netns = None):
         try:
-            _bridge_del_port(master, slaves, netns)
+            _bridge_del_port(master = master, slaves = slaves, netns = netns)
             return True
         except Exception as ex:
+            logger.error(str(ex.args[1]))
             return False
 
     @staticmethod
-    def delete_interface(ifname, netns = None):
+    def delete_port(ifname, netns = None):
         try:
-            _delete_interface(ifname, netns)
+            _delete_interface(ifname = ifname, netns = netns)
             return True
         except Exception as ex:
-            return False
-
-    @staticmethod
-    def config_ip_address(ifname, ip_addr, gateway = None, netns = None):
-        try:
-            _config_ip_address(ifname, ip_addr, gateway, netns)
-            return True
-        except Exception as ex:
+            logger.error(str(ex.args[1]))
             return False
 
     @staticmethod
@@ -182,5 +182,5 @@ class IpRouteApi(object):
             _add_port_ns(ifname = ifname, netns = netns)
             return True
         except Exception as ex:
+            logger.error(str(ex.args[1]))
             return False
-

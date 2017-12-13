@@ -62,7 +62,7 @@ class Link(object):
     def type(self, value):
         self.__type = check_not_null(value = value, msg = "type of link cannot be null")
 
-
+"""
 class LinkGroup(object):
 
     logger = Logger.logger("LinkGroup")
@@ -99,3 +99,4 @@ class LinkGroup(object):
             for k, v in self.__links.items():
                 self.logger.info("removing link ({label})".format(label = k))
                 v.delete()
+"""

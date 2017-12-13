@@ -1,4 +1,4 @@
-from Node.node import Node, ApiNode
+from node.node import Node, ApiNode
 from log import Logger
 import requests
 

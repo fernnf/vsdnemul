@@ -1,11 +1,12 @@
 from api.link.linkapi import Link
-from log import Logger
+from api.log.logapi import get_logger
 from api.ovsdb.ovsdbapi import OvsdbNode
 from api.utils import check_not_null
 
 
 class DirectLinkOvs(Link):
-    logger = Logger.logger("DirectLinkOvs")
+
+    logger = get_logger("DirectLinkOvs")
 
     def __init__(self, bridge_ns = "switch0", node_source = None, node_target = None):
         super().__init__(type = "direct-link-ovs", node_source = node_source, node_target = node_target)
@@ -55,7 +56,8 @@ class DirectLinkOvs(Link):
 
 
 class HostLinkOvs(Link):
-    logger = Logger.logger("HostLinkOvsVeth")
+
+    logger = get_logger("HostLinkOvsVeth")
 
     def __init__(self, ip_host, gateway_host = None, node_host = None, node_target = None, bridge_ns="switch0"):
         super().__init__(type = "host-link-ovs", node_source = node_host, node_target = node_target)

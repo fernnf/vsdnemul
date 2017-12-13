@@ -1,10 +1,9 @@
-
-
 from api.utils import check_not_null, create_namespace, delete_namespace
 from api.docker.dockerapi import DockerApi
 from log import Logger
 
 logger = Logger.logger("node")
+
 
 class Node(object):
 
@@ -63,15 +62,15 @@ class Node(object):
 
     def send_cmd(self, cmd = None):
         try:
-            return ApiNode.node_send_cmd(self.label, cmd = cmd)
+            return DockerApi.run_cmd(name = self.label, cmd = cmd)
         except Exception as ex:
-            self.logger.error(ex.args[0])
+            logger.error(ex.args[0])
 
-    def get_cli_prompt(self):
+    def get_cli_prompt(self, shell = "bash"):
         try:
-            ApiNode.get_node_prompt(label = self.label)
+            DockerApi.get_shell(name = self.label, shell = shell)
         except Exception as ex:
-            self.logger.error(str(ex.args))
+            logger.error(str(ex.args))
 
     @property
     def volume(self):
@@ -80,43 +79,3 @@ class Node(object):
     @volume.setter
     def volume(self, value):
         self.__volume = value
-
-
-class NodeGroup(object):
-    logger = Logger.logger("NodeGroup")
-
-    def __init__(self):
-        self.__nodes = {}
-
-    def add_node(self, node):
-        label = node.label
-        self.__nodes.update({label: node})
-
-    def rem_node(self, label):
-        if label in self.__nodes.keys():
-            del self.__nodes[label]
-
-    def get_nodes(self):
-        return self.__nodes.copy()
-
-    def get_node(self, label):
-        if label in self.__nodes.keys():
-            return self.__nodes[label]
-        else:
-            return None
-
-    def commit(self):
-        if len(self.__nodes) <= 0:
-            raise RuntimeError("there is not node to commit")
-        else:
-            for k, v in self.__nodes.items():
-                self.logger.debug("creating node ({label})".format(label = k))
-                v.create()
-
-    def remove(self):
-        if len(self.__nodes) <= 0:
-            raise RuntimeError("there is not node to commit")
-        else:
-            for k, v in self.__nodes.items():
-                self.logger.debug("removing node ({label})".format(label = k))
-                v.delete()

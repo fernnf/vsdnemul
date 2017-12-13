@@ -1,5 +1,5 @@
 from log import Logger
-from Node.node import Node, ApiNode
+from node.node import Node, ApiNode
 from utils import check_not_null
 
 
