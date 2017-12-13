@@ -7,7 +7,6 @@ class Host(Node):
     logger = get_logger("Host")
 
     def __init__(self, label = None):
-        DockerApi.create_node(
         super().__init__(label = label, type = "Host", service = {'22/tcp': None, '5201/tcp': None},
                          image = "vsdn/host", volume = None,
                          cap_add = ["SYS_ADMIN", "NET_ADMIN"])

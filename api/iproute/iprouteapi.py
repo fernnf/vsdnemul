@@ -184,3 +184,12 @@ class IpRouteApi(object):
         except Exception as ex:
             logger.error(str(ex.args[1]))
             return False
+
+    @staticmethod
+    def config_port_address(ifname, ip_addr, gateway = None, netns = None):
+
+        try:
+            _config_ip_address(ifname = ifname, ip_addr = ip_addr, gateway = gateway, netns = netns)
+
+        except Exception as ex:
+            logger.error(str(ex.args[1]))

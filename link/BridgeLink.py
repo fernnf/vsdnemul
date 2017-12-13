@@ -1,11 +1,13 @@
 from api.link.linkapi import Link
 from api.iproute.iprouteapi import IpRouteApi
 from api.ovsdb.ovsdbapi import OvsdbNode
+from api.log.logapi import get_logger
+from api.node.nodeapi import Node
 
 
 class DirectLinkBridge(Link):
 
-    def __init__(self, bridge_ns = "switch0", node_source = None, node_target = None):
+    def __init__(self, node_source: Node, node_target: Node, bridge_ns = "switch0",):
         super().__init__(type = "direct-link-bridge", node_source = node_source, node_target = node_target)
         self._bridge_ns = bridge_ns
 
@@ -59,9 +61,15 @@ class DirectLinkBridge(Link):
 
 
 class HostLinkBridge(Link):
-    def __init__(self, ip_host, gateway_host = None, bridge_ns = "switch0", node_source = None, node_target = None):
+
+    log = get_logger("HostLinkBridge")
+
+    def __init__(self, ip_addr, gateway = None, bridge_ns = "switch0", node_source = None, node_target = None):
         super().__init__(type = "host-link-bridge", node_source = node_source, node_target = node_target)
         self._bridge_ns = bridge_ns
+        self._ip_addr = ip_addr
+        self._gateway = gateway
+
 
     def create(self):
         pid_src = self.node_source.node_pid
@@ -87,7 +95,8 @@ class HostLinkBridge(Link):
 
             OvsdbNode.add_port_br(bridge = self._bridge_ns, netns = pid_dst, port_name = if_dst)
 
-            IpRouteApi.config_ip_address(ifname = if_src, netns = pid_src)
+            IpRouteApi.config_port_address(ifname = if_src, ip_addr = self._ip_addr, gateway = self._gateway,
+                                           netns = pid_src)
 
         except Exception as ex:
-            self.logger.error(str(ex.args[0]))
+            self.log.error(str(ex.args[0]))

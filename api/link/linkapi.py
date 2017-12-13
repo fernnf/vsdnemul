@@ -1,12 +1,10 @@
-from api.utils import check_not_null
 import uuid
-from log import Logger
 
 from api.node.nodeapi import Node
+from api.utils import check_not_null
 
 
 class Link(object):
-    logger = Logger.logger("link")
 
     def __init__(self, type, node_source: Node, node_target: Node):
         self.__node_source = node_source
@@ -40,7 +38,7 @@ class Link(object):
 
     @property
     def port_source(self):
-        return self.node_source.label + "-" + self.node_target.label
+        return self.__node_source.label + "-" + self.__node_target.label
 
     @port_source.setter
     def port_source(self, value):
@@ -48,7 +46,7 @@ class Link(object):
 
     @property
     def port_target(self):
-        return self.node_target + "-" + self.node_source
+        return self.__node_target.label + "-" + self.__node_source.label
 
     @port_target.setter
     def port_target(self, value):
@@ -61,6 +59,7 @@ class Link(object):
     @type.setter
     def type(self, value):
         self.__type = check_not_null(value = value, msg = "type of link cannot be null")
+
 
 """
 class LinkGroup(object):
