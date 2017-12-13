@@ -22,8 +22,8 @@ def Topology():
     _nodes.add_node(node = n1)
     #_nodes.add_node(node = n2)
 
-    h1 = Host(label = "host1")
-    h2 = Host(label = "host2")
+    h1 = Host(name = "host1")
+    h2 = Host(name = "host2")
 
     _nodes.add_node(node = h1)
     _nodes.add_node(node = h2)

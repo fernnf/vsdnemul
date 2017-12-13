@@ -16,9 +16,9 @@ class DirectLinkBridge(Link):
         pid_dst = self.node_target.node_pid
 
         if_src = self.port_source
-        peer_src = self.node_source.label + "-" + self.id
+        peer_src = self.node_source.name + "-" + self.id
         if_dst = self.port_target
-        peer_dst = self.node_target.label + "-" + self.id
+        peer_dst = self.node_target.name + "-" + self.id
 
         link_name = self.id
 
@@ -76,9 +76,9 @@ class HostLinkBridge(Link):
         pid_dst = self.node_target.node_pid
 
         if_src = self.port_source
-        peer_src = self.node_source.label + "-" + self.id
+        peer_src = self.node_source.name + "-" + self.id
         if_dst = self.port_target
-        peer_dst = self.node_target.label + "-" + self.id
+        peer_dst = self.node_target.name + "-" + self.id
 
         link_name = self.id
 

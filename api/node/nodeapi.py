@@ -2,13 +2,16 @@ from api.utils import check_not_null, create_namespace, delete_namespace
 from api.docker.dockerapi import DockerApi
 from log import Logger
 
-logger = Logger.logger("node")
+logger = Logger.logger("Node")
 
 
 class Node(object):
 
-    def __init__(self, label, type = None, service = None, image = None, volume = None, cap_add = None):
-        self.__label = label
+    def __init__(self, name, image, type = None, service = None, volume = None, cap_add = None):
+        check_not_null(value = name, msg = "the label node cannot be null")
+        check_not_null(value = image, msg = "the image name cannot be null")
+
+        self.__name = name
         self.__type = type
         self.__service = service
         self.__image = image
@@ -21,15 +24,19 @@ class Node(object):
 
     @image.setter
     def image(self, value):
-        self.__image = check_not_null(value = value, msg = "the image name cannot be null")
+        pass
 
     @property
-    def label(self):
-        return self.__label
+    def name(self):
+        return self.__name
 
-    @label.setter
-    def label(self, value):
-        self.__label = check_not_null(value = value, msg = "the label node cannot be null")
+    @name.setter
+    def name(self, value):
+        if DockerApi.get_status_node(self.name) == "running":
+            DockerApi.rename_node(self.name, new_name = value)
+            self.__name = value
+        else:
+            self.name = value
 
     @property
     def type(self):
@@ -37,40 +44,40 @@ class Node(object):
 
     @type.setter
     def type(self, value):
-        self.__type = check_not_null(value = value, msg = "the type node cannot be null")
+        self.__type = value
 
     @property
     def service_exposed(self):
         try:
-            return DockerApi.services_node(name = self.label)
+            return DockerApi.services_node(name = self.name)
         except Exception as ex:
             logger.error(ex.args[0])
 
     @property
     def node_pid(self):
         try:
-            return DockerApi.get_pid_node(name = self.label)
+            return DockerApi.get_pid_node(name = self.name)
         except Exception as ex:
             logger.error(ex.args[0])
 
     @property
     def node_status(self):
         try:
-            return DockerApi.get_status_node(name = self.label)
+            return DockerApi.get_status_node(name = self.name)
         except Exception as ex:
             logger.error(ex.args[0])
 
     def send_cmd(self, cmd = None):
         try:
-            return DockerApi.run_cmd(name = self.label, cmd = cmd)
+            return DockerApi.run_cmd(name = self.name, cmd = cmd)
         except Exception as ex:
             logger.error(ex.args[0])
 
     def get_cli_prompt(self, shell = "bash"):
         try:
-            DockerApi.get_shell(name = self.label, shell = shell)
+            DockerApi.get_shell(name = self.name, shell = shell)
         except Exception as ex:
-            logger.error(str(ex.args))
+            logger.error(str(ex.args[0]))
 
     @property
     def volume(self):
@@ -78,4 +85,12 @@ class Node(object):
 
     @volume.setter
     def volume(self, value):
-        self.__volume = value
+        pass
+
+    @property
+    def cap_add(self):
+        return self.__cap_add
+
+    @cap_add.setter
+    def cap_add(self, value):
+        pass

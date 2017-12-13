@@ -152,9 +152,10 @@ class DockerApi(object):
     def delete_node(name):
         try:
             _delete(name = name)
-
+            return True
         except Exception as ex:
             logger.error(str(ex.args[1]))
+            return False
 
     @staticmethod
     def pause_node(name):

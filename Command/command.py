@@ -33,8 +33,8 @@ class Prompt(Cmd):
         """
 
         def print_node(node):
-            print("[{i}]".format(i = node.label))
-            print(output.format(label = node.label,
+            print("[{i}]".format(i = node.name))
+            print(output.format(label = node.name,
                                 type = node.node_type,
                                 model = node.image,
                                 status = node.node_status,
@@ -52,10 +52,10 @@ class Prompt(Cmd):
             for k, v in n.items():
                 print_node(v)
 
-        if opts.label is None:
+        if opts.name is None:
             list_nodes()
         else:
-            list_node(opts.label)
+            list_node(opts.name)
 
     def do_quit(self, arg):
         print("Cleaning up topology")
@@ -77,13 +77,13 @@ class Prompt(Cmd):
         2 - Host
         """
         if equals_ignore_case(opts.type, "whitebox"):
-            node = WhiteBox(label = opts.label)
+            node = WhiteBox(label = opts.name)
             node.create()
             self.nodes.add_node(node = node)
             print("the whitebox node ({label}) has created".format(label = node.label))
 
         elif equals_ignore_case(opts.type, "host"):
-            node = Host(label = opts.label)
+            node = Host(name = opts.name)
             node.create()
             self.nodes.add_node(node = node)
             print("the host node ({label}) has created".format(label = node.label))
@@ -98,7 +98,7 @@ class Prompt(Cmd):
         """Remove a node of topology
 
         """
-        node = self.nodes.get_node(opts.label)
+        node = self.nodes.get_node(opts.name)
 
         if node is not None:
             node.delete()
@@ -162,8 +162,8 @@ class Prompt(Cmd):
             print("[{i}]".format(i = link.id))
 
             print(output.format(id = link.id,
-                                src_node = link.node_source.label,
-                                tgt_node = link.node_target.label,
+                                src_node = link.node_source.name,
+                                tgt_node = link.node_target.name,
                                 src_port = link.port_source,
                                 tgt_port = link.port_target))
 
@@ -186,7 +186,7 @@ class Prompt(Cmd):
     )
     def do_cli_node(self, arg, opts):
 
-        node = self.nodes.get_node(opts.label)
+        node = self.nodes.get_node(opts.name)
         if node is not None:
             node.get_cli_prompt()
         else:

@@ -128,6 +128,12 @@ def _config_ip_address(ifname, ip_addr, gateway = None, netns = None):
     ip.release()
 
 
+def _get_ip_address(ifname, netns):
+    ip = IPDB(nl = NetNS(netns))
+    with ip.interfaces[ifname] as interface:
+        return interface.ipaddr[0]["local"]
+
+
 class IpRouteApi(object):
 
     @staticmethod
@@ -193,3 +199,7 @@ class IpRouteApi(object):
 
         except Exception as ex:
             logger.error(str(ex.args[1]))
+
+    @staticmethod
+    def get_ip_address(netns, ifname = "mgt0"):
+        return IpRouteApi.get_ip_address(ifname = ifname, netns = netns)

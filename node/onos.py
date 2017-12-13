@@ -1,69 +1,74 @@
-from node.node import Node, ApiNode
-from log import Logger
 import requests
+
+from api.docker.dockerapi import DockerApi
+from api.iproute.iprouteapi import IpRouteApi
+from api.log.logapi import get_logger
+from api.node.nodeapi import Node
+from api.utils import check_not_null
+
+logger = get_logger("ONOS")
+
+
+def _disable_app(ctl_ip, name_app):
+    check_not_null(ctl_ip, "the controller ip cannot be null")
+    check_not_null(name_app, "the onos app cannot be null")
+
+    url = "http://{addr}:8181/onos/v1/applications/{app}/active".format(addr = ctl_ip, app = name_app)
+    with requests.Session() as r:
+        a = requests.adapters.HTTPAdapter(max_retries = 10)
+        r.mount("http://", a)
+        resp = r.delete(url = url, auth = ("karaf", "karaf"))
+        if not resp.ok:
+            raise RuntimeError("cannot disable application")
+
+
+def _enable_app(ctl_ip, name_app):
+    URL = "http://{addr}:8181/onos/v1/applications/{app}/active".format(addr = ctl_ip, app = name_app)
+
+    with requests.Session() as r:
+        a = requests.adapters.HTTPAdapter(max_retries = 10)
+        r.mount("http://", a)
+        resp = r.post(url = URL, auth = ("karaf", "karaf"))
+        if not resp.ok:
+            raise RuntimeError("cannot enable application")
 
 
 class Onos(Node):
-    logger = Logger.logger("ONOS")
-
     def __init__(self, label = None):
-        super().__init__(label = label,
-                         type = "ONOS Controller",
+        super().__init__(name = label,
+                         type = "ONOS-Controller",
                          image = "vsdn/onos",
                          service = {'6653/tcp': None,
                                     '6640/tcp': None,
                                     '8181/tcp': None,
                                     '8101/tcp': None,
                                     '9876/tcp': None},
+                         cap_add = ["SYS_ADMIN", "NET_ADMIN"],
                          volume = {"/sys/fs/cgroup": {"bind": "/sys/fs/cgroup", "mode": "ro"}})
+        self.__mgt_interface = "mgt0"
 
     def create(self):
-        try:
-            return ApiNode.create_node(label = self.label, image = self.image, service = self.service,
-                                       volume = self.volume, cap_add = self.cap_add)
-        except Exception as ex:
-            self.logger.error(ex.args[0])
+        ret = DockerApi.create_node(name = self.name, image = self.image, ports = self.service_exposed,
+                                    cap_app = self.cap_add, volumes = self.volume)
+        if ret is not True:
+            logger.error("the onos controller node cannot be created")
 
     def delete(self):
-        try:
-            return ApiNode.delete_node(label = self.label)
-        except Exception as ex:
-            self.logger.error(str(ex.args))
+        ret = DockerApi.delete_node(name = self.name)
+
+        if ret is not True:
+            logger.error("the onos controller node cannot be deleted")
 
     def enableApp(self, appName):
+        ctl_ip = IpRouteApi.get_ip_address(netns = self.name)
         try:
-            ApiOnos.enableApp(ctl_ip = self.control_ip, nameApp = appName)
+            _enable_app(ctl_ip = ctl_ip, name_app = appName)
         except Exception as ex:
-            self.logger.error(str(ex.args))
+            logger.error(str(ex.args[0]))
 
     def disableApp(self, appName):
+        ctl_ip = IpRouteApi.get_ip_address(netns = self.name)
         try:
-            ApiOnos.disableApp(ctl_ip = self.control_ip, nameApp = appName)
+            _disable_app(ctl_ip = ctl_ip, name_app = appName)
         except Exception as ex:
-            self.logger.error(str(ex.args))
-
-
-class ApiOnos(object):
-    logger = Logger.logger("ApiONOS")
-
-    @staticmethod
-    def enableApp(ctl_ip, nameApp):
-        URL = "http://{addr}:8181/onos/v1/applications/{app}/active".format(addr = ctl_ip, app = nameApp)
-
-        with requests.Session() as r:
-            a = requests.adapters.HTTPAdapter(max_retries = 10)
-            r.mount("http://", a)
-            resp = r.post(url = URL, auth = ("karaf", "karaf"))
-            if not resp.ok:
-                raise RuntimeError("cannot enable application")
-
-
-    @staticmethod
-    def disableApp(ctl_ip, nameApp):
-        URL = "http://{addr}:8181/onos/v1/applications/{app}/active".format(addr = ctl_ip, app = nameApp)
-        with requests.Session() as r:
-            a = requests.adapters.HTTPAdapter(max_retries = 10)
-            r.mount("http://", a)
-            resp = r.delete(url = URL, auth = ("karaf", "karaf"))
-            if not resp.ok:
-                raise RuntimeError("cannot disable application")
+            logger.error(str(ex.args[0]))
