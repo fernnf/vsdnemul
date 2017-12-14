@@ -14,7 +14,6 @@ def _create(name, image, ports = None, volumes = None, cap_app = None):
     check_not_null(image, "the image name cannot be null")
 
     client = docker.from_env()
-    client.containers.get()
 
     kwargs = dict()
 
@@ -37,12 +36,13 @@ def _create(name, image, ports = None, volumes = None, cap_app = None):
         network_mode = "none"
     )
 
-    container = client.containers.run(image = image, **kwargs)
+    client.containers.run(image = image, **kwargs)
+    container = client.containers.get(container_id = name)
     status = container.attrs["State"]["Status"]
 
     if status.__eq__("running"):
         pid = container.attrs["State"]["Pid"]
-        create_namespace(pid = pid)
+        create_namespace(name = name, pid = pid)
         return True
     else:
         return False
@@ -52,8 +52,7 @@ def _delete(name):
     check_not_null(name, "the container name cannot be null")
     client = docker.from_env()
     container = client.containers.get(container_id = name)
-    pid = container.attrs["State"]["Pid"]
-    delete_namespace(pid = pid)
+    delete_namespace(name = name)
     container.stop()
     container.remove()
 

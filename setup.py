@@ -9,6 +9,6 @@ setup(
     author = 'Fernando Farias',
     author_email = 'fernnf@gmail.com',
     description = '',
-    requires = ['pyroute2', 'docker', 'cmd2', 'requests']
+    requires = ['pyroute2', 'docker', 'cmd2', 'requests', 'names']
 )
 

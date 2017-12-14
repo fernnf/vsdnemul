@@ -63,11 +63,14 @@ def _del_controller(bridge, netns = None):
     _exec_action(ctl = ovsctl, cmd = cmd_del_ctl, netns = netns)
 
 
-def _set_bridge(bridge, netns = None, of_ver = "OpenFlow13", dp_type = "netdev"):
+def _set_bridge(bridge, netns = None, dpid = None, of_ver = "OpenFlow13", dp_type = "netdev"):
     check_not_null(bridge, "the bridge name cannot be null")
     ovsctl = "/usr/bin/ovs-vsctl"
-    cmd_set_bridge = "{ctl} add-br {bridge} -- set bridge {bridge} datapath_type={dp_type} protocols={version}".format(
+    cmd_set_bridge = "{ctl} add-br {bridge} -- set bridge {bridge} datapath_type={dp_type} protocols={version} ".format(
         ctl = ovsctl, bridge = bridge, dp_type = dp_type, version = of_ver)
+
+    if dpid is not None:
+        cmd_set_bridge = cmd_set_bridge + "other_config:datapath_id={dpid}".format(dpid = dpid)
 
     _exec_action(ctl = ovsctl, cmd = cmd_set_bridge, netns = netns)
 
@@ -140,7 +143,7 @@ def _del_port_ns(bridge, netns, intf_name):
                                                                          ctl = ovsdocker,
                                                                          ifname = intf_name,
                                                                          netns = netns)
-    if DockerApi._status(name = netns) is "running":
+    if DockerApi.get_status_node(name = netns) is "running":
 
         ret = subprocess.Popen(cmd_del_port_ns, shell = True)
         ret.wait()
@@ -153,7 +156,16 @@ def _del_port_ns(bridge, netns, intf_name):
         raise RuntimeError("the node is not running")
 
 
-class OvsdbNode(object):
+def _set_openflow_version(netns, bridge, version = "OpenFlow13"):
+    check_not_null(value = netns, msg = "the name cannot be null")
+
+    ovsctl = "/usr/bin/ovs-vsctl"
+    cmd_set_of_version = "{ctl} set bridge {bridge} protocols={version".format(ctl= ovsctl,bridge = bridge,
+                                                                              version = version)
+    _exec_action(ctl = ovsctl, cmd = cmd_set_of_version)
+
+
+class OvsdbApi(object):
 
     @staticmethod
     def set_manager(ip, netns = None, type = "tcp", port = "6640"):
@@ -161,6 +173,7 @@ class OvsdbNode(object):
             _set_manager(ip = ip, netns = netns, type = type, port = port)
             return True
         except Exception as ex:
+            logger.error(str(ex.args[1]))
             return False
 
     @staticmethod
@@ -169,7 +182,7 @@ class OvsdbNode(object):
             _del_manager(netns = netns)
             return True
         except Exception as ex:
-            logger.error(ex.args[1])
+            logger.error(str(ex.args[1]))
             return False
 
     @staticmethod
@@ -178,6 +191,7 @@ class OvsdbNode(object):
             _set_controller(ip = ip, bridge = bridge, type = type, port = port, netns = netns)
             return True
         except Exception as ex:
+            logger.error(str(ex.args[1]))
             return False
 
     @staticmethod
@@ -186,14 +200,16 @@ class OvsdbNode(object):
             _del_controller(bridge = bridge, netns = netns)
             return True
         except Exception as ex:
+            logger.error(str(ex.args[1]))
             return False
 
     @staticmethod
-    def set_bridge(bridge, netns = None, of_ver = "OpenFlow13", dp_type = "netdev"):
+    def set_bridge(bridge, netns = None, dpid = None, of_ver = "OpenFlow13", dp_type = "netdev"):
         try:
-            _set_bridge(bridge = bridge, netns = netns, of_ver = of_ver, dp_type = dp_type)
+            _set_bridge(bridge = bridge, netns = netns, dpid = dpid, of_ver = of_ver, dp_type = dp_type)
             return True
         except Exception as ex:
+            logger.error(str(ex.args[1]))
             return False
 
     @staticmethod
@@ -202,6 +218,7 @@ class OvsdbNode(object):
             _del_bridge(bridge = bridge, netns = netns)
             return True
         except Exception as ex:
+            logger.error(str(ex.args[1]))
             return False
 
     @staticmethod
@@ -211,6 +228,7 @@ class OvsdbNode(object):
             return True
 
         except Exception as ex:
+            logger.error(str(ex.args[1]))
             return False
 
     @staticmethod
@@ -220,6 +238,7 @@ class OvsdbNode(object):
             return True
 
         except Exception as ex:
+            logger.error(str(ex.args[1]))
             return False
 
     @staticmethod
@@ -228,6 +247,7 @@ class OvsdbNode(object):
             _add_port_ns(bridge = bridge, netns = netns, intf_name = intf_name, ip = ip, gateway = gateway, mtu = mtu)
             return True
         except Exception as ex:
+            logger.error(str(ex.args[1]))
             return False
 
     @staticmethod
@@ -235,8 +255,14 @@ class OvsdbNode(object):
         try:
             _del_port_ns(bridge = bridge, netns = netns, intf_name = intf_name)
             return True
-
         except Exception as ex:
+            logger.error(str(ex.args[1]))
             return False
 
+    @staticmethod
+    def change_openflow_version(netns, bridge, version = "OpenFlow13"):
+        try:
+            _set_openflow_version(netns = netns, bridge = bridge, version = version)
+        except Exception as ex:
+            logger.error(str(ex.args[1]))
 

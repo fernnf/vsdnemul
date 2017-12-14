@@ -6,11 +6,13 @@ from api.utils import check_not_null
 
 class Link(object):
 
-    def __init__(self, type, node_source: Node, node_target: Node):
-        self.__node_source = node_source
-        self.__node_target = node_target
-        self.__type = type
+    def __init__(self, type, node_source, node_target, mtu = "1500"):
+        self.__node_source = check_not_null(value = node_source, msg = "the name of source node cannot be null")
+        self.__node_target = check_not_null(value = node_target, msg = "the name of target node cannot be null")
+        self.__type = check_not_null(value = type, msg = "type of link cannot be null")
         self.__id = str(uuid.uuid4())[0:8]
+        self.__mtu = mtu
+
 
     @property
     def id(self):
@@ -26,7 +28,7 @@ class Link(object):
 
     @node_source.setter
     def node_source(self, value):
-        self.__node_source = check_not_null(value = value, msg = "the label of source node cannot be null")
+        pass
 
     @property
     def node_target(self):
@@ -34,11 +36,11 @@ class Link(object):
 
     @node_target.setter
     def node_target(self, value):
-        self.__node_target = check_not_null(value = value, msg = "the label of target node cannot be null")
+        pass
 
     @property
     def port_source(self):
-        return self.__node_source.name + "-" + self.__node_target.name
+        return self.__node_source + "-" + self.__node_target
 
     @port_source.setter
     def port_source(self, value):
@@ -46,7 +48,7 @@ class Link(object):
 
     @property
     def port_target(self):
-        return self.__node_target.name + "-" + self.__node_source.name
+        return self.__node_target+ "-" + self.__node_source
 
     @port_target.setter
     def port_target(self, value):
@@ -58,44 +60,12 @@ class Link(object):
 
     @type.setter
     def type(self, value):
-        self.__type = check_not_null(value = value, msg = "type of link cannot be null")
+        pass
 
+    @property
+    def mtu(self):
+        return self.__mtu
 
-"""
-class LinkGroup(object):
-
-    logger = Logger.logger("LinkGroup")
-
-    def __init__(self):
-        self.__links = {}
-
-    def add_link(self, link):
-        label = link.id
-        self.__links.update({label: link})
-
-    def rem_link(self, link):
-        link.delete()
-        del self.__links[link.id]
-
-    def get_links(self):
-        return self.__links.copy()
-
-    def get_link(self, id):
-        return self.__links[id]
-
-    def commit(self):
-        if len(self.__links) <= 0:
-            raise RuntimeError("there is not link to commit")
-        else:
-            for k, v in self.__links.items():
-                self.logger.info("creating link {key} from {a} to {b}".format(key= k, a = v.port_source, b= v.port_target))
-                v.create()
-
-    def remove(self):
-        if len(self.__links) <= 0:
-            raise RuntimeError("there is not node to commit")
-        else:
-            for k, v in self.__links.items():
-                self.logger.info("removing link ({label})".format(label = k))
-                v.delete()
-"""
+    @mtu.setter
+    def mtu(self, value):
+        pass

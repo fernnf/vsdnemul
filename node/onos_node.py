@@ -13,7 +13,7 @@ def _disable_app(ctl_ip, name_app):
     check_not_null(ctl_ip, "the controller ip cannot be null")
     check_not_null(name_app, "the onos app cannot be null")
 
-    url = "http://{addr}:8181/onos/v1/applications/{app}/active".format(addr = ctl_ip, app = name_app)
+    url = "http://{addr}:8181/onos/v1/applications/{app}/deactive".format(addr = ctl_ip, app = name_app)
     with requests.Session() as r:
         a = requests.adapters.HTTPAdapter(max_retries = 10)
         r.mount("http://", a)
@@ -35,6 +35,8 @@ def _enable_app(ctl_ip, name_app):
 
 class Onos(Node):
     def __init__(self, label = None):
+        self.__mgt_interface = "mgt0"
+
         super().__init__(name = label,
                          type = "ONOS-Controller",
                          image = "vsdn/onos",
@@ -45,7 +47,6 @@ class Onos(Node):
                                     '9876/tcp': None},
                          cap_add = ["SYS_ADMIN", "NET_ADMIN"],
                          volume = {"/sys/fs/cgroup": {"bind": "/sys/fs/cgroup", "mode": "ro"}})
-        self.__mgt_interface = "mgt0"
 
     def create(self):
         ret = DockerApi.create_node(name = self.name, image = self.image, ports = self.service_exposed,
@@ -59,16 +60,16 @@ class Onos(Node):
         if ret is not True:
             logger.error("the onos controller node cannot be deleted")
 
-    def enableApp(self, appName):
-        ctl_ip = IpRouteApi.get_ip_address(netns = self.name)
+    def enableApp(self, app_name):
+        ctl_ip = IpRouteApi.get_interface_addr(netns = self.name)
         try:
-            _enable_app(ctl_ip = ctl_ip, name_app = appName)
+            _enable_app(ctl_ip = ctl_ip, name_app = app_name)
         except Exception as ex:
             logger.error(str(ex.args[0]))
 
-    def disableApp(self, appName):
-        ctl_ip = IpRouteApi.get_ip_address(netns = self.name)
+    def disableApp(self, app_name):
+        ctl_ip = IpRouteApi.get_interface_addr(netns = self.name)
         try:
-            _disable_app(ctl_ip = ctl_ip, name_app = appName)
+            _disable_app(ctl_ip = ctl_ip, name_app = app_name)
         except Exception as ex:
             logger.error(str(ex.args[0]))

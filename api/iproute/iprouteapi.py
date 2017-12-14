@@ -1,11 +1,10 @@
 from pyroute2 import IPDB, NetNS
 
 from api.log.logapi import get_logger
-
 from api.utils import check_not_null
 
+logger = get_logger("IpRouteApi")
 
-logger =  get_logger("IpRouteApi")
 
 def _add_port_ns(ifname, netns):
     check_not_null(ifname, "the interface name cannot be null")
@@ -112,7 +111,11 @@ def _delete_interface(ifname, netns = None):
 
 
 def _config_ip_address(ifname, ip_addr, gateway = None, netns = None):
+    check_not_null(ifname, "the interface name cannot be null")
+    check_not_null(ip_addr, "the ip address of the interface cannot be null")
+
     ip = None
+
     if netns is None:
         ip = IPDB()
     else:
@@ -128,10 +131,53 @@ def _config_ip_address(ifname, ip_addr, gateway = None, netns = None):
     ip.release()
 
 
-def _get_ip_address(ifname, netns):
-    ip = IPDB(nl = NetNS(netns))
+def _get_interface_addr(ifname, netns = None):
+    check_not_null(ifname, "the interface name cannot be null")
+
+    ip = None
+    addr = None
+
+    if netns is None:
+        ip = IPDB()
+    else:
+        ip = IPDB(nl = NetNS(netns))
+
     with ip.interfaces[ifname] as interface:
-        return interface.ipaddr[0]["local"]
+        addr = interface.ipaddr[0]["local"]
+
+    ip.release()
+
+    return addr
+
+
+def _switch_on(ifname, netns = None):
+    check_not_null(ifname, "the interface name cannot be null")
+    ip = None
+
+    if netns is None:
+        ip = IPDB()
+    else:
+        ip = IPDB(nl = NetNS(netns))
+
+    with ip.interfaces[ifname] as interface:
+        interface.up()
+
+    ip.release()
+
+
+def _switch_off(ifname, netns = None):
+    check_not_null(ifname, "the interface name cannot be null")
+    ip = None
+
+    if netns is None:
+        ip = IPDB()
+    else:
+        ip = IPDB(nl = NetNS(netns))
+
+    with ip.interfaces[ifname] as interface:
+        interface.down()
+
+    ip.release()
 
 
 class IpRouteApi(object):
@@ -193,13 +239,25 @@ class IpRouteApi(object):
 
     @staticmethod
     def config_port_address(ifname, ip_addr, gateway = None, netns = None):
-
         try:
             _config_ip_address(ifname = ifname, ip_addr = ip_addr, gateway = gateway, netns = netns)
-
         except Exception as ex:
             logger.error(str(ex.args[1]))
 
     @staticmethod
-    def get_ip_address(netns, ifname = "mgt0"):
-        return IpRouteApi.get_ip_address(ifname = ifname, netns = netns)
+    def get_interface_addr(ifname, netns = None):
+        return _get_interface_addr(ifname = ifname, netns = netns)
+
+    @staticmethod
+    def switch_on(ifname, netns = None):
+        try:
+            _switch_on(ifname = ifname, netns = netns)
+        except Exception as ex:
+            logger.log(str(ex.args[1]))
+
+    @staticmethod
+    def switch_off(ifname, netns = None):
+        try:
+            _switch_off(ifname = ifname, netns = netns)
+        except Exception as ex:
+            logger.log(str(ex.args[1]))

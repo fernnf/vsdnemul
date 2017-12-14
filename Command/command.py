@@ -2,8 +2,8 @@ from cmd2 import Cmd, make_option, options
 from link.link import LinkGroup
 from link.vethlink import HostLinkOvsVeth, DirectLinkOvsVeth
 from node.node import NodeGroup, ApiNode
-from node.whitebox import WhiteBox
-from node.host import Host
+from node.whitebox_node import WhiteBox
+from node.host_node import Host
 from utils import equals_ignore_case
 
 

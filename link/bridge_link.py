@@ -1,8 +1,11 @@
 from api.link.linkapi import Link
 from api.iproute.iprouteapi import IpRouteApi
-from api.ovsdb.ovsdbapi import OvsdbNode
+from api.ovsdb.ovsdbapi import OvsdbApi
 from api.log.logapi import get_logger
 from api.node.nodeapi import Node
+
+
+logger_direct = get_logger("DirectLinkBridge")
 
 
 class DirectLinkBridge(Link):
@@ -33,11 +36,11 @@ class DirectLinkBridge(Link):
 
             IpRouteApi.bridge_add_port(master = link_name, slaves = [peer_src, peer_src])
 
-            OvsdbNode.add_port_br(bridge = self._bridge_ns, netns = pid_src, port_name = if_src)
-            OvsdbNode.add_port_br(bridge = self._bridge_ns, netns = pid_dst, port_name = if_dst)
+            OvsdbApi.add_port_br(bridge = self._bridge_ns, netns = pid_src, port_name = if_src)
+            OvsdbApi.add_port_br(bridge = self._bridge_ns, netns = pid_dst, port_name = if_dst)
 
         except Exception as ex:
-            self.logger.error(str(ex.args[0]))
+            logger_direct.error(str(ex.args[0]))
 
     def delete(self):
 
@@ -48,8 +51,8 @@ class DirectLinkBridge(Link):
         link_name = self.id
 
         try:
-            OvsdbNode.rem_port_br(bridge = link_name, port_name = if_src, netns = pid_src)
-            OvsdbNode.rem_port_br(bridge = link_name, port_name = if_dst, netns = pid_dst)
+            OvsdbApi.rem_port_br(bridge = link_name, port_name = if_src, netns = pid_src)
+            OvsdbApi.rem_port_br(bridge = link_name, port_name = if_dst, netns = pid_dst)
 
             IpRouteApi.delete_port(ifname = if_src, netns = pid_src)
             IpRouteApi.delete_port(ifname = if_dst, netns = pid_dst)
@@ -57,7 +60,10 @@ class DirectLinkBridge(Link):
             IpRouteApi.delete_port(ifname = link_name)
 
         except Exception as ex:
-            self.logger.error(str(ex.args[0]))
+            logger_direct.error(str(ex.args[0]))
+
+
+logger_host = get_logger("HostLinkBridge")
 
 
 class HostLinkBridge(Link):
@@ -69,7 +75,6 @@ class HostLinkBridge(Link):
         self._bridge_ns = bridge_ns
         self._ip_addr = ip_addr
         self._gateway = gateway
-
 
     def create(self):
         pid_src = self.node_source.node_pid
@@ -93,10 +98,10 @@ class HostLinkBridge(Link):
 
             IpRouteApi.bridge_add_port(master = link_name, slaves = [peer_src, peer_src])
 
-            OvsdbNode.add_port_br(bridge = self._bridge_ns, netns = pid_dst, port_name = if_dst)
+            OvsdbApi.add_port_br(bridge = self._bridge_ns, netns = pid_dst, port_name = if_dst)
 
             IpRouteApi.config_port_address(ifname = if_src, ip_addr = self._ip_addr, gateway = self._gateway,
                                            netns = pid_src)
 
         except Exception as ex:
-            self.log.error(str(ex.args[0]))
+            logger_host.error(str(ex.args[0]))
