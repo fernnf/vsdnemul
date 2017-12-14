@@ -1,5 +1,4 @@
 from cmd2 import Cmd, make_option, options
-from link.link import LinkGroup
 from link.vethlink import HostLinkOvsVeth, DirectLinkOvsVeth
 from node.node import NodeGroup, ApiNode
 from node.whitebox_node import WhiteBox
@@ -9,9 +8,9 @@ from utils import equals_ignore_case
 
 class Prompt(Cmd):
 
-    def __init__(self, links: LinkGroup, nodes: NodeGroup):
+    def __init__(self, dataplane: Data):
 
-        self.prompt = "[vsdnagent]# "
+        self.prompt = "[cli@vsdnagent]# "
         self.links = links
         self.nodes = nodes
 

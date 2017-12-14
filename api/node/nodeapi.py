@@ -36,7 +36,7 @@ class Node(object):
             DockerApi.rename_node(self.name, new_name = value)
             self.__name = value
         else:
-            self.name = value
+            self.__name = value
 
     @property
     def type(self):
