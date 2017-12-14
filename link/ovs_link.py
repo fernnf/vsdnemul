@@ -13,7 +13,6 @@ class DirectLinkOvs(Link):
         self._bridge_ns = bridge_ns
 
     def create(self):
-
         try:
 
             OvsdbApi.set_bridge(bridge = self.id)
