@@ -13,7 +13,7 @@ class Host(Node):
 
     def create(self):
         ret = DockerApi.create_node(name = self.name, ports = self.service_exposed, volumes = self.volume,
-                                    cap_app = self.cap_add, image = self.image)
+                                    cap_add = self.cap_add, image = self.image)
         if ret is not True:
             logger.error("the node ({name}) cannot be created".format(name = self.name))
 

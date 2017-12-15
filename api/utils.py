@@ -1,7 +1,7 @@
 import ipaddress
 import os
 import names
-
+from pathlib import Path
 
 def check_not_null(value, msg):
     if value is None:
@@ -11,14 +11,19 @@ def check_not_null(value, msg):
 
 
 def create_namespace(name: str, pid: int):
-    if not os.path.exists("/var/run/netns"):
-        os.mkdir("/var/run/netns")
 
-    dir_src = "/proc/{pid}/ns/net".format(pid = pid)
-    dir_tgt = "/var/run/netns/{name}".format(name = name)
+    dir_dest = Path("/var/run/netns")
+    dir_src = Path("/proc/{pid}/ns/net".format(pid = pid))
+    dir_tgt = Path("/var/run/netns/{name}".format(name = name))
 
-    if os.path.exists(dir_src):
-        os.symlink(dir_src, dir_tgt)
+    if not dir_dest.exists():
+        dir_dest.mkdir()
+
+    if dir_src.exists():
+        if dir_tgt.is_symlink():
+            dir_tgt.unlink()
+
+        os.symlink(dir_src.as_posix(), dir_tgt.as_posix())
     else:
         OSError("the namespace not exist")
 
@@ -33,6 +38,10 @@ def delete_namespace(name: str):
             OSError("namespace with name not exist")
     else:
         raise OSError("folder namespace not exist")
+
+
+def clean_namespaces():
+    delete_namespace("*")
 
 
 def is_valid_ip(addr: str):

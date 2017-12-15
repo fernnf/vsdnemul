@@ -1,19 +1,14 @@
-from link.vethlink import DirectLinkOvsVeth, HostLinkOvsVeth
-from link.link import LinkGroup
-from node.node import NodeGroup
-from node.host_node import Host
-from node.whitebox_node import WhiteBox
-from Command.command import Prompt
-from log import Logger
+from api.log.logapi import get_logger, setup_logging
+from api.dataplane.dataplaneapi import Dataplane
+from command.cli import Prompt
+import logging
 
 from node.onos_node import Onos
 
 #from dataplane import Dataplane
 
-_nodes = NodeGroup()
-_links = LinkGroup()
 
-
+"""
 def Topology():
 
     n1 = WhiteBox(label = "node1")
@@ -65,21 +60,23 @@ def Controller():
     set_controller(ctl_ip = ctl.control_ip)
 
     log.info("Controller IP: http://{ip}:8181/onos/ui/login.html".format(ip=ctl.control_ip))
-
+"""
 
 if __name__ == '__main__':
 
-    log = Logger.logger(name = "simpletopo", level = "debug")
+    setup_logging()
 
-    log.info("Creating Topology")
 
-    Topology()
+    logging.info("Creating Topology")
 
-    Controller()
+    #Topology()
 
-    log.info("Topology initialized")
+    #Controller()
+    data = Dataplane()
 
-    cmd = Prompt(links = _links, nodes = _nodes)
+    logging.info("Topology initialized")
+
+    cmd = Prompt(dataplane = data)
     cmd.cmdloop()
 
 

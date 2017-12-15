@@ -27,6 +27,26 @@ class Dataplane(object):
     def get_link(self, id):
         return self.__links[id]
 
+    def get_nodes(self):
+        return self.__nodes.copy()
+
+    def get_links(self):
+        return self.__links.copy()
+
+    def exist_node(self, name):
+        for k,v in self.__nodes.items():
+            if v.__eq__(name):
+                return True
+        return False
+
+    def exist_link(self, source, target):
+        for k,v in self.__links.items():
+            if v.node_source == source and v.node_target == target:
+                return True
+            elif v.node_source == target and v.node_target == source:
+                return True
+        return False
+
     def commit(self):
 
         for key, node in self.__nodes.items():

@@ -9,7 +9,7 @@ from api.utils import check_not_null, create_namespace, delete_namespace
 logger = get_logger("DockerApi")
 
 
-def _create(name, image, ports = None, volumes = None, cap_app = None):
+def _create(name, image, ports = None, volumes = None, cap_add = None):
     check_not_null(name, "the name cannot be null")
     check_not_null(image, "the image name cannot be null")
 
@@ -23,8 +23,8 @@ def _create(name, image, ports = None, volumes = None, cap_app = None):
     if volumes is not None:
         kwargs.update(volumes = volumes)
 
-    if cap_app is not None:
-        kwargs.update(cap_app = cap_app)
+    if cap_add is not None:
+        kwargs.update(cap_add = cap_add)
 
     kwargs.update(
         name = name,
@@ -136,15 +136,15 @@ class DockerApi(object):
         try:
             return _id(name = name)
         except Exception as ex:
-            logger.error(str(ex.args[1]))
+            logger.error(str(ex))
             return None
 
     @staticmethod
-    def create_node(name, image, ports = None, volumes = None, cap_app = None):
+    def create_node(name, image, ports = None, volumes = None, cap_add = None):
         try:
-            return _create(name = name, image = image, ports = ports, volumes = volumes, cap_app = cap_app)
+            return _create(name = name, image = image, ports = ports, volumes = volumes, cap_add = cap_add)
         except Exception as ex:
-            logger.error(str(ex.args[1]))
+            logger.error(str(ex))
             return None
 
     @staticmethod
@@ -153,7 +153,7 @@ class DockerApi(object):
             _delete(name = name)
             return True
         except Exception as ex:
-            logger.error(str(ex.args[1]))
+            logger.error(str(ex))
             return False
 
     @staticmethod
@@ -161,7 +161,7 @@ class DockerApi(object):
         try:
             _pause(name = name)
         except Exception as ex:
-            logger.error(str(ex.args[1]))
+            logger.error(str(ex.args))
 
     @staticmethod
     def resume_node(name):
@@ -175,7 +175,7 @@ class DockerApi(object):
         try:
             return _exec(name = name, cmd = cmd)
         except Exception as ex:
-            logger.error(str(ex.args[1]))
+            logger.error(str(ex.args))
             return None
 
     @staticmethod
@@ -183,7 +183,7 @@ class DockerApi(object):
         try:
             return _pid(name = name)
         except Exception as ex:
-            logger.error(str(ex.args[1]))
+            logger.error(str(ex.args))
             return None
 
     @staticmethod
@@ -191,7 +191,7 @@ class DockerApi(object):
         try:
             return _status(name = name)
         except Exception as ex:
-            logger.error(str(ex.args[1]))
+            logger.error(str(ex.args))
             return None
 
     @staticmethod
@@ -199,20 +199,20 @@ class DockerApi(object):
         try:
             _shell(name = name, shell = shell)
         except Exception as ex:
-            logger.error(str(ex.args[1]))
+            logger.error(str(ex.args))
 
     @staticmethod
     def rename_node(name, new_name):
         try:
             _rename(name = name, new_name = new_name)
         except Exception as ex:
-            logger.error(str(ex.args[1]))
+            logger.error(str(ex.args))
 
     @staticmethod
     def services_node(name):
         try:
             return _services(name = name)
         except Exception as ex:
-            logger.error(str(ex.args[1]))
+            logger.error(str(ex.args))
             return None
 

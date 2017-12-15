@@ -50,7 +50,7 @@ class Onos(Node):
 
     def create(self):
         ret = DockerApi.create_node(name = self.name, image = self.image, ports = self.service_exposed,
-                                    cap_app = self.cap_add, volumes = self.volume)
+                                    cap_add = self.cap_add, volumes = self.volume)
         if ret is not True:
             logger.error("the onos controller node cannot be created")
 

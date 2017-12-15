@@ -48,10 +48,7 @@ class Node(object):
 
     @property
     def service_exposed(self):
-        try:
-            return DockerApi.services_node(name = self.name)
-        except Exception as ex:
-            logger.error(ex.args[0])
+        return self.__service
 
     @property
     def node_pid(self):
