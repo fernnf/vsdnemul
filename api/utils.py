@@ -22,8 +22,7 @@ def create_namespace(name: str, pid: int):
     if dir_src.exists():
         if dir_tgt.is_symlink():
             dir_tgt.unlink()
-
-        os.symlink(dir_src.as_posix(), dir_tgt.as_posix())
+        dir_tgt.symlink_to(dir_src.as_posix())
     else:
         OSError("the namespace not exist")
 

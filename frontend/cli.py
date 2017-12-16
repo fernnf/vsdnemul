@@ -23,14 +23,12 @@ class Prompt(Cmd):
     ])
     def do_list_nodes(self, arg, opts):
         """ List information about all nodes or a specific node"""
-        output = """
-        Label: {label}
-        Type: {type} 
-        Model: {model}
-        Status: {status}
-        Sevices: {services}
-        Pid: {pid}
-        """
+        output = "\n Label: {label} " \
+                 "\n Type: {type} " \
+                 "\n Model: {model} " \
+                 "\n Status: {status} " \
+                 "\n Sevices: {services} " \
+                 "\n Pid: {pid} \n"
 
         def print_node(node: Node):
             print("[{i}]".format(i = node.name))
@@ -48,8 +46,11 @@ class Prompt(Cmd):
 
         def list_nodes():
             n = self.dataplane.get_nodes()
-            for k, v in n.items():
-                print_node(v)
+            if len(n) > 0:
+                for k, v in n.items():
+                    print_node(v)
+            else:
+                print("There is not nodes on topology")
 
         if opts.name is None:
             list_nodes()
@@ -67,12 +68,8 @@ class Prompt(Cmd):
         make_option("-t", "--type", action = "store", type = "string", help = "the type of node eg: whitebox or host")
     ])
     def do_create_node(self, arg, opts):
-        """
-        Create a new node on topology.
-        Nodes Available:
-        1 - Whitebox
-        2 - Host
-        3 - ONOS
+        """Create a new node on topology. \nNodes types available:
+        \n   1 - Whitebox \n   2 - Host \n   3 - ONOS
         """
         if equals_ignore_case(opts.type, "whitebox"):
             node = WhiteBox(name = opts.name)
@@ -99,30 +96,31 @@ class Prompt(Cmd):
         make_option("-n", "--name", action = "store", type = "string", help = "the label used by node")
     ])
     def do_delete_node(self, arg, opts):
-        """Remove a node of topology
+        """Remove a node of topology"""
 
-        """
-        node = self.dataplane.get_node(opts.name)
+        exist = self.dataplane.exist_node(opts.name)
 
-        if node is not None:
+        if exist:
+            node = self.dataplane.get_node(opts.name)
             node.delete()
             self.dataplane.del_node(name = opts.name)
             print("the node {name} has removed".format(name = opts.name))
-            del node
         else:
-            print("the type node is unknown")
+            print("the node was not found")
 
     @options([
         make_option("-s", "--source", action = "store", type = "string", help = "the node ingress link"),
         make_option("-d", "--destination", action = "store", type = "string", help = "the node egress link"),
         make_option("-t", "--type", action = "store", type = "string",
                     help = "the type of technology that will be used by link"),
+        make_option("-m", "--mtu", action = "store", type = "string", default = "1500",
+                    help = "the mtu unit of link [default: %default]"),
 
     ])
-    def do_create_direct_link(self, opts):
+    def do_create_direct_link(self, args, opts):
         """Create a link between two nodes
         \ntechologies types:
-        \n  1 - DirectLinkOvs \n  2 - HostLinkOvs \n  3 - DirectLinkBridge \n  4 - HostLinkBridge
+        \n  1 - DirectLinkOvs \n  2 - DirectLinkBridge
         """
         error = "Error: {msg}"
         success = "The {tech} link ({id}) has created"
@@ -140,16 +138,6 @@ class Prompt(Cmd):
                 self.dataplane.add_link(link = link)
                 print(success.format(tech = "link-direct-ovs", id = link.id))
 
-            elif equals_ignore_case(opts.type, "hostlinkovs"):
-                host_src = self.dataplane.get_node(name = opts.source)
-                node_tgt = self.dataplane.get_node(name = opts.destination)
-
-                link = HostLinkOvs(node_host = host_src, node_target = node_tgt, mtu = opts.mtu, ip_host = opts.address,
-                                   gateway_host = opts.gateway)
-                link.create()
-                self.dataplane.add_link(link = link)
-                print(success.format(tech = "link-host-direct-ovs", id = link.id))
-
             elif equals_ignore_case(opts.type, "directlinkbridge"):
                 node_src = self.dataplane.get_node(name = opts.source)
                 node_tgt = self.dataplane.get_node(name = opts.destination)
@@ -159,6 +147,45 @@ class Prompt(Cmd):
                 link.create()
                 self.dataplane.add_link(link = link)
                 print(success.format(tech = "link-direct-bridge", id = link.id))
+
+            else:
+                print(error.format("the technology type is unknown"))
+        else:
+            print(error.format("the node of target or source was not found"))
+
+    @options([
+        make_option("-s", "--source", action = "store", type = "string", help = ""),
+        make_option("-d", "--destination", action = "store", type = "string", help = ""),
+        make_option("-t", "--type", action = "store", type = "string",
+                    help = "the type of technology that will be used by link"),
+
+        make_option("-m", "--mtu", action = "store", type = "string", default = "1500",
+                    help = "the mtu unit of link [default: %default]"),
+        make_option("-a", "--address", action = "store", type = "string", help = ""),
+        make_option("-g", "--gateway", action = "store", type = "string", help = "")
+    ])
+    def do_create_host_link(self, arg, opts):
+        """Create a link between two nodes
+        \ntechologies types:
+        \n  1 - HostLinkOvs \n  2 - HostLinkBridge
+        """
+
+        error = "Error: {msg}"
+        success = "The {tech} link ({id}) has created"
+
+        source = self.dataplane.exist_node(opts.source)
+        target = self.dataplane.exist_node(opts.destination)
+
+        if source is True and target is True:
+            if equals_ignore_case(opts.type, "hostlinkovs"):
+                host_src = self.dataplane.get_node(name = opts.source)
+                node_tgt = self.dataplane.get_node(name = opts.destination)
+
+                link = HostLinkOvs(node_host = host_src, node_target = node_tgt, mtu = opts.mtu, ip_host = opts.address,
+                                   gateway_host = opts.gateway)
+                link.create()
+                self.dataplane.add_link(link = link)
+                print(success.format(tech = "link-host-direct-ovs", id = link.id))
 
             elif equals_ignore_case(opts.type, "hostlinkbridge"):
                 host_src = self.dataplane.get_node(name = opts.source)
@@ -177,47 +204,15 @@ class Prompt(Cmd):
             print(error.format("the node of target or source was not found"))
 
     @options([
-        make_option("-h", "--host", action = "store", type = "string", help = ""),
-        make_option("-d", "--destination", action = "store", type = "string", help = ""),
-        make_option("-t", "--type", action = "store", type = "string",
-                    help = "the type of technology that will be used by link"),
-
-        make_option("-m", "--mtu", action = "store", type = "string", default = "1500",
-                    help = "the mtu unit of link [default: %default]"),
-        make_option("-a", "--address", action = "store", type = "string", help = ""),
-        make_option("-g", "--gateway", action = "store", type = "string", help = "")
-    ])
-    def do_create_host_link(self, arg, opts):
-
-        error = "Error: {msg}"
-        success = "The {tech} link ({id}) has created"
-
-        source = self.dataplane.exist_node(opts.source)
-        target = self.dataplane.exist_node(opts.destination)
-
-
-
-
-        if source is True and tartget is True:
-            link = HostLinkOvsVeth(node_host = opts.host, node_target = opts.target)
-            link.create()
-            self.links.add_link(link = link)
-            print("the link has created")
-        else:
-            print("host or target node not found")
-
-    @options([
         make_option("-i", "--id", action = "store", type = "string", help = ""),
     ])
     def do_list_links(self, arg, opts):
 
-        output = """
-        ID: {id}
-        Source node: {src_node}
-        Target node: {tgt_node}
-        Source port: {src_port}
-        Target port: {tgt_port}
-        """
+        output = "\n ID: {id} " \
+                 "\n Source node: {src_node} " \
+                 "\n Target node: {tgt_node} " \
+                 "\n Source port: {src_port} " \
+                 "\n Target port: {tgt_port}"
 
         def print_link(link):
             print("[{i}]".format(i = link.id))
@@ -227,6 +222,7 @@ class Prompt(Cmd):
                                 tgt_node = link.node_target.name,
                                 src_port = link.port_source,
                                 tgt_port = link.port_target))
+            print("[>]")
 
         def list_link():
             link = self.links.get_link(opts.id)
@@ -242,13 +238,18 @@ class Prompt(Cmd):
         else:
             list_links()
 
-    @options(
-        make_option("-l", "--label", action = "store", type = "string", help = "the label used by node")
-    )
+    @options([
+        make_option("-n", "--name", action = "store", type = "string", help = "the label used by node"),
+        make_option("-s", "--shell", action = "store", type = "string", default="bash",
+                    help = "the shell used by cli [default: %default]")
+    ])
     def do_cli_node(self, arg, opts):
+        """Get CLI terminal of node"""
 
-        node = self.nodes.get_node(opts.name)
-        if node is not None:
-            node.get_cli_prompt()
+        exist = self.dataplane.exist_node(opts.name)
+
+        if exist:
+            node = self.dataplane.get_node(opts.name)
+            node.get_cli_prompt(shell = opts.shell)
         else:
-            print("the node was not found")
+            print("The node was not found on topology")

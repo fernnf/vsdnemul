@@ -44,7 +44,7 @@ class WhiteBox(Node):
 
     def del_port(self, bridge = "switch0", port = None):
         try:
-            OvsdbApi.rem_port_br(bridge = bridge, port_name = port, netns = self.name)
+            OvsdbApi.del_port_br(bridge = bridge, port_name = port, netns = self.name)
         except Exception as ex:
             logger.error(ex.args[0])
 

@@ -3,6 +3,7 @@ import subprocess
 
 import docker
 
+from pathlib import Path
 from api.log.logapi import get_logger
 from api.utils import check_not_null, create_namespace, delete_namespace
 
@@ -73,7 +74,7 @@ def _resume(name):
 
 def _exec(name, cmd):
     check_not_null(name, "the container name cannot be null")
-    check_not_null(cmd, "the command cannot be null")
+    check_not_null(cmd, "the frontend cannot be null")
     client = docker.from_env()
     container = client.containers.get(container_id = name)
     return container.exec_run(cmd = cmd, tty = True, privileged = True)
@@ -103,11 +104,11 @@ def _id(name):
 def _shell(name, shell = "bash"):
     check_not_null(name, "the container name cannot be null")
 
-    terminal_cmd = "/usr/bin/xterm "
-    docker_cmd = "/usr/bin/docker "
-    if os.path.exists(terminal_cmd) and os.path.exists(docker_cmd):
-        cmd = ["{cmd} -fg white -bg black -fa 'Liberation Mono' -fs 10 -e  {d_cmd} exec -it {node_name} {shell}"
-                   .format(cmd = terminal_cmd, d_cmd = docker_cmd, node_name = name, shell = shell)]
+    terminal = Path("/usr/bin/xterm")
+    docker = Path("/usr/bin/docker")
+    if docker.is_file() and terminal.is_file():
+        cmd = ["{cmd} -fg white -bg black -fa 'Liberation Mono' -fs 10 -e  {d_cmd} exec -it {node_name} {shell}".format(
+            cmd = terminal.as_posix(), d_cmd = docker.as_posix(), node_name = name, shell = shell)]
         subprocess.Popen(cmd, shell = True)
     else:
         raise ValueError("xterm or docker not found")

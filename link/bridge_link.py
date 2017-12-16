@@ -49,8 +49,8 @@ class DirectLinkBridge(Link):
         link_name = self.id
 
         try:
-            OvsdbApi.rem_port_br(bridge = link_name, port_name = if_src, netns = pid_src)
-            OvsdbApi.rem_port_br(bridge = link_name, port_name = if_dst, netns = pid_dst)
+            OvsdbApi.del_port_br(bridge = link_name, port_name = if_src, netns = pid_src)
+            OvsdbApi.del_port_br(bridge = link_name, port_name = if_dst, netns = pid_dst)
 
             IpRouteApi.delete_port(ifname = if_src, netns = pid_src)
             IpRouteApi.delete_port(ifname = if_dst, netns = pid_dst)

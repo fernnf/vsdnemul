@@ -31,8 +31,8 @@ class DirectLinkOvs(Link):
 
         try:
 
-            OvsdbApi.rem_port_br(bridge = self._bridge_ns, port_name = self.port_source, netns = self.node_source)
-            OvsdbApi.rem_port_br(bridge = self._bridge_ns, port_name = self.port_target, netns = self.node_target)
+            OvsdbApi.del_port_br(bridge = self._bridge_ns, port_name = self.port_source, netns = self.node_source)
+            OvsdbApi.del_port_br(bridge = self._bridge_ns, port_name = self.port_target, netns = self.node_target)
 
             OvsdbApi.del_port_ns(bridge = self.id, netns = self.node_source, intf_name = self.port_source)
             OvsdbApi.del_port_ns(bridge = self.id, netns = self.node_target, intf_name = self.port_target)
@@ -75,7 +75,7 @@ class HostLinkOvs(Link):
 
             OvsdbApi.del_port_ns(bridge = self.id, netns = self.node_source, intf_name = self.port_source)
 
-            OvsdbApi.rem_port_br(bridge = self._bridge_ns, port_name = self.port_target, netns = self.node_target)
+            OvsdbApi.del_port_br(bridge = self._bridge_ns, port_name = self.port_target, netns = self.node_target)
             OvsdbApi.del_port_ns(bridge = self.id, netns = self.node_target, intf_name = self.port_target)
 
             OvsdbApi.del_bridge(bridge = self.id)

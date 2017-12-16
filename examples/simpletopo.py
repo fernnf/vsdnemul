@@ -1,6 +1,6 @@
 from api.log.logapi import get_logger, setup_logging
 from api.dataplane.dataplaneapi import Dataplane
-from command.cli import Prompt
+from frontend.cli import Prompt
 import logging
 
 from node.onos_node import Onos
