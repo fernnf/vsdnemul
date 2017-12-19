@@ -117,7 +117,7 @@ class Prompt(Cmd):
                     help = "the mtu unit of link [default: %default]"),
 
     ])
-    def do_create_direct_link(self, args, opts):
+    def do_create_direct_link(self, arg, opts):
         """Create a link between two nodes
         \ntechologies types:
         \n  1 - DirectLinkOvs \n  2 - DirectLinkBridge
@@ -130,20 +130,15 @@ class Prompt(Cmd):
 
         if source is True and target is True:
             if equals_ignore_case(opts.type, "directlinkovs"):
-                node_src = self.dataplane.get_node(name = opts.source)
-                node_tgt = self.dataplane.get_node(name = opts.destination)
 
-                link = DirectLinkOvs(node_source = node_src, node_target = node_tgt, mtu = opts.mtu)
+                link = DirectLinkOvs(node_source = opts.source, node_target = opts.destination, mtu = opts.mtu)
                 link.create()
                 self.dataplane.add_link(link = link)
                 print(success.format(tech = "link-direct-ovs", id = link.id))
 
             elif equals_ignore_case(opts.type, "directlinkbridge"):
-                node_src = self.dataplane.get_node(name = opts.source)
-                node_tgt = self.dataplane.get_node(name = opts.destination)
 
-                link = DirectLinkBridge(node_source = node_src, node_target = node_tgt)
-
+                link = DirectLinkBridge(node_source = opts.source, node_target = opts.destination, mtu = opts.mtu)
                 link.create()
                 self.dataplane.add_link(link = link)
                 print(success.format(tech = "link-direct-bridge", id = link.id))
@@ -178,20 +173,16 @@ class Prompt(Cmd):
 
         if source is True and target is True:
             if equals_ignore_case(opts.type, "hostlinkovs"):
-                host_src = self.dataplane.get_node(name = opts.source)
-                node_tgt = self.dataplane.get_node(name = opts.destination)
 
-                link = HostLinkOvs(node_host = host_src, node_target = node_tgt, mtu = opts.mtu, ip_host = opts.address,
-                                   gateway_host = opts.gateway)
+                link = HostLinkOvs(node_host = opts.source, node_target = opts.destination, mtu = opts.mtu,
+                                   ip_host = opts.address, gateway_host = opts.gateway)
                 link.create()
                 self.dataplane.add_link(link = link)
                 print(success.format(tech = "link-host-direct-ovs", id = link.id))
 
             elif equals_ignore_case(opts.type, "hostlinkbridge"):
-                host_src = self.dataplane.get_node(name = opts.source)
-                node_tgt = self.dataplane.get_node(name = opts.destination)
 
-                link = HostLinkBridge(node_source = host_src, node_target = node_tgt, mtu = opts.mtu,
+                link = HostLinkBridge(node_source = opts.source, node_target = opts.destination, mtu = opts.mtu,
                                       ip_host = opts.address, gateway_host = opts.gateway)
 
                 link.create()
@@ -212,24 +203,24 @@ class Prompt(Cmd):
                  "\n Source node: {src_node} " \
                  "\n Target node: {tgt_node} " \
                  "\n Source port: {src_port} " \
-                 "\n Target port: {tgt_port}"
+                 "\n Target port: {tgt_port} \n"
 
         def print_link(link):
             print("[{i}]".format(i = link.id))
 
             print(output.format(id = link.id,
-                                src_node = link.node_source.name,
-                                tgt_node = link.node_target.name,
+                                src_node = link.node_source,
+                                tgt_node = link.node_target,
                                 src_port = link.port_source,
                                 tgt_port = link.port_target))
             print("[>]")
 
         def list_link():
-            link = self.links.get_link(opts.id)
+            link = self.dataplane.get_link(opts.id)
             print_link(link = link)
 
         def list_links():
-            l = self.links.get_links()
+            l = self.dataplane.get_links()
             for k, v in l.items():
                 print_link(link = v)
 
@@ -253,3 +244,17 @@ class Prompt(Cmd):
             node.get_cli_prompt(shell = opts.shell)
         else:
             print("The node was not found on topology")
+
+    @options([
+        make_option("-i", "--id", action="store", type = "string", help = "the link id on topology")
+    ])
+    def do_delete_link(self, arg, opts):
+
+        if self.dataplane.exist_link(id = opts.id):
+            link = self.dataplane.get_link(id = opts.id)
+            link.delete()
+            self.dataplane.del_link(id = opts.id)
+            print("the link ({id}) has deleted".format(id=opts.id))
+        else:
+            print("the link was not found by id ({id})".format(id = opts.id))
+

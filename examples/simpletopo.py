@@ -1,5 +1,8 @@
 from api.log.logapi import get_logger, setup_logging
 from api.dataplane.dataplaneapi import Dataplane
+from node.whitebox_node import WhiteBox
+from node.host_node import Host
+from link.ovs_link import DirectLinkOvs , HostLinkOvs
 from frontend.cli import Prompt
 import logging
 
@@ -8,39 +11,32 @@ from node.onos_node import Onos
 #from dataplane import Dataplane
 
 
-"""
 def Topology():
 
-    n1 = WhiteBox(label = "node1")
-    #n2 = WhiteBox(label = "node2")
-
-    _nodes.add_node(node = n1)
-    #_nodes.add_node(node = n2)
+    n1 = WhiteBox(name = "node1")
 
     h1 = Host(name = "host1")
     h2 = Host(name = "host2")
 
-    _nodes.add_node(node = h1)
-    _nodes.add_node(node = h2)
+    #link1 = HostLinkOvs(node_host = h1.name, node_target = n1.name, ip_host = "10.0.0.1/24")
+    #link2 = HostLinkOvs(node_host = h2.name, node_target = n1.name, ip_host = "10.0.0.2/24")
 
-    ctl = Onos(label = "ctl1")
+    data = Dataplane()
 
-    _nodes.add_node(ctl)
+    #data.add_link(link1)
+    #data.add_link(link2)
+    data.add_node(n1)
+    data.add_node(h1)
+    data.add_node(h2)
 
-    #n1_n2 = DirectLinkOvsVeth(node_source = n1, node_target = n2)
-
-    #_links.add_link(n1_n2)
-
-    h1_n1 = HostLinkOvsVeth(node_host = h1, node_target = n1, ip = "192.168.0.1/24")
-    h2_n1 = HostLinkOvsVeth(node_host = h2, node_target = n1, ip = "192.168.0.2/24")
-
-    _links.add_link(h1_n1)
-    _links.add_link(h2_n1)
-
-    _nodes.commit()
-    _links.commit()
+    return data
 
 
+
+
+
+
+"""
 def Controller():
 
     def exist_ctl():
@@ -66,13 +62,11 @@ if __name__ == '__main__':
 
     setup_logging()
 
-
     logging.info("Creating Topology")
 
-    #Topology()
+    data = Topology()
 
-    #Controller()
-    data = Dataplane()
+    data.commit()
 
     logging.info("Topology initialized")
 

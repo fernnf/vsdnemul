@@ -16,9 +16,10 @@ class DirectLinkOvs(Link):
         try:
 
             OvsdbApi.set_bridge(bridge = self.id)
+
             OvsdbApi.add_port_ns(bridge = self.id, netns = self.node_source, intf_name = self.port_source,
                                  mtu = self.mtu)
-            OvsdbApi.add_port_ns(bridge = self.id, netns = self.node_target, intf_name = self.node_target,
+            OvsdbApi.add_port_ns(bridge = self.id, netns = self.node_target, intf_name = self.port_target,
                                  mtu = self.mtu)
 
             OvsdbApi.add_port_br(bridge = self._bridge_ns, port_name = self.port_source, netns = self.node_source)
@@ -58,13 +59,14 @@ class HostLinkOvs(Link):
         try:
 
             OvsdbApi.set_bridge(bridge = self.id)
+
             OvsdbApi.add_port_ns(bridge = self.id, netns = self.node_source, intf_name = self.port_source,
-                                 mtu = self.mtu,ip = self._ip, gateway = self._gateway)
+                                 mtu = self.mtu, ip = self._ip, gateway = self._gateway)
 
             OvsdbApi.add_port_ns(bridge = self.id, netns = self.node_target, intf_name = self.port_target,
                                  mtu = self.mtu)
 
-            OvsdbApi.add_port_br(bridge = self._bridge_ns, port_name = self.port_target, netns = self.port_target)
+            OvsdbApi.add_port_br(bridge = self._bridge_ns, port_name = self.port_target, netns = self.node_target)
 
         except Exception as ex:
             logger_host.error(str(ex.args))

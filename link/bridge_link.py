@@ -8,57 +8,53 @@ logger_direct = get_logger("DirectLinkBridge")
 
 class DirectLinkBridge(Link):
 
-    def __init__(self, node_source, node_target, bridge_ns = "switch0", ):
-        super().__init__(type = "direct-link-bridge", node_source = node_source, node_target = node_target)
+    def __init__(self, node_source, node_target, bridge_ns = "switch0", mtu = "1500"):
+        super().__init__(type = "direct-link-bridge", node_source = node_source, node_target = node_target, mtu = mtu)
         self._bridge_ns = bridge_ns
 
     def create(self):
-        pid_src = self.node_source.node_pid
-        pid_dst = self.node_target.node_pid
 
-        if_src = self.port_source
-        peer_src = self.node_source.name + "-" + self.id
-        if_dst = self.port_target
-        peer_dst = self.node_target.name + "-" + self.id
-
-        link_name = self.id
+        if_src = self.node_source + "_" + self.node_target
+        peer_src = self.node_source + "_" + self.id
+        if_dst = self.node_target + "_" + self.node_source
+        peer_dst = self.node_target + "_" + self.id
 
         try:
-            IpRouteApi.create_bridge(ifname = link_name)
+            IpRouteApi.create_bridge(ifname = self.id)
 
-            IpRouteApi.create_pair(ifname = if_src, peer = peer_src, mtu = 1500)
-            IpRouteApi.create_pair(ifname = if_dst, peer = peer_dst, mtu = 1500)
+            IpRouteApi.create_pair(ifname = if_src, peer = peer_src, mtu = self.mtu)
+            IpRouteApi.create_pair(ifname = if_dst, peer = peer_dst, mtu = self.mtu)
 
-            IpRouteApi.add_port_ns(ifname = if_src, netns = pid_src)
-            IpRouteApi.add_port_ns(ifname = if_dst, netns = pid_dst)
+            IpRouteApi.add_port_ns(ifname = if_src, netns = self.node_source)
+            IpRouteApi.add_port_ns(ifname = if_dst, netns = self.node_target)
 
-            IpRouteApi.bridge_add_port(master = link_name, slaves = [peer_src, peer_src])
+            IpRouteApi.switch_on(ifname = if_src, netns = self.node_source)
+            IpRouteApi.switch_on(ifname = if_dst, netns = self.node_target)
 
-            OvsdbApi.add_port_br(bridge = self._bridge_ns, netns = pid_src, port_name = if_src)
-            OvsdbApi.add_port_br(bridge = self._bridge_ns, netns = pid_dst, port_name = if_dst)
+            IpRouteApi.bridge_add_port(master = self.id, slaves = [peer_src, peer_dst])
+
+            OvsdbApi.add_port_br(bridge = self._bridge_ns, netns = self.node_source, port_name = if_src)
+            OvsdbApi.add_port_br(bridge = self._bridge_ns, netns = self.node_target, port_name = if_dst)
 
         except Exception as ex:
-            logger_direct.error(str(ex.args[0]))
+            logger_direct.error(str(ex.args))
 
     def delete(self):
 
-        pid_src = self.node_source.node_pid
-        pid_dst = self.node_target.node_pid
-        if_src = self.port_source
-        if_dst = self.port_target
-        link_name = self.id
+        if_src = self.node_source + "_" + self.node_target
+        if_dst = self.node_target + "_" + self.node_source
 
         try:
-            OvsdbApi.del_port_br(bridge = link_name, port_name = if_src, netns = pid_src)
-            OvsdbApi.del_port_br(bridge = link_name, port_name = if_dst, netns = pid_dst)
+            IpRouteApi.delete_port(ifname = if_src, netns = self.node_source)
+            IpRouteApi.delete_port(ifname = if_dst, netns = self.node_target)
 
-            IpRouteApi.delete_port(ifname = if_src, netns = pid_src)
-            IpRouteApi.delete_port(ifname = if_dst, netns = pid_dst)
+            IpRouteApi.delete_port(ifname = self.id)
 
-            IpRouteApi.delete_port(ifname = link_name)
+            OvsdbApi.del_port_br(bridge = self._bridge_ns, port_name = if_src, netns = self.node_source)
+            OvsdbApi.del_port_br(bridge = self._bridge_ns, port_name = if_dst, netns = self.node_target)
 
         except Exception as ex:
-            logger_direct.error(str(ex.args[0]))
+            logger_direct.error(str(ex.args))
 
 
 logger_host = get_logger("HostLinkBridge")
@@ -76,31 +72,45 @@ class HostLinkBridge(Link):
         self._mtu = mtu
 
     def create(self):
-        pid_src = self.node_source.node_pid
-        pid_dst = self.node_target.node_pid
 
-        if_src = self.port_source
-        peer_src = self.node_source.name + "-" + self.id
-        if_dst = self.port_target
-        peer_dst = self.node_target.name + "-" + self.id
-
-        link_name = self.id
+        if_src = self.node_source + "_" + self.node_target
+        peer_src = self.node_source + "_" + self.id
+        if_dst = self.node_target + "_" + self.node_source
+        peer_dst = self.node_target + "_" + self.id
 
         try:
-            IpRouteApi.create_bridge(ifname = link_name)
 
-            IpRouteApi.create_pair(ifname = if_src, peer = peer_src, mtu = 1500)
-            IpRouteApi.create_pair(ifname = if_dst, peer = peer_dst, mtu = 1500)
+            IpRouteApi.create_pair(ifname = if_src, peer = peer_src, mtu = self.mtu)
+            IpRouteApi.create_pair(ifname = if_dst, peer = peer_dst, mtu = self.mtu)
 
-            IpRouteApi.add_port_ns(ifname = if_src, netns = pid_src)
-            IpRouteApi.add_port_ns(ifname = if_dst, netns = pid_dst)
+            IpRouteApi.create_bridge(ifname = self.id, slaves = [peer_src, peer_dst], mtu = self.mtu)
 
-            IpRouteApi.bridge_add_port(master = link_name, slaves = [peer_src, peer_src])
+            IpRouteApi.add_port_ns(ifname = if_src, netns = self.node_source)
+            IpRouteApi.add_port_ns(ifname = if_dst, netns = self.node_target)
 
-            OvsdbApi.add_port_br(bridge = self._bridge_ns, netns = pid_dst, port_name = if_dst)
+            IpRouteApi.switch_on(ifname = if_src, netns = self.node_source)
+            IpRouteApi.switch_on(ifname = if_dst, netns = self.node_target)
 
-            IpRouteApi.config_port_address(ifname = if_src, ip_addr = self._ip_host, gateway = self._gateway,
-                                           netns = pid_src)
+            OvsdbApi.add_port_br(bridge = self._bridge_ns, netns = self.node_target, port_name = if_dst)
+
+            IpRouteApi.config_port_address(ifname = if_src, ip_addr = self._ip_host, gateway = self._gateway_host,
+                                           netns = self.node_source)
 
         except Exception as ex:
-            logger_host.error(str(ex.args[0]))
+            logger_host.error(str(ex.args))
+
+    def delete(self):
+        if_src = self.node_source + "_" + self.node_target
+        if_dst = self.node_target + "_" + self.node_source
+
+        try:
+
+            IpRouteApi.delete_port(ifname = if_src, netns = self.node_source)
+            IpRouteApi.delete_port(ifname = if_dst, netns = self.node_target)
+
+            IpRouteApi.delete_port(ifname = self.id)
+
+            OvsdbApi.del_port_br(bridge = self._bridge_ns, netns = self.node_target, port_name = if_dst)
+
+        except Exception as ex:
+            logger_host.error(str(ex.args))

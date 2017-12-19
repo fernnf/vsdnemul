@@ -53,9 +53,9 @@ def _delete(name):
     check_not_null(name, "the container name cannot be null")
     client = docker.from_env()
     container = client.containers.get(container_id = name)
-    delete_namespace(name = name)
     container.stop()
     container.remove()
+    delete_namespace(name = name)
 
 
 def _pause(name):

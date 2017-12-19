@@ -28,11 +28,12 @@ def create_namespace(name: str, pid: int):
 
 
 def delete_namespace(name: str):
-    dir_tgt = "/var/run/netns/{name}".format(name = name)
+    dir_tgt = Path("/var/run/netns")
+    file_tgt = Path("/var/run/netns/{name}".format(name = name))
 
-    if os.path.exists("/var/run/netns"):
-        if os.path.exists(dir_tgt):
-            os.remove(dir_tgt)
+    if dir_tgt.exists():
+        if file_tgt.is_symlink():
+            file_tgt.unlink()
         else:
             OSError("namespace with name not exist")
     else:
@@ -57,3 +58,4 @@ def equals_ignore_case(a: str, b: str):
 
 def rand_name():
     return names.get_first_name().lower()
+

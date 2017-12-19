@@ -12,7 +12,7 @@ def _add_port_ns(ifname, netns):
 
     ip = IPDB()
     with ip.interfaces[ifname] as ns:
-        ns.net_ns_fd = ifname
+        ns.net_ns_fd = netns
 
     ip.release()
 
@@ -30,12 +30,12 @@ def _create_pair(ifname, peer, netns = None, mtu = 1500):
     ip.create(ifname = ifname, kind = "veth", peer = peer).commit()
 
     with ip.interfaces[ifname] as veth:
-        veth.set_mtu(mtu)
+        veth.set_mtu(int(mtu))
         veth.up()
 
     if peer is not None:
         with ip.interfaces[peer] as veth_peer:
-            veth_peer.set_mtu(mtu)
+            veth_peer.set_mtu(int(mtu))
             veth_peer.up()
 
     ip.release()
@@ -55,9 +55,9 @@ def _create_bridge(ifname, slaves = [], netns = None, mtu = 1500):
     with ip.interfaces[ifname] as bridge:
         if len(slaves) > 0:
             for intf in slaves:
-                bridge.add_port_br(intf)
+                bridge.add_port(intf)
 
-            bridge.set_mtu(mtu)
+            bridge.set_mtu(int(mtu))
 
         bridge.up()
 
@@ -76,7 +76,7 @@ def _bridge_add_port(master, slaves = [], netns = None):
     with ip.interfaces[master] as bridge:
         if len(slaves) > 0:
             for interface in slaves:
-                bridge.add_port_br(interface)
+                bridge.add_port(interface)
 
     ip.release()
 
@@ -146,7 +146,6 @@ def _get_interface_addr(ifname, netns = None):
         addr = interface.ipaddr[0]["local"]
 
     ip.release()
-
     return addr
 
 
@@ -198,7 +197,7 @@ class IpRouteApi(object):
             _create_bridge(ifname = ifname, slaves = slaves, netns = netns, mtu = mtu)
             return True
         except Exception as ex:
-            logger.error(str(ex.args[1]))
+            logger.error(str(ex.args))
             return False
 
     @staticmethod
