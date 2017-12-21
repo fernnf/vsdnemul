@@ -20,8 +20,8 @@ class PortType(Enum):
 
 class Port(object):
 
-    def __init__(self, idx, type, mtu = "1500", ip=None, gateway = None):
-        self.__name = "eth{idx}".format(idx)
+    def __init__(self, idx,  type, mtu = "1500", name= None, ip=None, gateway = None):
+        self.__name = name
         self.__type = type
         self.__ip = ip
         self.__gateway = gateway
@@ -34,7 +34,10 @@ class Port(object):
 
     @name.setter
     def name(self, value):
-        pass
+        if self.__name is None:
+            self.__name = value
+        else:
+            pass
 
     @property
     def type(self):
