@@ -40,7 +40,7 @@ class Onos(Node):
         super().__init__(name = label,
                          type = "ONOS-Controller",
                          image = "vsdn/onos",
-                         service = {'6653/tcp': None,
+                         services = {'6653/tcp': None,
                                     '6640/tcp': None,
                                     '8181/tcp': None,
                                     '8101/tcp': None,
@@ -49,7 +49,7 @@ class Onos(Node):
                          volume = {"/sys/fs/cgroup": {"bind": "/sys/fs/cgroup", "mode": "ro"}})
 
     def create(self):
-        ret = DockerApi.create_node(name = self.name, image = self.image, ports = self.service_exposed,
+        ret = DockerApi.create_node(name = self.name, image = self.image, ports = self.services,
                                     cap_add = self.cap_add, volumes = self.volume)
         if ret is not True:
             logger.error("the onos controller node cannot be created")

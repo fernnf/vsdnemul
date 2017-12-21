@@ -13,7 +13,7 @@ class WhiteBox(Node):
 
         super().__init__(name = name,
                          type = "WhiteBox",
-                         service = {'22/tcp': None, '6633/tcp': None, '6640/tcp': None, '6653/tcp': None},
+                         services = {'22/tcp': None, '6633/tcp': None, '6640/tcp': None, '6653/tcp': None},
                          image = "vsdn/whitebox",
                          volume = None,
                          cap_add = ["SYS_ADMIN", "NET_ADMIN"])
@@ -69,7 +69,7 @@ class WhiteBox(Node):
 
     def create(self):
 
-        ret = DockerApi.create_node(name = self.name, image = self.image, ports = self.service_exposed,
+        ret = DockerApi.create_node(name = self.name, image = self.image, ports = self.services,
                                     volumes = self.volume, cap_add = self.cap_add)
         if ret is not True:
             logger.error("the whitebox node cannot be created")

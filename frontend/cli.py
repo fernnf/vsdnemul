@@ -36,7 +36,7 @@ class Prompt(Cmd):
                                 type = node.type,
                                 model = node.image,
                                 status = node.node_status,
-                                services = str(node.service_exposed),
+                                services = str(node.services),
                                 pid = node.node_pid))
             print("[>]")
 

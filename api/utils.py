@@ -1,7 +1,9 @@
 import ipaddress
-import os
-import names
+import random
 from pathlib import Path
+
+import names
+
 
 def check_not_null(value, msg):
     if value is None:
@@ -11,7 +13,6 @@ def check_not_null(value, msg):
 
 
 def create_namespace(name: str, pid: int):
-
     dir_dest = Path("/var/run/netns")
     dir_src = Path("/proc/{pid}/ns/net".format(pid = pid))
     dir_tgt = Path("/var/run/netns/{name}".format(name = name))
@@ -59,3 +60,11 @@ def equals_ignore_case(a: str, b: str):
 def rand_name():
     return names.get_first_name().lower()
 
+
+def rand_interface_name():
+
+    digits = 8
+    lower = 10 ** (digits - 1)
+    upper = 10 ** digits - 1
+
+    return str(random.randint(lower, upper))

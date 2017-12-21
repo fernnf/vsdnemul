@@ -55,6 +55,7 @@ def _create_bridge(ifname, slaves = [], netns = None, mtu = 1500):
     with ip.interfaces[ifname] as bridge:
         if len(slaves) > 0:
             for intf in slaves:
+
                 bridge.add_port(intf)
 
             bridge.set_mtu(int(mtu))
@@ -178,6 +179,12 @@ def _switch_off(ifname, netns = None):
 
     ip.release()
 
+def _get_interfaces(netns):
+    check_not_null(netns, "the namespace cannot be null")
+
+    ip = IPDB(nl = NetNS(netns))
+
+    ip.
 
 class IpRouteApi(object):
 
