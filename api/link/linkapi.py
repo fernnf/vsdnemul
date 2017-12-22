@@ -1,5 +1,6 @@
 import uuid
 from enum import Enum
+from itertools import count
 
 from api.utils import check_not_null
 
@@ -20,30 +21,23 @@ class LinkType(Enum):
 
 class Link(object):
 
-    def __init__(self, node_source, node_target, type: LinkType, idx =None, description = None):
+    def __init__(self, node_source, node_target, port_source, port_target, type: LinkType):
         self.__node_source = check_not_null(value = node_source, msg = "the name of source node cannot be null")
         self.__node_target = check_not_null(value = node_target, msg = "the name of target node cannot be null")
+        self.__port_target = check_not_null(value = port_target, msg = "the port of target cannot be null")
+        self.__port_source = check_not_null(value = port_source, msg = "the port of source cannot be null")
         self.__type = check_not_null(value = type, msg = "type of link cannot be null")
-        self.__description = description
-        self.__port_target = None
-        self.__port_source = None
-        self.__idx = idx
+        self.__idx = None
+        self.__name = None
+
 
     @property
     def name(self):
-        return "link{idx}".format(idx = self.__idx)
+        return self.__name
 
     @name.setter
     def name(self, value):
-        pass
-
-    @property
-    def description(self):
-        return self.__description
-
-    @description.setter
-    def description(self, value):
-        self.__description = value
+        self.__name = value
 
     @property
     def node_source(self):
@@ -67,10 +61,7 @@ class Link(object):
 
     @port_source.setter
     def port_source(self, value):
-        if self.__port_target is None:
-            self.port_source = value
-        else:
-            pass
+        pass
 
     @property
     def port_target(self):
@@ -78,10 +69,7 @@ class Link(object):
 
     @port_target.setter
     def port_target(self, value):
-        if self.__port_target is None:
-            self.__port_target = value
-        else:
-            pass
+       pass
 
     @property
     def type(self):
@@ -104,3 +92,69 @@ class Link(object):
             self.__idx = value
         else:
             pass
+
+
+class LinkFabric(object):
+    def __init__(self):
+        self.__links = {}
+        self.__links_idx = count()
+
+    def add_link(self, link):
+        if not self.__exist_link():
+            key = self.__links_idx.__next__()
+            link.idx = key
+            link.create()
+            self.__links.update({key: link})
+            return link
+        else:
+            raise ValueError("the node object already exists")
+
+    def del_link(self, name = None, idx = None):
+        if self.__exist_link(name = name, idx = idx):
+            if name is not None:
+                key = self.__get_index(name = name)
+                node = self.__links[key]
+                node.delete()
+                del self.__links[key]
+            else:
+                node = self.__links[idx]
+                node.delete()
+                del self.__links[idx]
+        else:
+            ValueError("the node was not found")
+
+    def update_link(self, idx, link):
+        if self.__exist_link(idx = idx):
+            self.__links.update({idx: link})
+        else:
+            ValueError("the node was not found")
+
+    def get_links(self):
+        return self.__links.copy()
+
+    def is_exist(self, name):
+        return self.__exist_link(name = name)
+
+    def get_index(self, name):
+        if self.__exist_link(name = name):
+            return self.__get_index(name = name)
+        else:
+            ValueError("the node was not found")
+
+    def __get_index(self, name):
+        for k, n in self.__links.items():
+            if n.name.__eq__(name):
+                return k
+
+    def __exist_link(self, name = None, idx = None):
+
+        if name is not None:
+            key = self.__get_index(name = name)
+            if key is not None:
+                return True
+
+        if idx is not None:
+            if idx in self.__links.keys():
+                return True
+
+        return False

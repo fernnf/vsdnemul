@@ -1,5 +1,5 @@
 from api.log.logapi import get_logger
-from api.node.nodeapi import Node
+from api.node.nodeapi import Node, NodeType
 from api.ovsdb.ovsdbapi import OvsdbApi
 from api.docker.dockerapi import DockerApi
 from api.utils import check_not_null
@@ -12,7 +12,7 @@ class WhiteBox(Node):
     def __init__(self, name = None):
 
         super().__init__(name = name,
-                         type = "WhiteBox",
+                         type = NodeType.SWITCH,
                          services = {'22/tcp': None, '6633/tcp': None, '6640/tcp': None, '6653/tcp': None},
                          image = "vsdn/whitebox",
                          volume = None,

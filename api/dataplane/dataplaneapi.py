@@ -1,5 +1,8 @@
 from api.log.logapi import get_logger
-from api.port.portapi import Port, PortType
+from api.port.portapi import Port, PortFabric
+from port.veth_port import SwitchEthPort, HostEthPort
+from api.node.nodeapi import NodeFabric
+from api.link.linkapi import LinkFabric, LinkType
 from itertools import count
 
 logger = get_logger("Dataplane")
@@ -7,38 +10,26 @@ logger = get_logger("Dataplane")
 
 class Dataplane(object):
     def __init__(self):
-        self.__nodes = {}
-        self.__links = {}
-        self.__ports = {}
-
-        self.__link_idx = count()
-        self.__node_idx = count()
-
+        self.__nodes = NodeFabric()
+        self.__links = LinkFabric()
 
     def add_node(self, node):
-        if node not in self.__nodes.values():
-            key = str(self.__node_idx.__next__())
-            node.idx = key
-            self.__nodes.update({key: node})
-            return True
-        else:
-            return False
+        try:
+            return self.__nodes.add_node(node = node)
+        except Exception as ex:
+            logger.error(str(ex.args[0]))
 
     def del_node(self, name):
-        for k, v in self.__nodes.items():
-            if v.name.__eq__(name):
-                del self.__nodes[v.idx]
-                return True
-        return False
+        try:
+            self.del_link(name = name)
+        except Exception as ex:
+            logger.error(str(ex.args[0]))
 
     def add_link(self, link):
-        if link not in self.__links.values():
-            key = str(self.__link_idx.__next__())
-            link.idx = key
-            self.__links.update({key: link})
-            return True
-        else:
-            return False
+        if not self.__links.is_exist(link.name):
+            node_target =  self.__nodes.
+
+            if link.type is LinkType.DIRECT:
 
     def del_link(self, name):
         for k,v in self.__links.items():

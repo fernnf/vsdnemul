@@ -13,30 +13,30 @@ logger_direct = get_logger("DirectLinkBridge")
 
 class DirectLinkBridge(Link):
 
-    def __init__(self, id, node_source, node_target, bridge_ns = "switch0", mtu = "1500"):
+    def __init__(self, id, node_source, node_target, port_source, port_target,bridge_ns = "switch0", mtu = "1500"):
         check_not_null(id, "the id link cannot be null")
 
-        super().__init__(node_source = node_source, node_target = node_target, description = "direct-link-bridge",
-                         type = LinkType.DIRECT)
+        super().__init__(node_source = node_source, node_target = node_target, type = LinkType.DIRECT,
+                         port_target = port_target, port_source = port_source)
         self._bridge_ns = bridge_ns
         self._mtu = mtu
         self._id = id
 
     def create(self):
 
-        peer_src = rand_interface_name()
-        peer_dst = rand_interface_name()
+        peer_src = self.port_target.peer()
+        peer_dst = self.port_source.peer()
         link_bridge = "link{id}".format(id = self._id)
 
         try:
 
-            IpRouteApi.create_pair(ifname = self.port_source, peer = peer_src, mtu = self._mtu)
-            IpRouteApi.create_pair(ifname = self.port_target, peer = peer_dst, mtu = self._mtu)
+            IpRouteApi.create_pair(ifname = self.port_source.name, peer = peer_src, mtu = self._mtu)
+            IpRouteApi.create_pair(ifname = self.port_target.name, peer = peer_dst, mtu = self._mtu)
             IpRouteApi.create_bridge(ifname = link_bridge, slaves = [peer_src, peer_dst], mtu = self._mtu)
-            IpRouteApi.add_port_ns(ifname = self.port_source, netns = self.node_source)
-            IpRouteApi.add_port_ns(ifname = self.port_target, netns = self.node_target)
-            IpRouteApi.switch_on(ifname = self.port_source, netns = self.node_source)
-            IpRouteApi.switch_on(ifname = self.port_target, netns = self.node_target)
+            IpRouteApi.add_port_ns(ifname = self.port_source.name, netns = self.node_source)
+            IpRouteApi.add_port_ns(ifname = self.port_target.name, netns = self.node_target)
+            IpRouteApi.switch_on(ifname = self.port_source.name, netns = self.node_source)
+            IpRouteApi.switch_on(ifname = self.port_target.name, netns = self.node_target)
             OvsdbApi.add_port_br(bridge = self._bridge_ns, netns = self.node_source, port_name = self.port_source)
             OvsdbApi.add_port_br(bridge = self._bridge_ns, netns = self.node_target, port_name = self.port_target)
 

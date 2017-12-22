@@ -184,6 +184,8 @@ def _get_interfaces(netns):
 
     ip = IPDB(nl = NetNS(netns))
 
+
+
 class IpRouteApi(object):
 
     @staticmethod

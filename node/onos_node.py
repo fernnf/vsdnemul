@@ -3,7 +3,7 @@ import requests
 from api.docker.dockerapi import DockerApi
 from api.iproute.iprouteapi import IpRouteApi
 from api.log.logapi import get_logger
-from api.node.nodeapi import Node
+from api.node.nodeapi import Node, NodeType
 from api.utils import check_not_null
 
 logger = get_logger("ONOS")
@@ -38,7 +38,7 @@ class Onos(Node):
         self.__mgt_interface = "mgt0"
 
         super().__init__(name = label,
-                         type = "ONOS-Controller",
+                         type = NodeType.CONTROLLER,
                          image = "vsdn/onos",
                          services = {'6653/tcp': None,
                                     '6640/tcp': None,
@@ -56,7 +56,6 @@ class Onos(Node):
 
     def delete(self):
         ret = DockerApi.delete_node(name = self.name)
-
         if ret is not True:
             logger.error("the onos controller node cannot be deleted")
 

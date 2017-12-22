@@ -1,8 +1,7 @@
-from selinux import selabel_close
-
-from api.utils import check_not_null
 import itertools
 from enum import Enum
+
+from api.utils import check_not_null
 
 
 class PortType(Enum):
@@ -20,13 +19,21 @@ class PortType(Enum):
 
 class Port(object):
 
-    def __init__(self, idx,  type, mtu = "1500", name= None, ip=None, gateway = None):
-        self.__name = name
-        self.__type = type
-        self.__ip = ip
-        self.__gateway = gateway
-        self.__mtu = mtu
+    def __init__(self, name, type: PortType):
+        self.__name = check_not_null(name, "the name port cannot be null")
+        self.__type = check_not_null(type, "the type port cannot be null")
+        self.__idx = None
 
+    @property
+    def idx(self):
+        return self.__idx
+
+    @idx.setter
+    def idx(self, value):
+        if self.__idx is None:
+            self.__idx = value
+        else:
+            pass
 
     @property
     def name(self):
@@ -34,10 +41,7 @@ class Port(object):
 
     @name.setter
     def name(self, value):
-        if self.__name is None:
-            self.__name = value
-        else:
-            pass
+        self.__name = value
 
     @property
     def type(self):
@@ -50,30 +54,6 @@ class Port(object):
         else:
             raise ValueError("the value is not member of PortType")
 
-    @property
-    def ip(self):
-        return self.__ip
-
-    @ip.setter
-    def ip(self, value):
-        self.__ip = value
-
-    @property
-    def gateway(self):
-        return self.__gateway
-
-    @gateway.setter
-    def gateway(self, value):
-        self.__gateway = value
-
-    @property
-    def mtu(self):
-        return self.__mtu
-
-    @mtu.setter
-    def mtu(self, value):
-        pass
-
 
 class PortFabric(object):
 
@@ -84,43 +64,57 @@ class PortFabric(object):
     def add_port(self, port):
         check_not_null(port, "the port object cannot be null")
 
-        if self.__get_index(name = port.name) is None:
+        if not self.__exist_port(name = port.name):
             key = self.__count.__next__()
+            port.idx = key
+            port.name = port.name+key
             self.__ports.update({key: port})
+            return key
         else:
             raise ValueError("The port already exists")
 
     def del_port(self, name = None, idx = None):
-
-        if name is not None:
-            key = self.__get_index(name = name)
-            if key is None:
-                return False
-            else:
+        if self.__exist_port(name = name, idx = idx):
+            if name is not None:
+                key = self.get_index(name = name)
                 del self.__ports[key]
-                return True
-
-        if idx is not None:
-            if idx in self.__ports:
+            else:
                 del self.__ports[idx]
-                return True
+        else:
+            raise ValueError("the port was not found")
 
-        return False
+    def update_port(self, idx, port):
+        if self.__exist_port(idx = idx):
+            self.__ports.update({idx: port})
+        else:
+            raise ValueError("The port was not found")
 
     def get_ports(self):
         return self.__ports.copy()
 
+    def is_exist(self, name):
+        return self.__exist_port(name = name)
+
     def get_index(self, name):
         check_not_null(name, "the name port object cannot be null")
-
-        key = self.__get_index(name = name)
-
-        if key is not None:
-            return key
+        if self.__exist_port(name = name):
+            return self.__get_index(name = name)
+        else:
+            raise ValueError("the port was not found")
 
     def __get_index(self, name):
-        for k,v in self.__ports.items():
+        for k, v in self.__ports.items():
             if v.name.__eq__(name):
                 return k
 
-        return None
+    def __exist_port(self, name = None, idx = None):
+        if name is not None:
+            key = self.get_index(name = name)
+            if key is not None:
+                return True
+
+        if idx is not None:
+            if idx in self.__ports.keys():
+                return True
+
+        return False
