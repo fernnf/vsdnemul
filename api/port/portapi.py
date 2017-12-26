@@ -1,13 +1,14 @@
 import itertools
 from enum import Enum
+from abc import ABCMeta
 
 from api.utils import check_not_null
 
 
 class PortType(Enum):
-    ETHERNET = 1
-    OPTICAL = 2
-    RADIO = 3
+    ETHERNET = "eth"
+    OPTICAL = "opt"
+    RADIO = "wifi"
 
     def describe(self):
         return self.name.lower()
@@ -19,10 +20,9 @@ class PortType(Enum):
 
 class Port(object):
 
-    def __init__(self, name, type: PortType):
-        self.__name = check_not_null(name, "the name port cannot be null")
+    def __init__(self, type: PortType, idx = None):
         self.__type = check_not_null(type, "the type port cannot be null")
-        self.__idx = None
+        self.__idx = idx
 
     @property
     def idx(self):
@@ -37,11 +37,11 @@ class Port(object):
 
     @property
     def name(self):
-        return self.__name
+        return self.__type.value + self.__idx
 
     @name.setter
     def name(self, value):
-        self.__name = value
+        pass
 
     @property
     def type(self):
@@ -64,27 +64,24 @@ class PortFabric(object):
     def add_port(self, port):
         check_not_null(port, "the port object cannot be null")
 
-        if not self.__exist_port(name = port.name):
+        if not self.is_exist(name = port.name):
             key = self.__count.__next__()
             port.idx = key
-            port.name = port.name+key
-            self.__ports.update({key: port})
-            return key
+            self.update_port(idx = key, port = port)
+            return port.name
         else:
             raise ValueError("The port already exists")
 
-    def del_port(self, name = None, idx = None):
-        if self.__exist_port(name = name, idx = idx):
-            if name is not None:
-                key = self.get_index(name = name)
-                del self.__ports[key]
-            else:
-                del self.__ports[idx]
+    def del_port(self, name):
+        check_not_null(name, "the port name cannot be null")
+        if self.is_exist(name = name):
+            key = self.get_index(name = name)
+            del self.__ports[key]
         else:
             raise ValueError("the port was not found")
 
     def update_port(self, idx, port):
-        if self.__exist_port(idx = idx):
+        if self.is_exist(name = port.name):
             self.__ports.update({idx: port})
         else:
             raise ValueError("The port was not found")
@@ -92,12 +89,17 @@ class PortFabric(object):
     def get_ports(self):
         return self.__ports.copy()
 
+    def get_port(self, name):
+        if self.__exist_port(name = name):
+            key = self.get_index(name = name)
+            return self.__ports[key]
+
     def is_exist(self, name):
         return self.__exist_port(name = name)
 
     def get_index(self, name):
         check_not_null(name, "the name port object cannot be null")
-        if self.__exist_port(name = name):
+        if self.is_exist(name = name):
             return self.__get_index(name = name)
         else:
             raise ValueError("the port was not found")

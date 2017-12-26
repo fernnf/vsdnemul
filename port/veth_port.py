@@ -22,7 +22,7 @@ class VethPortDesc(Enum):
 class HostEthPort(Port):
 
     def __init__(self, ip, gateway, mtu = "1500"):
-        super().__init__(type = PortType.ETHERNET, name = "eth")
+        super().__init__(type = PortType.ETHERNET)
 
         self.__ip = ip
         self.__gate = gateway
@@ -74,7 +74,7 @@ class HostEthPort(Port):
 class SwitchEthPort(Port):
 
     def __init__(self, mtu = "1500"):
-        super().__init__(name = "eth", type = PortType.ETHERNET)
+        super().__init__(type = PortType.ETHERNET)
 
         self.__mtu = mtu
         self.__peer = rand_interface_name()
