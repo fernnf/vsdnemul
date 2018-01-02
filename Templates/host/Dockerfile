@@ -1,7 +1,10 @@
-FROM alpine:latest
+FROM fedora:27
 
-RUN apk update
+RUN dnf -y update
 
-RUN apk upgrade && apk add iperf net-tools nano tcpdump bash 
+RUN dnf -y install iperf3 tcpdump iputils nano ethtool iproute net-tools
 
-CMD ["sh"]
+ENV TERM=vt100
+
+CMD /bin/sh 
+

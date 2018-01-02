@@ -2,7 +2,7 @@ from enum import Enum
 from itertools import count
 
 from api.docker.dockerapi import DockerApi
-from api.port.portapi import PortFabric
+from api.port.portapi import PortFabric, PortType
 from api.utils import check_not_null
 from log import Logger
 
@@ -39,6 +39,7 @@ class Node(object):
         self.__cap_add = cap_add
         self.__ports = PortFabric()
         self.__idx = None
+
 
     @property
     def idx(self):
@@ -127,6 +128,18 @@ class Node(object):
         except Exception as ex:
             logger.error(str(ex.args[0]))
 
+
+    @property
+    def control_ip(self):
+        try:
+            return DockerApi.get_control_ip(name = self.name)
+        except Exception as ex:
+            logger.error(str(ex.args[0]))
+
+    @control_ip.setter
+    def control_ip(self, value):
+        pass
+
     def send_cmd(self, cmd = None):
         try:
             return DockerApi.run_cmd(name = self.name, cmd = cmd)
@@ -139,19 +152,15 @@ class Node(object):
         except Exception as ex:
             logger.error(str(ex.args[0]))
 
-    def add_port(self, port):
+    def add_node_port(self, type: PortType):
         try:
-            if self.__ports.is_exist(name = port.name):
-                key = self.__ports.get_index(port.name)
-                self.__ports.update_port(idx = key, port = port)
-            else:
-                self.__ports.add_port(port = port)
+            return self.__ports.add_port(type = type)
         except Exception as ex:
             logger.error(str(ex.args[0]))
 
-    def del_port(self, name = None, idx = None):
+    def del_node_port(self, name):
         try:
-            self.__ports.del_port(name = name, idx = idx)
+            self.__ports.del_port(name = name)
         except Exception as ex:
             logger.error(str(ex.args[0]))
 
@@ -168,26 +177,18 @@ class NodeFabric(object):
         self.__node_idx = count()
 
     def add_node(self, node):
-        if not self.__exist_node():
+        if not self.__exist_node(name = node.name):
             key = self.__node_idx.__next__()
             node.idx = key
-            node.create()
             self.__nodes.update({key: node})
-            return key
+            return node
         else:
             raise ValueError("the node object already exists")
 
-    def del_node(self, name = None, idx = None):
-        if self.__exist_node(name = name, idx = idx):
-            if name is not None:
-                key = self.__get_index(name = name)
-                node = self.__nodes[key]
-                node.delete()
-                del self.__nodes[key]
-            else:
-                node = self.__nodes[idx]
-                node.delete()
-                del self.__nodes[idx]
+    def del_node(self, name):
+        if self.__exist_node(name = name):
+            key = self.__get_index(name = name)
+            del self.__nodes[key]
         else:
             ValueError("the node was not found")
 
@@ -197,14 +198,13 @@ class NodeFabric(object):
         else:
             ValueError("the node was not found")
 
+    def get_node(self, name):
 
-    def get_node(self, idx = None, name = None):
-        if self.__exist_node(name = name, idx =idx):
-            for n in self.__nodes.values():
-                if n.name.__eq__(name):
-                    return n
-                if n.idx.__eq__(idx):
-                    return n
+        if self.__exist_node(name = name):
+            key = self.get_index(name = name)
+            return self.__nodes[key]
+        else:
+            ValueError("the node was not found")
 
     def get_nodes(self):
         return self.__nodes.copy()

@@ -6,7 +6,7 @@ from api.utils import check_not_null
 
 
 class PortType(Enum):
-    ETHERNET = "eth"
+    ETHERNET = "data"
     OPTICAL = "opt"
     RADIO = "wifi"
 
@@ -37,7 +37,7 @@ class Port(object):
 
     @property
     def name(self):
-        return self.__type.value + self.__idx
+        return "{type}{idx}".format(type = self.type.value, idx = self.idx)
 
     @name.setter
     def name(self, value):
@@ -61,16 +61,12 @@ class PortFabric(object):
         self.__ports = {}
         self.__count = itertools.count()
 
-    def add_port(self, port):
-        check_not_null(port, "the port object cannot be null")
-
-        if not self.is_exist(name = port.name):
-            key = self.__count.__next__()
-            port.idx = key
-            self.update_port(idx = key, port = port)
-            return port.name
-        else:
-            raise ValueError("The port already exists")
+    def add_port(self, type: PortType):
+        port = Port(type = type)
+        key = self.__count.__next__()
+        port.idx = key
+        self.__ports.update({key: port})
+        return port
 
     def del_port(self, name):
         check_not_null(name, "the port name cannot be null")

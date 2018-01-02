@@ -68,3 +68,12 @@ def rand_interface_name():
     upper = 10 ** digits - 1
 
     return str(random.randint(lower, upper))
+
+
+def disable_rx_off(netns, port_name):
+    ethtool = Path("/usr/sbin/ethtool")
+    if ethtool.exists():
+        cmd = "{app} --offload {intf} rx off tx off".format(app = ethtool, intf = port_name)
+        netns.send_cmd(cmd = cmd)
+    else:
+        raise RuntimeError("the ethtool was not found")

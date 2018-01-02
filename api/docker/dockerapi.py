@@ -34,7 +34,10 @@ def _create(name, image, ports = None, volumes = None, cap_add = None):
         tty = True,
         privileged = True,
         stdin_open = True,
-        network_mode = "none"
+        init = True,
+        environment = ["container=docker"],
+        ipc_mode = "shareable",
+        security_opt = ["label=disable"]
     )
 
     client.containers.run(image = image, **kwargs)
@@ -107,8 +110,8 @@ def _shell(name, shell = "bash"):
     terminal = Path("/usr/bin/xterm")
     docker = Path("/usr/bin/docker")
     if docker.is_file() and terminal.is_file():
-        cmd = ["{cmd} -fg white -bg black -fa 'Liberation Mono' -fs 10 -e  {d_cmd} exec -it {node_name} {shell}".format(
-            cmd = terminal.as_posix(), d_cmd = docker.as_posix(), node_name = name, shell = shell)]
+        cmd = ["{cmd} -T {node_name} -fg white -bg black -fa 'Liberation Mono' -fs 10 -e {d_cmd} exec -it {node_name} {shell}"
+                   .format(cmd = terminal.as_posix(), d_cmd = docker.as_posix(), node_name = name, shell = shell)]
         subprocess.Popen(cmd, shell = True)
     else:
         raise ValueError("xterm or docker not found")
@@ -128,6 +131,13 @@ def _services(name):
     client = docker.from_env()
     container = client.containers.get(container_id = name)
     return container.attrs["Config"]["ExposedPorts"]
+
+
+def _control_ip(name):
+    check_not_null(name, "the container name cannot be null")
+    client = docker.from_env()
+    container = client.containers.get(container_id = name)
+    return container.attrs["NetworkSettings"]["IPAddress"]
 
 
 class DockerApi(object):
@@ -217,3 +227,9 @@ class DockerApi(object):
             logger.error(str(ex.args))
             return None
 
+    @staticmethod
+    def get_control_ip(name):
+        try:
+            return _control_ip(name = name)
+        except Exception as ex:
+            logger.error(str(ex.args))

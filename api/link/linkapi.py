@@ -6,10 +6,10 @@ from api.utils import check_not_null
 
 
 class LinkType(Enum):
-    DIRECT = 1
-    HOST = 2
-    VIRTUAL = 3
-    WIFI = 4
+    DIRECT = "d"
+    HOST = "h"
+    VIRTUAL = "v"
+    WIFI = "w"
 
     def describe(self):
         return self.name.lower()
@@ -21,23 +21,21 @@ class LinkType(Enum):
 
 class Link(object):
 
-    def __init__(self, node_source, node_target, port_source, port_target, type: LinkType):
+    def __init__(self, node_source, node_target, type: LinkType, idx = None):
         self.__node_source = check_not_null(value = node_source, msg = "the name of source node cannot be null")
         self.__node_target = check_not_null(value = node_target, msg = "the name of target node cannot be null")
-        self.__port_target = check_not_null(value = port_target, msg = "the port of target cannot be null")
-        self.__port_source = check_not_null(value = port_source, msg = "the port of source cannot be null")
         self.__type = check_not_null(value = type, msg = "type of link cannot be null")
-        self.__idx = None
-        self.__name = None
+        self.__idx = idx
+
 
 
     @property
     def name(self):
-        return self.__name
+        return "{type}{idx}".format(type = self.type.value, idx = self.idx)
 
     @name.setter
     def name(self, value):
-        self.__name = value
+        pass
 
     @property
     def node_source(self):
@@ -61,7 +59,7 @@ class Link(object):
 
     @port_source.setter
     def port_source(self, value):
-        pass
+        self.__port_source = value
 
     @property
     def port_target(self):
@@ -69,7 +67,7 @@ class Link(object):
 
     @port_target.setter
     def port_target(self, value):
-       pass
+       self.__port_target = value
 
     @property
     def type(self):
@@ -100,37 +98,37 @@ class LinkFabric(object):
         self.__links_idx = count()
 
     def add_link(self, link):
-        if not self.__exist_link():
+        if not self.is_exist(name = link.name):
             key = self.__links_idx.__next__()
             link.idx = key
-            link.create()
-            self.__links.update({key: link})
+            self.__links.update({key:link})
             return link
         else:
             raise ValueError("the node object already exists")
 
-    def del_link(self, name = None, idx = None):
-        if self.__exist_link(name = name, idx = idx):
-            if name is not None:
-                key = self.__get_index(name = name)
-                node = self.__links[key]
-                node.delete()
-                del self.__links[key]
-            else:
-                node = self.__links[idx]
-                node.delete()
-                del self.__links[idx]
+    def del_link(self, name = None):
+        if self.is_exist(name = name):
+            key = self.__get_index(name = name)
+            del self.__links[key]
         else:
             ValueError("the node was not found")
 
     def update_link(self, idx, link):
-        if self.__exist_link(idx = idx):
+        if self.is_exist(name = link.name):
             self.__links.update({idx: link})
         else:
             ValueError("the node was not found")
 
     def get_links(self):
         return self.__links.copy()
+
+    def get_link(self, name):
+        check_not_null(name, "the name cannot be null")
+        if self.is_exist(name = name):
+            key = self.get_index(name = name)
+            return self.__links[key]
+        else:
+            ValueError("the link was not found")
 
     def is_exist(self, name):
         return self.__exist_link(name = name)

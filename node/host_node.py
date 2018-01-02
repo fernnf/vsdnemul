@@ -8,8 +8,11 @@ logger = get_logger("Host")
 class Host(Node):
 
     def __init__(self, name = None):
-        super().__init__(name = name, type = NodeType.HOST, image = "vsdn/host", volume = None,
-                         cap_add = ["SYS_ADMIN", "NET_ADMIN"])
+        super().__init__(name = name,
+                         type = NodeType.HOST,
+                         image = "vsdn/host",
+                         volume = {"/sys/fs/cgroup": {"bind": "/sys/fs/cgroup", "mode": "ro"}},
+                         cap_add = ["ALL"])
 
     def create(self):
         ret = DockerApi.create_node(name = self.name, ports = self.services, volumes = self.volume,

@@ -1,9 +1,7 @@
-from api.log.logapi import get_logger
-from api.port.portapi import Port, PortFabric
-from port.veth_port import SwitchEthPort, HostEthPort
-from api.node.nodeapi import NodeFabric
 from api.link.linkapi import LinkFabric, LinkType
-from itertools import count
+from api.log.logapi import get_logger
+from api.node.nodeapi import NodeFabric
+from api.port.portapi import Port
 
 logger = get_logger("Dataplane")
 
@@ -21,101 +19,72 @@ class Dataplane(object):
 
     def del_node(self, name):
         try:
-            self.del_link(name = name)
+            self.__nodes.del_node(name = name)
         except Exception as ex:
             logger.error(str(ex.args[0]))
 
     def add_link(self, link):
-        if not self.__links.is_exist(link.name):
-            node_target =  self.__nodes.
 
-            if link.type is LinkType.DIRECT:
+        try:
+            return self.__links.add_link(link = link)
+        except Exception as ex:
+            logger.error(ex.args[0])
 
     def del_link(self, name):
-        for k,v in self.__links.items():
-            if v.name.__eq__(name):
-                del self.__links[v.idx]
-                return True
-        return False
+        if self.__links.is_exist(name = name):
+            try:
+                self.__links.del_link(name = name)
+            except Exception as ex:
+                logger.error(ex.args[0])
+        else:
+            logger.warn("the link was not found")
 
-    def get_node(self, idx):
-        if idx is not None:
-            if idx in self.__nodes.keys():
-                return self.__nodes[idx]
+    def get_node(self, name):
+        return self.__nodes.get_node(name = name)
 
-    def get_link(self, idx):
-        if idx is not None:
-            if idx in self.__links.keys():
-                return self.__links[idx]
-        return None
+    def get_link(self, name):
+        return self.__links.get_link(name = name)
 
     def get_nodes(self):
-        return self.__nodes.copy()
+        return self.__nodes.get_nodes()
 
     def get_links(self):
-        return self.__links.copy()
+        return self.__links.get_links()
 
-    def exist_node(self, idx = None, name = None):
-        if idx is not None:
-            if idx in self.__nodes.keys():
-                return True
-        if name is not None:
-            for k, v in self.__nodes.items():
-                if v.__eq__(name):
-                    return True
-        return False
+    def exist_node(self, name):
+        return self.__nodes.is_exist(name = name)
 
-    def exist_link(self, idx = None, name = None):
-        if idx is not None:
-            if idx in self.__links.keys():
-                return True
-        if name is not None:
-            for k,v in self.__links.items():
-                if v.name.__eq__(name):
-                    return True
-        return False
+    def exist_link(self, name):
+        return self.__links.is_exist(name = name)
 
     def commit(self):
 
         def add_nodes():
-            for key, node in self.__nodes.items():
-                logger.info("Creating node ({name})".format(name = node.name))
+            for key, node in self.__nodes.get_nodes().items():
+                logger.info("Creating node ({key}:{name}) ".format(name = node.name, key = key))
                 node.create()
 
         def add_links():
-
-            for key, link in self.__links.items():
-
-                node_source = self.get_node(link.node_source)
-                node_target = self.get_node(link.node_target)
-
-                port_source = Port()
-
-
-
-                logger.info("Creating link {name}".format(name = key))
-                link.create()
+            for key, link in self.__links.get_links().items():
+                logger.info("Creating link ({key}:{name})".format(name = link.name, key = key))
+                s, t = link.create()
+                self.__nodes.update_node(idx = s.idx, node = s)
+                self.__nodes.update_node(idx = t.idx, node = t)
 
         add_nodes()
         add_links()
 
     def delete(self):
         def del_links():
-            for key, link in self.__links.items():
-                logger.info("Deleting link {name}".format(name = key))
+            for key, link in self.__links.get_links().items():
+                logger.info("Deleting link ({key}:{name})".format(name = link.name, key = key))
                 link.delete()
 
         def del_nodes():
-            for key, node in self.__nodes.items():
-                logger.info("Deleting node {name}".format(name = key))
+            for key, node in self.__nodes.get_nodes().items():
+                logger.info("Deleting node ({key}:{name}) ".format(name = node.name, key = key))
                 node.delete()
 
         del_links()
         del_nodes()
 
-    def __get_next_port(self, node):
-        ports = node.get_ports()
-        if len(ports) > 0:
-            idx = len(ports)+1
-            port = Port(idx = idx, )
-            return "eth{idx}".format(idx = idx)

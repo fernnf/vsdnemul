@@ -206,17 +206,17 @@ class Prompt(Cmd):
                  "\n Target port: {tgt_port} \n"
 
         def print_link(link):
-            print("[{i}]".format(i = link.id))
+            print("[{i}]".format(i = link.name))
 
-            print(output.format(id = link.id,
-                                src_node = link.node_source,
-                                tgt_node = link.node_target,
-                                src_port = link.port_source,
-                                tgt_port = link.port_target))
+            print(output.format(id = link.name,
+                                src_node = link.node_source.name,
+                                tgt_node = link.node_target.name,
+                                src_port = link.port_source.name,
+                                tgt_port = link.port_target.name))
             print("[>]")
 
         def list_link():
-            link = self.dataplane.get_link(opts.id)
+            link = self.dataplane.get_link(name = opts.id)
             print_link(link = link)
 
         def list_links():
@@ -250,10 +250,10 @@ class Prompt(Cmd):
     ])
     def do_delete_link(self, arg, opts):
 
-        if self.dataplane.exist_link(id = opts.id):
-            link = self.dataplane.get_link(id = opts.id)
+        if self.dataplane.exist_link(name = opts.id):
+            link = self.dataplane.get_link(name = opts.id)
             link.delete()
-            self.dataplane.del_link(id = opts.id)
+            self.dataplane.del_link(name = opts.id)
             print("the link ({id}) has deleted".format(id=opts.id))
         else:
             print("the link was not found by id ({id})".format(id = opts.id))

@@ -34,12 +34,11 @@ def _enable_app(ctl_ip, name_app):
 
 
 class Onos(Node):
-    def __init__(self, label = None):
-        self.__mgt_interface = "mgt0"
+    def __init__(self, name):
 
-        super().__init__(name = label,
+        super().__init__(name = name,
                          type = NodeType.CONTROLLER,
-                         image = "vsdn/onos",
+                         image = "onosproject/onos",
                          services = {'6653/tcp': None,
                                     '6640/tcp': None,
                                     '8181/tcp': None,
@@ -60,14 +59,14 @@ class Onos(Node):
             logger.error("the onos controller node cannot be deleted")
 
     def enableApp(self, app_name):
-        ctl_ip = IpRouteApi.get_interface_addr(netns = self.name)
+        ctl_ip = DockerApi.get_control_ip(name = self.name)
         try:
             _enable_app(ctl_ip = ctl_ip, name_app = app_name)
         except Exception as ex:
             logger.error(str(ex.args[0]))
 
     def disableApp(self, app_name):
-        ctl_ip = IpRouteApi.get_interface_addr(netns = self.name)
+        ctl_ip = DockerApi.get_control_ip(name = self.name)
         try:
             _disable_app(ctl_ip = ctl_ip, name_app = app_name)
         except Exception as ex:

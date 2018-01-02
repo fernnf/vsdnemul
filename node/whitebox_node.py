@@ -13,10 +13,10 @@ class WhiteBox(Node):
 
         super().__init__(name = name,
                          type = NodeType.SWITCH,
-                         services = {'22/tcp': None, '6633/tcp': None, '6640/tcp': None, '6653/tcp': None},
+                         services = None,
                          image = "vsdn/whitebox",
                          volume = None,
-                         cap_add = ["SYS_ADMIN", "NET_ADMIN"])
+                         cap_add = ["ALL"])
 
     def set_controller(self, ip = None, port = "6653", bridge = "switch0", type = "tcp"):
         try:
