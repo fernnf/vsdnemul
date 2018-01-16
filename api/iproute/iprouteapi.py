@@ -1,6 +1,6 @@
 from pyroute2 import IPDB, NetNS, IPRoute
 from api.log.logapi import get_logger
-from api.utils import check_not_null
+from api.utils.utils import check_not_null
 
 logger = get_logger("IpRouteApi")
 

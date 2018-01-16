@@ -3,7 +3,7 @@ from api.link.linkapi import Link, LinkType
 from api.port.portapi import PortType
 from api.log.logapi import get_logger
 from api.ovsdb.ovsdbapi import OvsdbApi
-from api.utils import rand_interface_name, check_not_null, disable_rx_off
+from api.utils.utils import rand_interface_name, check_not_null, disable_rx_off
 
 logger_direct = get_logger("DirectLinkVeth")
 

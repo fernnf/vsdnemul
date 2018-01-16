@@ -1,0 +1,17 @@
+FROM alpine:edge
+RUN apk update 
+RUN apk add --upgrade busybox 
+RUN apk add openvswitch tcpdump nano iproute2 ethtool bash
+COPY boot.sh /bin/boot.sh
+ENV PS1="[vsdn:whitebox \u@\h]# "
+
+LABEL br.ufpa.label.name="WhiteBox"\
+      br.ufpa.label.description="Whitebox switch"\
+      br.ufpa.label.vendor="Federal University of Para"\
+      br.ufpa.label.contact="fernnf@gmail.com"\
+      br.ufpa.label.application="vSDNAgent"\
+      br.ufpa.label.version="0.1"\
+      br.ufpa.label.license="Apache2"
+
+ENTRYPOINT [ "/bin/sh" ]
+CMD [ "/bin/boot.sh" ]

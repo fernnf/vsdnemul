@@ -1,8 +1,7 @@
+from api.docker.dockerapi import DockerApi
 from api.log.logapi import get_logger
 from api.node.nodeapi import Node, NodeType
 from api.ovsdb.ovsdbapi import OvsdbApi
-from api.docker.dockerapi import DockerApi
-from api.utils import check_not_null
 
 logger = get_logger("Whitebox")
 

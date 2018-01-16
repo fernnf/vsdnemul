@@ -1,10 +1,9 @@
 import requests
 
 from api.docker.dockerapi import DockerApi
-from api.iproute.iprouteapi import IpRouteApi
 from api.log.logapi import get_logger
 from api.node.nodeapi import Node, NodeType
-from api.utils import check_not_null
+from api.utils.utils import check_not_null
 
 logger = get_logger("ONOS")
 
@@ -38,7 +37,7 @@ class Onos(Node):
 
         super().__init__(name = name,
                          type = NodeType.CONTROLLER,
-                         image = "onosproject/onos",
+                         image = "vsdn/onos",
                          services = {'6653/tcp': None,
                                     '6640/tcp': None,
                                     '8181/tcp': None,

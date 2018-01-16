@@ -2,7 +2,7 @@ from cmd2 import Cmd, make_option, options
 
 from api.dataplane.dataplaneapi import Dataplane
 from api.node.nodeapi import Node
-from api.utils import equals_ignore_case
+from api.utils.utils import equals_ignore_case
 from link.bridge_link import DirectLinkBridge, HostLinkBridge
 from link.ovs_link import DirectLinkOvs, HostLinkOvs
 from node.host_node import Host

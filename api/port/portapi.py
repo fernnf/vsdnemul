@@ -2,7 +2,7 @@ import itertools
 from enum import Enum
 from abc import ABCMeta
 
-from api.utils import check_not_null
+from api.utils.utils import check_not_null
 
 
 class PortType(Enum):

@@ -8,7 +8,7 @@ setup(
     license = 'Apache2',
     author = 'Fernando Farias',
     author_email = 'fernnf@gmail.com',
-    description = '',
+    description = 'A SDN prototyper for create network topology for rapid developer application.',
     requires = ['pyroute2', 'docker', 'cmd2', 'requests', 'names']
 )
 

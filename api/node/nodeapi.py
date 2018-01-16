@@ -3,7 +3,7 @@ from itertools import count
 
 from api.docker.dockerapi import DockerApi
 from api.port.portapi import PortFabric, PortType
-from api.utils import check_not_null
+from api.utils.utils import check_not_null
 from log import Logger
 
 logger = Logger.logger("Node")

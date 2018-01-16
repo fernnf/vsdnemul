@@ -50,7 +50,7 @@ def is_valid_ip(addr: str):
         ipaddress.ip_address(address = addr)
         return True
     except Exception as ex:
-        raise ValueError("Error: " + ex.args[0])
+        return False
 
 
 def equals_ignore_case(a: str, b: str):
@@ -62,7 +62,6 @@ def rand_name():
 
 
 def rand_interface_name():
-
     digits = 8
     lower = 10 ** (digits - 1)
     upper = 10 ** digits - 1

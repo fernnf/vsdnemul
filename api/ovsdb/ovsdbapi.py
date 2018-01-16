@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 from api.docker.dockerapi import DockerApi
 from api.log.logapi import logging
-from api.utils import check_not_null
+from api.utils.utils import check_not_null
 
 logger = logging.getLogger("OvsdbApi")
 
