@@ -9,7 +9,6 @@ logger = get_logger(__name__)
 class WhiteBox(Node):
 
     def __init__(self, name = None):
-
         super().__init__(name = name,
                          type = NodeType.SWITCH,
                          services = None,
