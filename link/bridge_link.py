@@ -1,15 +1,11 @@
-import uuid
-import random
-
 from api.iproute.iprouteapi import IpRouteApi
 from api.link.linkapi import Link, LinkType
-from api.port.portapi import PortType
 from api.log.logapi import get_logger
 from api.ovsdb.ovsdbapi import OvsdbApi
+from api.port.portapi import PortType
 from api.utils.utils import rand_interface_name, check_not_null, disable_rx_off
 
-
-logger_direct = get_logger("DirectLinkBridge")
+logger = get_logger(__name__)
 
 
 class DirectLinkBridge(Link):
@@ -46,7 +42,7 @@ class DirectLinkBridge(Link):
             return self.node_source, self.node_target
 
         except Exception as ex:
-            logger_direct.error(str(ex.args))
+            logger.error(str(ex.args))
 
     def delete(self):
 
@@ -58,10 +54,7 @@ class DirectLinkBridge(Link):
             IpRouteApi.delete_port(ifname = self.name)
 
         except Exception as ex:
-            logger_direct.error(str(ex.args))
-
-
-logger_host = get_logger("HostLinkBridge")
+            logger.error(str(ex.args))
 
 
 class HostLinkBridge(Link):
@@ -104,7 +97,7 @@ class HostLinkBridge(Link):
 
             return self.node_source, self.node_target
         except Exception as ex:
-            logger_host.error(str(ex.args))
+            logger.error(str(ex.args))
 
     def delete(self, ):
 
@@ -115,4 +108,4 @@ class HostLinkBridge(Link):
             OvsdbApi.del_port_br(bridge = self._bridge_ns, netns = self.node_target.name, port_name = self.port_target.name)
 
         except Exception as ex:
-            logger_host.error(str(ex.args))
+            logger.error(str(ex.args))

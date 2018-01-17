@@ -5,6 +5,7 @@ from api.node.nodeapi import Node
 from api.utils.utils import equals_ignore_case
 from link.bridge_link import DirectLinkBridge, HostLinkBridge
 from link.ovs_link import DirectLinkOvs, HostLinkOvs
+from link.veth_link import DirectLinkVeth, HostLinkVeth
 from node.host_node import Host
 from node.whitebox_node import WhiteBox
 
@@ -69,7 +70,7 @@ class Prompt(Cmd):
     ])
     def do_create_node(self, arg, opts):
         """Create a new node on topology. \nNodes types available:
-        \n   1 - Whitebox \n   2 - Host \n   3 - ONOS
+        \n   1 - Whitebox \n   2 - Host
         """
         if equals_ignore_case(opts.type, "whitebox"):
             node = WhiteBox(name = opts.name)
@@ -78,12 +79,6 @@ class Prompt(Cmd):
             print("the whitebox node ({name}) has created".format(name = node.name))
 
         elif equals_ignore_case(opts.type, "host"):
-            node = Host(name = opts.name)
-            node.create()
-            self.dataplane.add_node(node = node)
-            print("the host node ({name}) has created".format(name = node.name))
-
-        elif equals_ignore_case(opts.type, "onos"):
             node = Host(name = opts.name)
             node.create()
             self.dataplane.add_node(node = node)
@@ -120,33 +115,42 @@ class Prompt(Cmd):
     def do_create_direct_link(self, arg, opts):
         """Create a link between two nodes
         \ntechologies types:
-        \n  1 - DirectLinkOvs \n  2 - DirectLinkBridge
+        \n  1 - DirectLinkOvs \n  2 - DirectLinkBridge \n 3 - DirectVethLink
         """
         error = "Error: {msg}"
         success = "The {tech} link ({id}) has created"
+        source = None
+        target = None
 
-        source = self.dataplane.exist_node(opts.source)
-        target = self.dataplane.exist_node(opts.destination)
+        try:
+            source = self.dataplane.get_node(opts.source)
+            target = self.dataplane.get_node(opts.destination)
+            if source.type.value() == 2 and target.type.value() == 2:
+                if equals_ignore_case(opts.type, "directlinkovs"):
 
-        if source is True and target is True:
-            if equals_ignore_case(opts.type, "directlinkovs"):
+                    link = DirectLinkOvs(node_source = source, node_target = target, mtu = opts.mtu)
+                    link.create()
+                    self.dataplane.add_link(link = link)
+                    print(success.format(tech = "link-direct-ovs", id = link.idx))
 
-                link = DirectLinkOvs(node_source = opts.source, node_target = opts.destination, mtu = opts.mtu)
-                link.create()
-                self.dataplane.add_link(link = link)
-                print(success.format(tech = "link-direct-ovs", id = link.id))
+                elif equals_ignore_case(opts.type, "directlinkbridge"):
 
-            elif equals_ignore_case(opts.type, "directlinkbridge"):
+                    link = DirectLinkBridge(node_source = source, node_target = target, mtu = opts.mtu)
+                    link.create()
+                    self.dataplane.add_link(link = link)
+                    print(success.format(tech = "link-direct-bridge", id = link.idx))
 
-                link = DirectLinkBridge(node_source = opts.source, node_target = opts.destination, mtu = opts.mtu)
-                link.create()
-                self.dataplane.add_link(link = link)
-                print(success.format(tech = "link-direct-bridge", id = link.id))
+                elif equals_ignore_case(opts.type, "directvethlink"):
+                    link = DirectLinkVeth(node_source = source, node_target = target, mtu = opts.mtu)
+                    link.create()
+                    self.dataplane.add_link(link = link)
+                    print(success.format(tech = "link-direct-veth-pair", id = link.idx))
 
-            else:
-                print(error.format("the technology type is unknown"))
-        else:
-            print(error.format("the node of target or source was not found"))
+                else:
+                    print(error.format("the technology type is unknown"))
+
+        except Exception as ex:
+            print(error.format(ex.args[0]))
 
     @options([
         make_option("-s", "--source", action = "store", type = "string", help = ""),
@@ -168,31 +172,45 @@ class Prompt(Cmd):
         error = "Error: {msg}"
         success = "The {tech} link ({id}) has created"
 
-        source = self.dataplane.exist_node(opts.source)
-        target = self.dataplane.exist_node(opts.destination)
+        try:
+            source = self.dataplane.exist_node(opts.source)
+            target = self.dataplane.exist_node(opts.destination)
 
-        if source is True and target is True:
-            if equals_ignore_case(opts.type, "hostlinkovs"):
+            if source.type.value() == 1 and target.type.value() == 2:
 
-                link = HostLinkOvs(node_host = opts.source, node_target = opts.destination, mtu = opts.mtu,
-                                   ip_host = opts.address, gateway_host = opts.gateway)
-                link.create()
-                self.dataplane.add_link(link = link)
-                print(success.format(tech = "link-host-direct-ovs", id = link.id))
+                if equals_ignore_case(opts.type, "hostlinkovs"):
 
-            elif equals_ignore_case(opts.type, "hostlinkbridge"):
+                    link = HostLinkOvs(node_host = source, node_target = target, mtu = opts.mtu,
+                                       ip_host = opts.address, gateway_host = opts.gateway)
+                    link.create()
+                    self.dataplane.add_link(link = link)
+                    print(success.format(tech = "link-host-direct-ovs", id = link.idx))
 
-                link = HostLinkBridge(node_source = opts.source, node_target = opts.destination, mtu = opts.mtu,
-                                      ip_host = opts.address, gateway_host = opts.gateway)
+                elif equals_ignore_case(opts.type, "hostlinkbridge"):
+                    link = HostLinkBridge(node_host = source, node_target = target, mtu = opts.mtu,
+                                          ip_host = opts.address, gateway_host = opts.gateway)
 
-                link.create()
-                self.dataplane.add_link(link = link)
-                print(success.format(tech = "link-host-direct-bridge", id = link.id))
+                    link.create()
+                    self.dataplane.add_link(link = link)
+                    print(success.format(tech = "link-host-direct-bridge", id = link.idx))
+
+                elif equals_ignore_case(opts.type, "hostlinkveth"):
+
+                    link = HostLinkVeth(node_host = source, node_target = target, mtu = opts.mtu,
+                                        ip_host = opts.address, gateway_host = opts.gateway)
+
+                    link.create()
+                    self.dataplane.add_link(link = link)
+                    print(success.format(tech = "link-host-direct-veth-pair", id = link.idx))
+
+                else:
+                    print(error.format("the technology type is unknown"))
 
             else:
-                print(error.format("the technology type is unknown"))
-        else:
-            print(error.format("the node of target or source was not found"))
+                print(error.format("the node of target or source was not valid"))
+
+        except Exception as ex:
+            print(ex.args[0])
 
     @options([
         make_option("-i", "--id", action = "store", type = "string", help = ""),
@@ -231,7 +249,7 @@ class Prompt(Cmd):
 
     @options([
         make_option("-n", "--name", action = "store", type = "string", help = "the label used by node"),
-        make_option("-s", "--shell", action = "store", type = "string", default="bash",
+        make_option("-s", "--shell", action = "store", type = "string", default = "bash",
                     help = "the shell used by cli [default: %default]")
     ])
     def do_cli_node(self, arg, opts):
@@ -246,7 +264,7 @@ class Prompt(Cmd):
             print("The node was not found on topology")
 
     @options([
-        make_option("-i", "--id", action="store", type = "string", help = "the link id on topology")
+        make_option("-i", "--id", action = "store", type = "string", help = "the link id on topology")
     ])
     def do_delete_link(self, arg, opts):
 
@@ -254,7 +272,6 @@ class Prompt(Cmd):
             link = self.dataplane.get_link(name = opts.id)
             link.delete()
             self.dataplane.del_link(name = opts.id)
-            print("the link ({id}) has deleted".format(id=opts.id))
+            print("the link ({id}) has deleted".format(id = opts.id))
         else:
             print("the link was not found by id ({id})".format(id = opts.id))
-

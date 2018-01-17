@@ -1,4 +1,3 @@
-import uuid
 from enum import Enum
 from itertools import count
 
@@ -26,8 +25,6 @@ class Link(object):
         self.__node_target = check_not_null(value = node_target, msg = "the name of target node cannot be null")
         self.__type = check_not_null(value = type, msg = "type of link cannot be null")
         self.__idx = idx
-
-
 
     @property
     def name(self):
@@ -67,7 +64,7 @@ class Link(object):
 
     @port_target.setter
     def port_target(self, value):
-       self.__port_target = value
+        self.__port_target = value
 
     @property
     def type(self):
@@ -101,7 +98,7 @@ class LinkFabric(object):
         if not self.is_exist(name = link.name):
             key = self.__links_idx.__next__()
             link.idx = key
-            self.__links.update({key:link})
+            self.__links.update({key: link})
             return link
         else:
             raise ValueError("the node object already exists")

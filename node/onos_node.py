@@ -5,7 +5,7 @@ from api.log.logapi import get_logger
 from api.node.nodeapi import Node, NodeType
 from api.utils.utils import check_not_null
 
-logger = get_logger("ONOS")
+logger = get_logger(__name__)
 
 
 def _disable_app(ctl_ip, name_app):
@@ -39,10 +39,10 @@ class Onos(Node):
                          type = NodeType.CONTROLLER,
                          image = "vsdn/onos",
                          services = {'6653/tcp': None,
-                                    '6640/tcp': None,
-                                    '8181/tcp': None,
-                                    '8101/tcp': None,
-                                    '9876/tcp': None},
+                                     '6640/tcp': None,
+                                     '8181/tcp': None,
+                                     '8101/tcp': None,
+                                     '9876/tcp': None},
                          cap_add = ["SYS_ADMIN", "NET_ADMIN"],
                          volume = {"/sys/fs/cgroup": {"bind": "/sys/fs/cgroup", "mode": "ro"}})
 

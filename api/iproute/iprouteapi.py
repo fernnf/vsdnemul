@@ -1,8 +1,9 @@
 from pyroute2 import IPDB, NetNS, IPRoute
+
 from api.log.logapi import get_logger
 from api.utils.utils import check_not_null
 
-logger = get_logger("IpRouteApi")
+logger = get_logger(__name__)
 
 
 def _add_port_ns(ifname, netns, new_name = None):
@@ -55,7 +56,6 @@ def _create_bridge(ifname, slaves = [], netns = None, mtu = 1500):
     with ip.interfaces[ifname] as bridge:
         if len(slaves) > 0:
             for intf in slaves:
-
                 bridge.add_port(intf)
 
             bridge.set_mtu(int(mtu))
@@ -253,7 +253,7 @@ class IpRouteApi(object):
         try:
             _switch_on(ifname = ifname, netns = netns)
         except Exception as ex:
-            logger.log(str(ex.args))
+            logger.error(str(ex.args))
 
     @staticmethod
     def switch_off(ifname, netns = None):

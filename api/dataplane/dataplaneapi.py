@@ -1,12 +1,12 @@
-from api.link.linkapi import LinkFabric, LinkType
+from api.link.linkapi import LinkFabric
 from api.log.logapi import get_logger
 from api.node.nodeapi import NodeFabric
-from api.port.portapi import Port
 
-logger = get_logger("Dataplane")
+logger = get_logger(__name__)
 
 
 class Dataplane(object):
+
     def __init__(self):
         self.__nodes = NodeFabric()
         self.__links = LinkFabric()
@@ -24,7 +24,6 @@ class Dataplane(object):
             logger.error(str(ex.args[0]))
 
     def add_link(self, link):
-
         try:
             return self.__links.add_link(link = link)
         except Exception as ex:
@@ -37,7 +36,7 @@ class Dataplane(object):
             except Exception as ex:
                 logger.error(ex.args[0])
         else:
-            logger.warn("the link was not found")
+            logger.warning("the link was not found")
 
     def get_node(self, name):
         return self.__nodes.get_node(name = name)

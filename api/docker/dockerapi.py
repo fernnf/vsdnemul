@@ -1,13 +1,12 @@
-import os
 import subprocess
+from pathlib import Path
 
 import docker
 
-from pathlib import Path
 from api.log.logapi import get_logger
 from api.utils.utils import check_not_null, create_namespace, delete_namespace
 
-logger = get_logger("DockerApi")
+logger = get_logger(__name__)
 
 
 def _create(name, image, ports = None, volumes = None, cap_add = None):

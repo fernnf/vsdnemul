@@ -2,7 +2,7 @@ from api.docker.dockerapi import DockerApi
 from api.log.logapi import get_logger
 from api.node.nodeapi import Node, NodeType
 
-logger = get_logger("Host")
+logger = get_logger(__name__)
 
 
 class Host(Node):

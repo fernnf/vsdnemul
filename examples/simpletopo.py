@@ -1,18 +1,13 @@
-from api.log.logapi import get_logger, setup_logging
 from api.dataplane.dataplaneapi import Dataplane
+from api.log.logapi import get_logger
 from api.node.nodeapi import NodeType
-from node.whitebox_node import WhiteBox
-from node.host_node import Host
-from link.ovs_link import DirectLinkOvs , HostLinkOvs
-from link.bridge_link import HostLinkBridge
-from link.veth_link import HostLinkVeth, DirectLinkVeth
 from frontend.cli import Prompt
-import logging
-
+from link.veth_link import HostLinkVeth, DirectLinkVeth
+from node.host_node import Host
 from node.onos_node import Onos
+from node.whitebox_node import WhiteBox
 
-#from dataplane import Dataplane
-
+logger = get_logger("topology.script")
 
 def Topology():
 
@@ -42,7 +37,6 @@ def Topology():
 
 
 def Controlplane(dataplane):
-
     def exist_ctl():
         for k, n in dataplane.get_nodes().items():
             if n.type == NodeType.CONTROLLER:
@@ -57,7 +51,7 @@ def Controlplane(dataplane):
 
     ctl = exist_ctl()
     connect_ctl(control_ip = ctl.control_ip)
-    logging.info("Controller IP: http://{ip}:8181/onos/ui/login.html".format(ip = ctl.control_ip))
+    logger.info("Controller IP: http://{ip}:8181/onos/ui/login.html".format(ip = ctl.control_ip))
 
 
 
@@ -84,20 +78,17 @@ def Controller():
 """
 
 if __name__ == '__main__':
-
-    setup_logging()
-
-    logging.info("Creating Topology")
+    logger.info("Creating Topology")
 
     data = Topology()
 
     data.commit()
 
-    logging.info("Topology initialized")
+    logger.info("Topology initialized")
 
     Controlplane(dataplane = data)
 
-    logging.info("Control plane initialized")
+    logger.info("Control plane initialized")
 
     cmd = Prompt(dataplane = data)
     cmd.cmdloop()

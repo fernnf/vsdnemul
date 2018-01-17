@@ -2,11 +2,11 @@ from enum import Enum
 from itertools import count
 
 from api.docker.dockerapi import DockerApi
+from api.log.logapi import get_logger
 from api.port.portapi import PortFabric, PortType
 from api.utils.utils import check_not_null
-from log import Logger
 
-logger = Logger.logger("Node")
+logger = get_logger(__name__)
 
 
 class NodeType(Enum):
@@ -39,7 +39,6 @@ class Node(object):
         self.__cap_add = cap_add
         self.__ports = PortFabric()
         self.__idx = None
-
 
     @property
     def idx(self):
@@ -127,7 +126,6 @@ class Node(object):
             return DockerApi.get_status_node(name = self.name)
         except Exception as ex:
             logger.error(str(ex.args[0]))
-
 
     @property
     def control_ip(self):

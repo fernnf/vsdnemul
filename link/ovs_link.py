@@ -4,10 +4,7 @@ from api.ovsdb.ovsdbapi import OvsdbApi
 from api.port.portapi import PortType
 from api.utils.utils import check_not_null, disable_rx_off
 
-from pathlib import Path
-
-
-logger_direct = get_logger("DirectLinkOvs")
+logger = get_logger(__name__)
 
 
 class DirectLinkOvs(Link):
@@ -42,7 +39,7 @@ class DirectLinkOvs(Link):
             return self.node_source, self.node_target
 
         except Exception as ex:
-            logger_direct.error(str(ex.args[0]))
+            logger.error(str(ex.args[0]))
 
     def delete(self):
 
@@ -59,10 +56,7 @@ class DirectLinkOvs(Link):
             OvsdbApi.del_bridge(bridge = self.name)
 
         except Exception as ex:
-            logger_direct.error(str(ex.args[0]))
-
-
-logger_host = get_logger("HostLinkOvsVeth")
+            logger.error(str(ex.args[0]))
 
 
 class HostLinkOvs(Link):
@@ -98,7 +92,7 @@ class HostLinkOvs(Link):
             return self.node_source, self.node_target
 
         except Exception as ex:
-            logger_host.error(str(ex.args))
+            logger.error(str(ex.args))
 
     def delete(self):
 
@@ -113,4 +107,4 @@ class HostLinkOvs(Link):
             OvsdbApi.del_bridge(bridge = self.name)
 
         except Exception as ex:
-            logger_host.error(ex.args)
+            logger.error(ex.args)

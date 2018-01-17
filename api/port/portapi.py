@@ -1,6 +1,5 @@
 import itertools
 from enum import Enum
-from abc import ABCMeta
 
 from api.utils.utils import check_not_null
 

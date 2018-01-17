@@ -3,7 +3,7 @@ from api.log.logapi import get_logger
 from api.node.nodeapi import Node, NodeType
 from api.ovsdb.ovsdbapi import OvsdbApi
 
-logger = get_logger("Whitebox")
+logger = get_logger(__name__)
 
 
 class WhiteBox(Node):

@@ -1,11 +1,11 @@
 from api.iproute.iprouteapi import IpRouteApi
 from api.link.linkapi import Link, LinkType
-from api.port.portapi import PortType
 from api.log.logapi import get_logger
 from api.ovsdb.ovsdbapi import OvsdbApi
+from api.port.portapi import PortType
 from api.utils.utils import rand_interface_name, check_not_null, disable_rx_off
 
-logger_direct = get_logger("DirectLinkVeth")
+logger = get_logger(__name__)
 
 
 class DirectLinkVeth(Link):
@@ -29,8 +29,10 @@ class DirectLinkVeth(Link):
             IpRouteApi.switch_on(ifname = self.port_source.name, netns = self.node_source.name)
             IpRouteApi.switch_on(ifname = self.port_target.name, netns = self.node_target.name)
 
-            OvsdbApi.add_port_br(bridge = self._bridge_ns, netns = self.node_source.name, port_name = self.port_source.name)
-            OvsdbApi.add_port_br(bridge = self._bridge_ns, netns = self.node_target.name, port_name = self.port_target.name)
+            OvsdbApi.add_port_br(bridge = self._bridge_ns, netns = self.node_source.name,
+                                 port_name = self.port_source.name)
+            OvsdbApi.add_port_br(bridge = self._bridge_ns, netns = self.node_target.name,
+                                 port_name = self.port_target.name)
 
             disable_rx_off(netns = self.node_source, port_name = self.port_source.name)
             disable_rx_off(netns = self.node_target, port_name = self.port_target.name)
@@ -38,25 +40,25 @@ class DirectLinkVeth(Link):
             return self.node_source, self.node_target
 
         except Exception as ex:
-            logger_direct.error(str(ex.args))
+            logger.error(str(ex.args))
 
     def delete(self):
 
         try:
             IpRouteApi.delete_port(ifname = self.port_source.name, netns = self.node_source.name)
-            OvsdbApi.del_port_br(bridge = self._bridge_ns, port_name = self.port_source.name, netns = self.node_source.name)
-            OvsdbApi.del_port_br(bridge = self._bridge_ns, port_name = self.port_target.name, netns = self.node_target.name)
+            OvsdbApi.del_port_br(bridge = self._bridge_ns, port_name = self.port_source.name,
+                                 netns = self.node_source.name)
+            OvsdbApi.del_port_br(bridge = self._bridge_ns, port_name = self.port_target.name,
+                                 netns = self.node_target.name)
 
         except Exception as ex:
-            logger_direct.error(str(ex.args))
-
-
-logger_host = get_logger("HostLinkVeth")
+            logger.error(str(ex.args))
 
 
 class HostLinkVeth(Link):
 
-    def __init__(self, node_host, node_target, ip_host = None, mtu = "1500", gateway_host = None, bridge_ns = "switch0"):
+    def __init__(self, node_host, node_target, ip_host = None, mtu = "1500", gateway_host = None,
+                 bridge_ns = "switch0"):
         check_not_null(id, "the id link cannot be null")
         super().__init__(type = LinkType.HOST, node_source = node_host, node_target = node_target)
         self._bridge_ns = bridge_ns
@@ -91,7 +93,7 @@ class HostLinkVeth(Link):
             return self.node_source, self.node_target
 
         except Exception as ex:
-            logger_host.error(str(ex.args))
+            logger.error(str(ex.args))
 
     def delete(self):
 
@@ -100,7 +102,4 @@ class HostLinkVeth(Link):
             OvsdbApi.del_port_br(bridge = self._bridge_ns, netns = self.node_target.name,
                                  port_name = self.port_target.name)
         except Exception as ex:
-            logger_host.error(str(ex.args))
-
-
-
+            logger.error(str(ex.args))
