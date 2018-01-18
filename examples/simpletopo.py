@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from vsdnagent.api.dataplane.dataplaneapi import Dataplane
 from vsdnagent.api.log.logapi import get_logger
 from vsdnagent.api.node.nodeapi import NodeType

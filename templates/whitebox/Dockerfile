@@ -6,7 +6,7 @@ COPY boot.sh /bin/boot.sh
 ENV PS1="[vsdn:whitebox \u@\h]# "
 
 LABEL br.ufpa.label.name="WhiteBox"\
-      br.ufpa.label.description="Whitebox switch"\
+      br.ufpa.label.description="Whitebox Switch"\
       br.ufpa.label.vendor="Federal University of Para"\
       br.ufpa.label.contact="fernnf@gmail.com"\
       br.ufpa.label.application="vSDNAgent"\
