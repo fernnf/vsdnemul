@@ -1,13 +1,14 @@
-from api.dataplane.dataplaneapi import Dataplane
-from api.log.logapi import get_logger
-from api.node.nodeapi import NodeType
-from frontend.cli import Prompt
-from link.veth_link import HostLinkVeth, DirectLinkVeth
-from node.host_node import Host
-from node.onos_node import Onos
-from node.whitebox_node import WhiteBox
+from vsdnagent.api.dataplane.dataplaneapi import Dataplane
+from vsdnagent.api.log.logapi import get_logger
+from vsdnagent.api.node.nodeapi import NodeType
+from vsdnagent.frontend.cli import Prompt
+from vsdnagent.link.veth_link import HostLinkVeth, DirectLinkVeth
+from vsdnagent.node.host_node import Host
+from vsdnagent.node.onos_node import Onos
+from vsdnagent.node.whitebox_node import WhiteBox
 
 logger = get_logger("topology.script")
+
 
 def Topology():
 
