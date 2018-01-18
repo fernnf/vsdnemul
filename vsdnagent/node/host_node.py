@@ -1,6 +1,6 @@
-from api.docker.dockerapi import DockerApi
-from api.log.logapi import get_logger
-from api.node.nodeapi import Node, NodeType
+from vsdnagent.api.docker.dockerapi import DockerApi
+from vsdnagent.api.log.logapi import get_logger
+from vsdnagent.api.node.nodeapi import Node, NodeType
 
 logger = get_logger(__name__)
 

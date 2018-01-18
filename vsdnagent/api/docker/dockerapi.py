@@ -2,8 +2,9 @@ import subprocess
 from pathlib import Path
 
 import docker
-from api.log.logapi import get_logger
-from api.utils.utils import check_not_null, create_namespace, delete_namespace
+
+from vsdnagent.api.log.logapi import get_logger
+from vsdnagent.api.utils.utils import check_not_null, create_namespace, delete_namespace
 
 logger = get_logger(__name__)
 

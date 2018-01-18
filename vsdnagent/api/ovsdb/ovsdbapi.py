@@ -1,9 +1,9 @@
 import subprocess
 from pathlib import Path
 
-from api.docker.dockerapi import DockerApi
-from api.log.logapi import get_logger
-from api.utils.utils import check_not_null
+from vsdnagent.api.docker.dockerapi import DockerApi
+from vsdnagent.api.log.logapi import get_logger
+from vsdnagent.api.utils.utils import check_not_null
 
 logger = get_logger(__name__)
 

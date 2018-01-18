@@ -1,13 +1,13 @@
-from api.dataplane.dataplaneapi import Dataplane
-from api.node.nodeapi import Node
-from api.utils.utils import equals_ignore_case
 from cmd2 import Cmd, make_option, options
 
-from vsdnagent.link import DirectLinkBridge, HostLinkBridge
-from vsdnagent.link import DirectLinkVeth, HostLinkVeth
+from vsdnagent.api.dataplane.dataplaneapi import Dataplane
+from vsdnagent.api.node.nodeapi import Node
+from vsdnagent.api.utils.utils import equals_ignore_case
+from vsdnagent.link.bridge_link import DirectLinkBridge, HostLinkBridge
 from vsdnagent.link.ovs_link import DirectLinkOvs, HostLinkOvs
-from vsdnagent.node import WhiteBox
+from vsdnagent.link.veth_link import DirectLinkVeth, HostLinkVeth
 from vsdnagent.node.host_node import Host
+from vsdnagent.node.whitebox_node import WhiteBox
 
 
 class Prompt(Cmd):

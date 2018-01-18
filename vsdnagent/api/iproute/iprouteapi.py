@@ -1,6 +1,7 @@
-from api.log.logapi import get_logger
-from api.utils.utils import check_not_null
 from pyroute2 import IPDB, NetNS, IPRoute
+
+from vsdnagent.api.log.logapi import get_logger
+from vsdnagent.api.utils.utils import check_not_null
 
 logger = get_logger(__name__)
 
