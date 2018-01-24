@@ -1,6 +1,6 @@
-from vsdnagent.api.link.linkapi import LinkFabric
-from vsdnagent.api.log.logapi import get_logger
-from vsdnagent.api.node.nodeapi import NodeFabric
+from vsdnemu.api.link.linkapi import LinkFabric
+from vsdnemu.api.log.logapi import get_logger
+from vsdnemu.api.node.nodeapi import NodeFabric
 
 logger = get_logger(__name__)
 

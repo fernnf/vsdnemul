@@ -1,7 +1,7 @@
 import itertools
 from enum import Enum
 
-from vsdnagent.api.utils.utils import check_not_null
+from vsdnemu.api.utils.utils import check_not_null
 
 
 class PortType(Enum):

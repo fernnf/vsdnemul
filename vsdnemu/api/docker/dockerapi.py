@@ -3,8 +3,8 @@ from pathlib import Path
 
 import docker
 
-from vsdnagent.api.log.logapi import get_logger
-from vsdnagent.api.utils.utils import check_not_null, create_namespace, delete_namespace
+from vsdnemu.api.log.logapi import get_logger
+from vsdnemu.api.utils.utils import check_not_null, create_namespace, delete_namespace
 
 logger = get_logger(__name__)
 

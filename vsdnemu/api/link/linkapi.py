@@ -1,7 +1,7 @@
 from enum import Enum
 from itertools import count
 
-from vsdnagent.api.utils.utils import check_not_null
+from vsdnemu.api.utils.utils import check_not_null
 
 
 class LinkType(Enum):

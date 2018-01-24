@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-from vsdnagent.api.dataplane.dataplaneapi import Dataplane
-from vsdnagent.api.log.logapi import get_logger
-from vsdnagent.api.node.nodeapi import NodeType
-from vsdnagent.frontend.cli import Prompt
-from vsdnagent.link.veth_link import HostLinkVeth, DirectLinkVeth
-from vsdnagent.node.host_node import Host
-from vsdnagent.node.onos_node import Onos
-from vsdnagent.node.whitebox_node import WhiteBox
+from vsdnemu.api.dataplane.dataplaneapi import Dataplane
+from vsdnemu.api.log.logapi import get_logger
+from vsdnemu.api.node.nodeapi import NodeType
+from vsdnemu.frontend.cli import Prompt
+from vsdnemu.link.veth_link import HostLinkVeth, DirectLinkVeth
+from vsdnemu.node.host_node import Host
+from vsdnemu.node.onos_node import Onos
+from vsdnemu.node.whitebox_node import WhiteBox
 
 logger = get_logger("topology.script")
 

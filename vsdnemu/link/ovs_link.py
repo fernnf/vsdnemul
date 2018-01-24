@@ -1,8 +1,8 @@
-from vsdnagent.api.link.linkapi import Link, LinkType
-from vsdnagent.api.log.logapi import get_logger
-from vsdnagent.api.ovsdb.ovsdbapi import OvsdbApi
-from vsdnagent.api.port.portapi import PortType
-from vsdnagent.api.utils.utils import check_not_null, disable_rx_off
+from vsdnemu.api.link.linkapi import Link, LinkType
+from vsdnemu.api.log.logapi import get_logger
+from vsdnemu.api.ovsdb.ovsdbapi import OvsdbApi
+from vsdnemu.api.port.portapi import PortType
+from vsdnemu.api.utils.utils import check_not_null, disable_rx_off
 
 logger = get_logger(__name__)
 

@@ -1,7 +1,7 @@
-from vsdnagent.api.docker.dockerapi import DockerApi
-from vsdnagent.api.log.logapi import get_logger
-from vsdnagent.api.node.nodeapi import Node, NodeType
-from vsdnagent.api.ovsdb.ovsdbapi import OvsdbApi
+from vsdnemu.api.docker.dockerapi import DockerApi
+from vsdnemu.api.log.logapi import get_logger
+from vsdnemu.api.node.nodeapi import Node, NodeType
+from vsdnemu.api.ovsdb.ovsdbapi import OvsdbApi
 
 logger = get_logger(__name__)
 

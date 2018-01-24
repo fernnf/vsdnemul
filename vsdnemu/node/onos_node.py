@@ -1,9 +1,9 @@
 import requests
 
-from vsdnagent.api.docker.dockerapi import DockerApi
-from vsdnagent.api.log.logapi import get_logger
-from vsdnagent.api.node.nodeapi import Node, NodeType
-from vsdnagent.api.utils.utils import check_not_null
+from vsdnemu.api.docker.dockerapi import DockerApi
+from vsdnemu.api.log.logapi import get_logger
+from vsdnemu.api.node.nodeapi import Node, NodeType
+from vsdnemu.api.utils.utils import check_not_null
 
 logger = get_logger(__name__)
 

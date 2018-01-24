@@ -6,11 +6,11 @@ def readme():
         return f.read()
 
 
-setup(name = 'vsdnagent',
+setup(name = 'vsdnemu',
       version = '0.1',
       long_description = readme(),
       packages = find_packages(),
-      url = 'https://github.com/FernandoFarias/vsdnagent',
+      url = 'https://github.com/FernandoFarias/vsdnemu',
       classifiers = [
           'Development Status :: 0.1 - Release',
           'License :: OSI Approved :: APACHE2 License',

@@ -1,10 +1,10 @@
 from enum import Enum
 from itertools import count
 
-from vsdnagent.api.docker.dockerapi import DockerApi
-from vsdnagent.api.log.logapi import get_logger
-from vsdnagent.api.port.portapi import PortFabric, PortType
-from vsdnagent.api.utils.utils import check_not_null
+from vsdnemu.api.docker.dockerapi import DockerApi
+from vsdnemu.api.log.logapi import get_logger
+from vsdnemu.api.port.portapi import PortFabric, PortType
+from vsdnemu.api.utils.utils import check_not_null
 
 logger = get_logger(__name__)
 
