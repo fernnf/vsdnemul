@@ -13,7 +13,7 @@ vSDNEmu  an SDN library for developing computer topology based on container dock
 ### Installation
 
 1. Clone vsdnemu from github: 
-> $ git clone https://github.com/FernandoFarias/vsdnagent.git
+> $ git clone https://github.com/fernnf/vsdnemul.git
 
 2. Install the vsdnemu library:
 > $ cd vsdnemu 
