@@ -1,9 +1,9 @@
-from vsdnemu.api.iproute.iprouteapi import IpRouteApi
-from vsdnemu.api.link.linkapi import Link, LinkType
-from vsdnemu.api.log.logapi import get_logger
-from vsdnemu.api.ovsdb.ovsdbapi import OvsdbApi
-from vsdnemu.api.port.portapi import PortType
-from vsdnemu.api.utils.utils import rand_interface_name, check_not_null, disable_rx_off
+from vsdnemul.lib.iproute import IpRouteApi
+from vsdnemul.link import Link, LinkType
+from vsdnemul.log import get_logger
+from vsdnemul.lib.ovsdb.ovsdblib import OvsdbApi
+from vsdnemul.template.port import PortType
+from vsdnemul.lib import rand_interface_name, check_not_null, disable_rx_off
 
 logger = get_logger(__name__)
 
@@ -12,7 +12,7 @@ class DirectLinkBridge(Link):
 
     def __init__(self, node_source, node_target, bridge_ns = "switch0", mtu = "1500"):
 
-        super().__init__(idx = None, node_source = node_source, node_target = node_target, type = LinkType.DIRECT)
+        super().__init__(index= None, node_source = node_source, node_target = node_target, type = LinkType.DIRECT)
         self._bridge_ns = bridge_ns
         self._mtu = mtu
 

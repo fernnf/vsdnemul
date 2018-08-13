@@ -1,13 +1,14 @@
 import itertools
+import logging
 from enum import Enum
 
-from vsdnemu.api.utils.utils import check_not_null
+from vsdnemul.lib.utils import check_not_null
 
 
 class PortType(Enum):
-    ETHERNET = "data"
-    OPTICAL = "opt"
-    RADIO = "wifi"
+    ETHERNET = "vif"
+    OPTICAL = "vopt"
+    RADIO = "vwifi"
 
     def describe(self):
         return self.name.lower()
@@ -19,9 +20,12 @@ class PortType(Enum):
 
 class Port(object):
 
+    logger = logging.getLogger(__name__)
+
     def __init__(self, type: PortType, idx = None):
         self.__type = check_not_null(type, "the type port cannot be null")
         self.__idx = idx
+
 
     @property
     def idx(self):

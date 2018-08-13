@@ -1,20 +1,20 @@
 from cmd2 import Cmd, make_option, options
 
-from vsdnemu.api.dataplane.dataplaneapi import Dataplane
-from vsdnemu.api.node.nodeapi import Node
-from vsdnemu.api.utils.utils import equals_ignore_case
-from vsdnemu.link.bridge_link import DirectLinkBridge, HostLinkBridge
-from vsdnemu.link.ovs_link import DirectLinkOvs, HostLinkOvs
-from vsdnemu.link.veth_link import DirectLinkVeth, HostLinkVeth
-from vsdnemu.node.host_node import Host
-from vsdnemu.node.whitebox_node import WhiteBox
+from vsdnemul.dataplane import Dataplane
+from vsdnemul.node import Node
+from vsdnemul.lib import equals_ignore_case
+from vsdnemul.template.link import DirectLinkBridge, HostLinkBridge
+from vsdnemul.template.link import DirectLinkOvs, HostLinkOvs
+from vsdnemul.template.link import DirectLinkVeth, HostLinkVeth
+from vsdnemul.template.node.host_node import Host
+from vsdnemul.template.node.whitebox_node import WhiteBox
 
 
 class Prompt(Cmd):
 
     def __init__(self, dataplane: Dataplane):
 
-        self.prompt = "[cli@vsdnemu]# "
+        self.prompt = "[cli@vsdnemul]# "
         self.dataplane = dataplane
 
         Cmd.__init__(self, use_ipython = False)

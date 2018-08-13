@@ -1,8 +1,8 @@
-from vsdnemu.api.link.linkapi import Link, LinkType
-from vsdnemu.api.log.logapi import get_logger
-from vsdnemu.api.ovsdb.ovsdbapi import OvsdbApi
-from vsdnemu.api.port.portapi import PortType
-from vsdnemu.api.utils.utils import check_not_null, disable_rx_off
+from vsdnemul.link import Link, LinkType
+from vsdnemul.log import get_logger
+from vsdnemul.lib.ovsdb.ovsdblib import OvsdbApi
+from vsdnemul.template.port import PortType
+from vsdnemul.lib import check_not_null, disable_rx_off
 
 logger = get_logger(__name__)
 

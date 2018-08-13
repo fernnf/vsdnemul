@@ -6,11 +6,11 @@ def readme():
         return f.read()
 
 
-setup(name = 'vsdnemu',
+setup(name = 'vsdnemul',
       version = '0.1',
       long_description = readme(),
       packages = find_packages(),
-      url = 'https://github.com/FernandoFarias/vsdnemu',
+      url = 'https://github.com/FernandoFarias/vsdnemul',
       classifiers = [
           'Development Status :: 0.1 - Release',
           'License :: OSI Approved :: APACHE2 License',
