@@ -1,14 +1,13 @@
 import itertools
-import logging
 from enum import Enum
-
-from vsdnemul.lib.utils import check_not_null
+from uuid import uuid4 as rand_id
 
 
 class PortType(Enum):
     ETHERNET = "vif"
     OPTICAL = "vopt"
     RADIO = "vwifi"
+    HOST = "host"
 
     def describe(self):
         return self.name.lower()
@@ -20,27 +19,42 @@ class PortType(Enum):
 
 class Port(object):
 
-    logger = logging.getLogger(__name__)
-
-    def __init__(self, type: PortType, idx = None):
-        self.__type = check_not_null(type, "the type port cannot be null")
-        self.__idx = idx
-
+    def __init__(self, value, node_name, type: PortType):
+        self.__type = type
+        self.__value = value
+        self.__node = node_name
+        self.__id = rand_id()
 
     @property
-    def idx(self):
-        return self.__idx
+    def node_name(self):
+        return self.__node
 
-    @idx.setter
-    def idx(self, value):
-        if self.__idx is None:
-            self.__idx = value
+    @node_name.setter
+    def node_name(self, value):
+        pass
+
+    @property
+    def id(self):
+        return self.__id
+
+    @id.setter
+    def id(self, value):
+        pass
+
+    @property
+    def value(self):
+        return self.__value
+
+    @value.setter
+    def value(self, v):
+        if self.__value is None:
+            self.__value = v
         else:
             pass
 
     @property
     def name(self):
-        return "{type}{idx}".format(type = self.type.value, idx = self.idx)
+        return "{type}{value}".format(type=self.__type.value, value=self.value)
 
     @name.setter
     def name(self, value):
@@ -48,74 +62,69 @@ class Port(object):
 
     @property
     def type(self):
-        return self.__type
+        return self.__type.describe()
 
     @type.setter
-    def type(self, value):
-        if PortType.is_member(value = value):
-            self.__type = value
+    def type(self, t):
+        if PortType.is_member(value=t):
+            self.__type = t
         else:
             raise ValueError("the value is not member of PortType")
+
+    def __dict__(self):
+        return {
+            "id": "{id}".format(self.id),
+            "object": "{object}".format(self.__name__),
+            "type": "{type}".format(self.type),
+            "name": "{name}".format(self.name),
+            "node": "{node_name}".format(self.node_name),
+        }
 
 
 class PortFabric(object):
 
-    def __init__(self):
+    def __init__(self, node_name):
         self.__ports = {}
         self.__count = itertools.count()
+        self.__node = node_name
 
     def add_port(self, type: PortType):
-        port = Port(type = type)
-        key = self.__count.__next__()
-        port.idx = key
-        self.__ports.update({key: port})
+        port = Port(value=self.__count.__next__(), type=type, node_name=self.__node)
+        self.__ports.update({port.id: port})
         return port
 
-    def del_port(self, name):
-        check_not_null(name, "the port name cannot be null")
-        if self.is_exist(name = name):
-            key = self.get_index(name = name)
-            del self.__ports[key]
-        else:
-            raise ValueError("the port was not found")
+    def del_port(self, id):
+        if not self.is_exist(id):
+            raise ValueError("the port not found")
 
-    def update_port(self, idx, port):
-        if self.is_exist(name = port.name):
-            self.__ports.update({idx: port})
-        else:
-            raise ValueError("The port was not found")
+        del self.__ports[id]
+
+    def update_port(self, id, port):
+        if not id.__eq__(port.id):
+            raise ValueError("the port id is not equal object")
+
+        if not self.is_exist(id):
+            raise ValueError("the port not found")
+
+        self.__ports.update({port.id: port})
 
     def get_ports(self):
-        return self.__ports.copy()
+        return self.__ports.values()
 
-    def get_port(self, name):
-        if self.__exist_port(name = name):
-            key = self.get_index(name = name)
-            return self.__ports[key]
+    def get_ids(self):
+        return self.__ports.keys()
 
-    def is_exist(self, name):
-        return self.__exist_port(name = name)
+    def get_port(self, id):
+        if not self.is_exist(id):
+            raise ValueError("the port not found")
 
-    def get_index(self, name):
-        check_not_null(name, "the name port object cannot be null")
-        if self.is_exist(name = name):
-            return self.__get_index(name = name)
-        else:
-            raise ValueError("the port was not found")
+        return self.__ports[id]
 
-    def __get_index(self, name):
-        for k, v in self.__ports.items():
-            if v.name.__eq__(name):
-                return k
+    def from_node(self, id):
+        if not self.is_exist(id):
+            raise ValueError("the port not found")
 
-    def __exist_port(self, name = None, idx = None):
-        if name is not None:
-            key = self.get_index(name = name)
-            if key is not None:
-                return True
+        return self.__ports[id].node_name
 
-        if idx is not None:
-            if idx in self.__ports.keys():
-                return True
-
-        return False
+    def is_exist(self, id):
+        return id in self.__ports

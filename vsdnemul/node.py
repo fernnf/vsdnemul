@@ -1,21 +1,23 @@
 from enum import Enum
 from itertools import count
 
+from abc import ABC, abstractmethod
 from vsdnemul.lib.docker import DockerApi
 from vsdnemul.log import get_logger
-from vsdnemul.template.port import PortFabric, PortType
+from vsdnemul.port import PortFabric, PortType
 from vsdnemul.lib import check_not_null
 
 logger = get_logger(__name__)
 
 
 class NodeType(Enum):
-    HOST = 1
-    SWITCH = 2
-    ROUTER = 3
-    WIFI_ROUTER = 4
-    VIRTUAL_SWITCH = 5
-    CONTROLLER = 6
+    HOST = "HOST"
+    SWITCH = "SWITCH"
+    ROUTER = "ROUTER"
+    WIFI_ROUTER = "WIFI_ROUTER"
+    CONTROLLER = "CONTROLLER"
+    SERVER = "SERVER"
+    HYPERVISOR = "SDN HYPERVISOR"
 
     def describe(self):
         return self.name.lower()
@@ -24,32 +26,26 @@ class NodeType(Enum):
     def has_member(cls, value):
         return any(value == item.value for item in cls)
 
+class NodeTemplate(ABC):
+
+
+    @abstractmethod
+    def create(self):
+        pass
+
+    @abstractmethod
+    def delete(self):
+        pass
 
 class Node(object):
 
-    def __init__(self, name, image, type: NodeType, services = None, volume = None, cap_add = None):
-        check_not_null(value = name, msg = "the label node cannot be null")
-        check_not_null(value = image, msg = "the image name cannot be null")
+    def __init__(self, **kwargs):
+        self.__name = kwargs.get("name")
+        self.__type = kwargs.get("type")
+        self.__image = kwargs.get("image")
+        self.__template = kwargs.get("template")
+        self.__ports = PortFabric(node_name=self.__name)
 
-        self.__name = name
-        self.__type = type
-        self.__services = services
-        self.__image = image
-        self.__volume = volume
-        self.__cap_add = cap_add
-        self.__ports = PortFabric()
-        self.__idx = None
-
-    @property
-    def idx(self):
-        return self.__idx
-
-    @idx.setter
-    def idx(self, value):
-        if self.__idx is None:
-            self.__idx = value
-        else:
-            pass
 
     @property
     def image(self):
@@ -168,6 +164,10 @@ class Node(object):
     def get_ports(self):
         return self.__ports.get_ports()
 
+    def commit(self):
+        self.__template.create()
+
+    def destroy(self):
 
 class NodeFabric(object):
     def __init__(self):
@@ -233,3 +233,5 @@ class NodeFabric(object):
                 return True
 
         return False
+
+
