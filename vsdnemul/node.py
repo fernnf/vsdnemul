@@ -61,7 +61,12 @@ class Node(ABC):
         pass
 
     @abstractmethod
-    def del_port(self, port: Port):
+    def del_port(self, id):
+        pass
+
+    @abstractmethod
+    def get_ports(self):
+        pass
 
     @abstractmethod
     def get_cli(self, type="bash"):
