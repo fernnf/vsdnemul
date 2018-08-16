@@ -28,7 +28,7 @@ function template {
     ONOS=templates/onos/Dockerfile
     WHITEBOX=templates/whitebox/Dockerfile
 
-    echo "Installing templates devices ..."
+    echo "Installing docker devices ..."
     echo "* HOST computer template"
     $DC build --rm -f ${HOST} -t vsdn/host:latest --no-cache=true . &> /dev/null
     if [ $? -ne 0 ]
@@ -90,7 +90,7 @@ case $1 in
         echo "option not found"
         echo "please use the following options:"
         echo "  [check] --------- for checking command necessaries."
-        echo "  [template] ------ for installing devices templates."
+        echo "  [template] ------ for installing devices docker."
         echo "  [library] ------- for installing only library."
         echo "  [all] ----------- for executing all options before"
 esac

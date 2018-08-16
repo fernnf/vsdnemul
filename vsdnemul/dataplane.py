@@ -56,7 +56,7 @@ class Dataplane(object):
     def exist_link(self, name):
         return self.__links.is_exist(name = name)
 
-    def commit(self):
+    def start(self):
 
         def add_nodes():
             for key, node in self.__nodes.get_nodes().items():
@@ -73,7 +73,7 @@ class Dataplane(object):
         add_nodes()
         add_links()
 
-    def delete(self):
+    def stop(self):
         def del_links():
             for key, link in self.__links.get_links().items():
                 logger.info("Deleting link ({key}:{name})".format(name = link.name, key = key))

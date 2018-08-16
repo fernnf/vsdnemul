@@ -1,6 +1,6 @@
 from vsdnemul.link import Link, LinkType
 from vsdnemul.log import get_logger
-from vsdnemul.lib.ovsdb.ovsdblib import OvsdbApi
+from vsdnemul.lib.ovsdblib import OvsdbApi
 from vsdnemul.template.port import PortType
 from vsdnemul.lib import check_not_null, disable_rx_off
 

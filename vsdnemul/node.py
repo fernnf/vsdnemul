@@ -1,13 +1,8 @@
-from enum import Enum
-from itertools import count
-
+import logging
 from abc import ABC, abstractmethod
-from vsdnemul.lib.docker import DockerApi
-from vsdnemul.log import get_logger
-from vsdnemul.port import PortFabric, PortType
-from vsdnemul.lib import check_not_null
+from enum import Enum
 
-logger = get_logger(__name__)
+from vsdnemul.port import PortFabric, Port
 
 
 class NodeType(Enum):
@@ -26,26 +21,15 @@ class NodeType(Enum):
     def has_member(cls, value):
         return any(value == item.value for item in cls)
 
-class NodeTemplate(ABC):
 
+class Node(ABC):
 
-    @abstractmethod
-    def create(self):
-        pass
-
-    @abstractmethod
-    def delete(self):
-        pass
-
-class Node(object):
-
-    def __init__(self, **kwargs):
-        self.__name = kwargs.get("name")
-        self.__type = kwargs.get("type")
-        self.__image = kwargs.get("image")
-        self.__template = kwargs.get("template")
-        self.__ports = PortFabric(node_name=self.__name)
-
+    def __init__(self, name, image, type: NodeType, **params):
+        super(Node, self).__init__()
+        self.__name = name
+        self.__type = type
+        self.__image = image
+        self.__ports = PortFabric(node_name=name)
 
     @property
     def image(self):
@@ -61,177 +45,101 @@ class Node(object):
 
     @name.setter
     def name(self, value):
-        if DockerApi.get_status_node(self.name) == "running":
-            DockerApi.rename_node(self.name, new_name = value)
-            self.__name = value
-        else:
-            self.__name = value
+        pass
 
     @property
     def type(self):
-        return self.__type
+        return self.__type.describe()
 
     @type.setter
     def type(self, value):
-        if NodeType.has_member(value = value):
+        if NodeType.has_member(value=value):
             self.__type = value
 
-    @property
-    def services(self):
-        return self.__services
-
-    @property
-    def volume(self):
-        return self.__volume
-
-    @volume.setter
-    def volume(self, value):
-        if self.__volume is None:
-            self.__volume = value
-        else:
-            pass
-
-    @property
-    def cap_add(self):
-        return self.__cap_add
-
-    @cap_add.setter
-    def cap_add(self, value):
-        if self.__cap_add is None:
-            self.__cap_add = value
-        else:
-            pass
-
-    @services.setter
-    def services(self, value):
-        if self.__services is None:
-            self.__services = value
-        else:
-            pass
-
-    @property
-    def node_pid(self):
-        try:
-            return DockerApi.get_pid_node(name = self.name)
-        except Exception as ex:
-            logger.error(str(ex.args[0]))
-
-    @property
-    def node_status(self):
-        try:
-            return DockerApi.get_status_node(name = self.name)
-        except Exception as ex:
-            logger.error(str(ex.args[0]))
-
-    @property
-    def control_ip(self):
-        try:
-            return DockerApi.get_control_ip(name = self.name)
-        except Exception as ex:
-            logger.error(str(ex.args[0]))
-
-    @control_ip.setter
-    def control_ip(self, value):
+    @abstractmethod
+    def set_port(self, port: Port):
         pass
 
-    def send_cmd(self, cmd = None):
-        try:
-            return DockerApi.run_cmd(name = self.name, cmd = cmd)
-        except Exception as ex:
-            logger.error(str(ex.args[0]))
+    @abstractmethod
+    def del_port(self, port: Port):
 
-    def get_cli_prompt(self, shell = "bash"):
-        try:
-            DockerApi.get_shell(name = self.name, shell = shell)
-        except Exception as ex:
-            logger.error(str(ex.args[0]))
+    @abstractmethod
+    def get_cli(self, type="bash"):
+        pass
 
-    def add_node_port(self, type: PortType):
-        try:
-            return self.__ports.add_port(type = type)
-        except Exception as ex:
-            logger.error(str(ex.args[0]))
+    @abstractmethod
+    def get_id(self):
+        pass
 
-    def del_node_port(self, name):
-        try:
-            self.__ports.del_port(name = name)
-        except Exception as ex:
-            logger.error(str(ex.args[0]))
+    @abstractmethod
+    def get_status(self):
+        pass
 
-    def is_port_exist(self, name):
-        return self.__ports.is_exist(name = name)
+    @abstractmethod
+    def get_control_ip(self):
+        pass
 
-    def get_ports(self):
-        return self.__ports.get_ports()
+    @abstractmethod
+    def get_pid(self):
+        pass
 
+    @abstractmethod
+    def change_name(self, new_name):
+        pass
+
+    @abstractmethod
     def commit(self):
-        self.__template.create()
+        pass
 
+    @abstractmethod
     def destroy(self):
+        pass
+
 
 class NodeFabric(object):
+
     def __init__(self):
+        self.logger = logging.getLogger(__name__)
         self.__nodes = {}
-        self.__node_idx = count()
 
-    def add_node(self, node):
-        if not self.__exist_node(name = node.name):
-            key = self.__node_idx.__next__()
-            node.idx = key
+    def add_node(self, node: Node):
+        try:
+            node.commit()
+            key = node.get_id()
             self.__nodes.update({key: node})
-            return node
-        else:
-            raise ValueError("the node object already exists")
+        except Exception as ex:
+            self.logger.error(ex.__cause__)
+            raise RuntimeError(ex.__cause__)
 
-    def del_node(self, name):
-        if self.__exist_node(name = name):
-            key = self.__get_index(name = name)
-            del self.__nodes[key]
+    def del_node(self, node_id):
+        if self.id_exist(node_id):
+            node = self.get_node(node_id)
+            node.destroy()
+            del self.__nodes[node_id]
         else:
-            ValueError("the node was not found")
+            raise RuntimeError("the node is not found")
 
-    def update_node(self, idx, node):
-        if self.__exist_node(idx = idx):
-            self.__nodes.update({idx: node})
+    def get_node(self, node_id):
+
+        if self.id_exist(node_id):
+            return self.__nodes[node_id]
         else:
-            ValueError("the node was not found")
-
-    def get_node(self, name):
-
-        if self.__exist_node(name = name):
-            key = self.get_index(name = name)
-            return self.__nodes[key]
-        else:
-            ValueError("the node was not found")
+            raise RuntimeError("the node is not found")
 
     def get_nodes(self):
         return self.__nodes.copy()
 
-    def is_exist(self, name):
-        return self.__exist_node(name = name)
+    def id_exist(self, node_id):
+        return node_id in self.__nodes.keys()
 
-    def get_index(self, name):
-        if self.__exist_node(name = name):
-            return self.__get_index(name = name)
-        else:
-            ValueError("the node was not found")
-
-    def __get_index(self, name):
-        for k, n in self.__nodes.items():
-            if n.name.__eq__(name):
-                return k
-
-    def __exist_node(self, name = None, idx = None):
-
-        if name is not None:
-            key = self.__get_index(name = name)
-            if key is not None:
+    def node_exist(self, name):
+        for v in self.__nodes.values():
+            if v.name.__eq__(name):
                 return True
-
-        if idx is not None:
-            if idx in self.__nodes.keys():
-                return True
-
         return False
 
-
+    def get_id(self, name):
+        for k, v in self.__nodes.items():
+            if v.name.__eq__(name):
+                return k
+        return None

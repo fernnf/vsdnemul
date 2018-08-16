@@ -1,7 +1,7 @@
 from enum import Enum
 from itertools import count
 from uuid import uuid4 as rand_id
-
+from abc import ABC
 from vsdnemul.lib.utils import check_not_null
 
 
@@ -19,14 +19,13 @@ class LinkType(Enum):
         return any(value == item.value for item in cls)
 
 
-class Link(object):
+class Link(ABC):
 
-    def __init__(self, node_source, node_target, template, type: LinkType):
+    def __init__(self, node_source, node_target, type: LinkType):
         super(Link, self).__init__()
-        self.__node_source = node_source
-        self.__node_target = node_target
+        self.__source = node_source
+        self.__target = node_target
         self.__type = type
-        self.__template = template
         self.__id = rand_id()
 
     @property
@@ -38,27 +37,19 @@ class Link(object):
         pass
 
     @property
-    def template(self):
-        return self.__template
+    def source(self):
+        return self.__source
 
-    @template.setter
-    def template(self, value):
+    @source.setter
+    def source(self, value):
         pass
 
     @property
-    def node_source(self):
-        return self.__node_source
+    def target(self):
+        return self.__target
 
-    @node_source.setter
-    def node_source(self, value):
-        pass
-
-    @property
-    def node_target(self):
-        return self.__node_target
-
-    @node_target.setter
-    def node_target(self, value):
+    @target.setter
+    def target(self, value):
         pass
 
     @property

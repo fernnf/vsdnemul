@@ -6,8 +6,8 @@ from vsdnemul.lib import equals_ignore_case
 from vsdnemul.template.link import DirectLinkBridge, HostLinkBridge
 from vsdnemul.template.link import DirectLinkOvs, HostLinkOvs
 from vsdnemul.template.link import DirectLinkVeth, HostLinkVeth
-from vsdnemul.template.node.host_node import Host
-from vsdnemul.template.node.whitebox_node import WhiteBox
+from vsdnemul.template.node.host.host_node import Host
+from vsdnemul.template.node.switch.whitebox_node import WhiteBox
 
 
 class Prompt(Cmd):

@@ -4,9 +4,9 @@ from vsdnemul.log import get_logger
 from vsdnemul.node import NodeType
 from vsdnemul.cli import Prompt
 from vsdnemul.template.link import HostLinkVeth, DirectLinkVeth
-from vsdnemul.template.node.host_node import Host
-from vsdnemul.template.node.onos_node import Onos
-from vsdnemul.template.node.whitebox_node import WhiteBox
+from vsdnemul.template.node.host.host_node import Host
+from vsdnemul.template.node.controller.onos_node import Onos
+from vsdnemul.template.node.switch.whitebox_node import WhiteBox
 
 logger = get_logger("topology.script")
 

@@ -19,19 +19,10 @@ class PortType(Enum):
 
 class Port(object):
 
-    def __init__(self, value, node_name, type: PortType):
+    def __init__(self, value, type: PortType):
         self.__type = type
         self.__value = value
-        self.__node = node_name
         self.__id = rand_id()
-
-    @property
-    def node_name(self):
-        return self.__node
-
-    @node_name.setter
-    def node_name(self, value):
-        pass
 
     @property
     def id(self):

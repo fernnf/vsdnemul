@@ -1,7 +1,7 @@
 from vsdnemul.lib.docker import DockerApi
 from vsdnemul.log import get_logger
 from vsdnemul.node import Node, NodeType
-from vsdnemul.lib.ovsdb.ovsdblib import OvsdbApi
+from vsdnemul.lib.ovsdblib import OvsdbApi
 
 logger = get_logger(__name__)
 
