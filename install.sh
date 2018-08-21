@@ -29,26 +29,26 @@ function template {
     WHITEBOX=templates/whitebox/Dockerfile
 
     echo "Installing docker devices ..."
-    echo "* HOST computer template"
+    echo "* HOST computer models"
     $DC build --rm -f ${HOST} -t vsdn/host:latest --no-cache=true . &> /dev/null
     if [ $? -ne 0 ]
     then
-        echo "Cannot install host template in docker"
+        echo "Cannot install host models in docker"
         exit
     fi
-    echo "* ONOS network controller template"
+    echo "* ONOS network controller models"
     $DC build --rm -f ${ONOS} -t vsdn/onos:latest --no-cache=true . &> /dev/null
     if [ $? -ne 0 ]
     then
-        echo "Cannot install onos template in docker"
+        echo "Cannot install onos models in docker"
         exit
     fi
-    echo "* WHITEBOX network switch template"
+    echo "* WHITEBOX network switch models"
     $DC build --rm -f ${WHITEBOX} -t vsdn/whitebox:latest --no-cache=true . &> /dev/null
     #&> /dev/null
     if [ $? -ne 0 ]
     then
-        echo "Cannot install whitebox template in docker"
+        echo "Cannot install whitebox models in docker"
         exit
     fi
     echo "DONE"
@@ -90,7 +90,7 @@ case $1 in
         echo "option not found"
         echo "please use the following options:"
         echo "  [check] --------- for checking command necessaries."
-        echo "  [template] ------ for installing devices docker."
+        echo "  [models] ------ for installing devices docker."
         echo "  [library] ------- for installing only library."
         echo "  [all] ----------- for executing all options before"
 esac

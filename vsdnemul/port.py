@@ -7,7 +7,7 @@ class PortType(Enum):
     ETHERNET = "vif"
     OPTICAL = "vopt"
     RADIO = "vwifi"
-    HOST = "host"
+    HOST = "vht"
 
     def describe(self):
         return self.name.lower()
@@ -19,10 +19,9 @@ class PortType(Enum):
 
 class Port(object):
 
-    def __init__(self, value, type: PortType):
+    def __init__(self, type: PortType):
         self.__type = type
-        self.__value = value
-        self.__id = rand_id()
+        self.__id = ""
 
     @property
     def id(self):
@@ -30,22 +29,11 @@ class Port(object):
 
     @id.setter
     def id(self, value):
-        pass
-
-    @property
-    def value(self):
-        return self.__value
-
-    @value.setter
-    def value(self, v):
-        if self.__value is None:
-            self.__value = v
-        else:
-            pass
+        self.__id = value
 
     @property
     def name(self):
-        return "{type}{value}".format(type=self.__type.value, value=self.value)
+        return "{type}{id}".format(type=self.__type.value, id=self.id)
 
     @name.setter
     def name(self, value):
@@ -65,57 +53,48 @@ class Port(object):
     def __dict__(self):
         return {
             "id": "{id}".format(self.id),
-            "object": "{object}".format(self.__name__),
             "type": "{type}".format(self.type),
             "name": "{name}".format(self.name),
-            "node": "{node_name}".format(self.node_name),
         }
+
+    def __str__(self):
+        return [
+            "id={id}".format(id=self.id),
+            "type={type}".format(type=self.type),
+            "name={name}".format(name=self.name)
+        ]
 
 
 class PortFabric(object):
 
     def __init__(self, node_name):
-        self.__ports = {}
-        self.__count = itertools.count()
         self.__node = node_name
+        self.__next_id = itertools.count()
+        self.__ports = {}
 
-    def add_port(self, type: PortType):
-        port = Port(value=self.__count.__next__(), type=type, node_name=self.__node)
-        self.__ports.update({port.id: port})
-        return port
+
+    def add_port(self, port: Port):
+        key = self.__next_id.__next__()
+        port.id = key
+        self.__ports.update({key: port})
 
     def del_port(self, id):
-        if not self.is_exist(id):
-            raise ValueError("the port not found")
-
-        del self.__ports[id]
-
-    def update_port(self, id, port):
-        if not id.__eq__(port.id):
-            raise ValueError("the port id is not equal object")
-
-        if not self.is_exist(id):
-            raise ValueError("the port not found")
-
-        self.__ports.update({port.id: port})
+        if self.is_exist(id=id):
+            del self.__ports[id]
+        else:
+            raise ValueError("the key is not found")
 
     def get_ports(self):
-        return self.__ports.values()
+        return self.__ports.copy()
 
     def get_ids(self):
         return self.__ports.keys()
 
     def get_port(self, id):
-        if not self.is_exist(id):
-            raise ValueError("the port not found")
-
-        return self.__ports[id]
-
-    def from_node(self, id):
-        if not self.is_exist(id):
-            raise ValueError("the port not found")
-
-        return self.__ports[id].node_name
+        if self.is_exist(id):
+            return self.__ports[id]
+        else:
+            raise ValueError("the key is not exist")
 
     def is_exist(self, id):
-        return id in self.__ports
+        return id in self.__ports.keys()

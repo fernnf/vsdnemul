@@ -1,8 +1,10 @@
 import logging
+import itertools
 from abc import ABC, abstractmethod
 from enum import Enum
 
 from vsdnemul.port import PortFabric, Port
+from vsdnemul.lib.dockerlib import get_status_node, get_id
 
 
 class NodeType(Enum):
@@ -24,12 +26,15 @@ class NodeType(Enum):
 
 class Node(ABC):
 
-    def __init__(self, name, image, type: NodeType, **params):
+    def __init__(self, name, image, type: NodeType, **config):
         super(Node, self).__init__()
         self.__name = name
         self.__type = type
         self.__image = image
-        self.__ports = PortFabric(node_name=name)
+        self.__id = ""
+        self.__cid = ""
+        self._ports = PortFabric(name)
+
 
     @property
     def image(self):
@@ -48,6 +53,30 @@ class Node(ABC):
         pass
 
     @property
+    def config(self):
+        return self.config
+
+    @config.setter
+    def config(self, value):
+        pass
+
+    @property
+    def id(self):
+        return self.__id
+
+    @id.setter
+    def id(self, value):
+        self.__id = value
+
+    @property
+    def cid(self):
+        return get_id(self.name)
+
+    @cid.setter
+    def cid(self, value):
+        pass
+
+    @property
     def type(self):
         return self.__type.describe()
 
@@ -56,40 +85,26 @@ class Node(ABC):
         if NodeType.has_member(value=value):
             self.__type = value
 
-    @abstractmethod
-    def set_port(self, port: Port):
+    @property
+    def status(self):
+        try:
+            return get_status_node(self.name)
+        except:
+            return None
+
+    @status.setter
+    def status(self, value):
         pass
 
+    @abstractmethod
+    def add_port(self):
+        pass
     @abstractmethod
     def del_port(self, id):
         pass
 
     @abstractmethod
-    def get_ports(self):
-        pass
-
-    @abstractmethod
-    def get_cli(self, type="bash"):
-        pass
-
-    @abstractmethod
-    def get_id(self):
-        pass
-
-    @abstractmethod
-    def get_status(self):
-        pass
-
-    @abstractmethod
-    def get_control_ip(self):
-        pass
-
-    @abstractmethod
-    def get_pid(self):
-        pass
-
-    @abstractmethod
-    def change_name(self, new_name):
+    def get_port(self, id):
         pass
 
     @abstractmethod
@@ -100,51 +115,72 @@ class Node(ABC):
     def destroy(self):
         pass
 
+    def __dict__(self):
+        return {
+            "id": self.id,
+            "cid": self.cid,
+            "name": self.name,
+            "image": self.image,
+            "type": self.type,
+            "status": self.status,
+            "config": self.config
+        }
+
+    def __str__(self):
+        return [
+            "id={id}".format(id=self.id),
+            "cid={cid}".format(cid=self.cid),
+            "name={name}".format(name=self.name),
+            "image={image}".format(image=self.image),
+            "type={type}".format(type=self.type),
+            "status={status}".format(status=self.status),
+            "config={config}".format(config=self.config)
+        ]
 
 class NodeFabric(object):
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+        self.__next_id = itertools.count()
         self.__nodes = {}
 
     def add_node(self, node: Node):
+        key = self.__next_id.__next__()
+        node.id = key
         try:
-            node.commit()
-            key = node.get_id()
             self.__nodes.update({key: node})
+            self.logger.debug("node with id ({id}) has added".format(id=key))
         except Exception as ex:
             self.logger.error(ex.__cause__)
-            raise RuntimeError(ex.__cause__)
+            raise ValueError(ex.__cause__)
 
-    def del_node(self, node_id):
-        if self.id_exist(node_id):
-            node = self.get_node(node_id)
-            node.destroy()
-            del self.__nodes[node_id]
+    def del_node(self, id):
+        if self.id_exist(id):
+            del self.__nodes[id]
         else:
-            raise RuntimeError("the node is not found")
+            raise ValueError("the id is not found")
 
-    def get_node(self, node_id):
-
-        if self.id_exist(node_id):
-            return self.__nodes[node_id]
-        else:
-            raise RuntimeError("the node is not found")
+    def get_node(self, id):
+        return self.__nodes[id]
 
     def get_nodes(self):
         return self.__nodes.copy()
 
-    def id_exist(self, node_id):
-        return node_id in self.__nodes.keys()
+    def id_exist(self, id):
+        return any(k == id for k in self.__nodes.keys())
 
-    def node_exist(self, name):
-        for v in self.__nodes.values():
-            if v.name.__eq__(name):
-                return True
-        return False
+    def start(self):
+        try:
+            for n in self.__nodes.values():
+                n.commit()
+                self.logger.info("the new node ({name}) with id ({id}) was added".format(name=n.name, id=n.id))
+        except:
+            self.logger.error("It cannot create nodes ")
 
-    def get_id(self, name):
-        for k, v in self.__nodes.items():
-            if v.name.__eq__(name):
-                return k
-        return None
+    def stop(self):
+        try:
+            for n in self.__nodes.values():
+                n.destroy()
+                self.logger.info("the node ({name}) with id ({id}) was deleted".format(name=n.name, id=n.id))
+        except:
+            self.logger.error("It cannot delete nodes")

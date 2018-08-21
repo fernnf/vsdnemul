@@ -3,11 +3,11 @@ from cmd2 import Cmd, make_option, options
 from vsdnemul.dataplane import Dataplane
 from vsdnemul.node import Node
 from vsdnemul.lib import equals_ignore_case
-from vsdnemul.template.link import DirectLinkBridge, HostLinkBridge
-from vsdnemul.template.link import DirectLinkOvs, HostLinkOvs
-from vsdnemul.template.link import DirectLinkVeth, HostLinkVeth
-from vsdnemul.template.node.host.host_node import Host
-from vsdnemul.template.node.switch.whitebox_node import WhiteBox
+from vsdnemul.models.link import DirectLinkBridge, HostLinkBridge
+from vsdnemul.models.link import DirectLinkOvs, HostLinkOvs
+from vsdnemul.models.link import DirectLinkVeth, HostLinkVeth
+from vsdnemul.models.node.host.host_node import Host
+from vsdnemul.models.node.switch.whitebox_node import WhiteBox
 
 
 class Prompt(Cmd):
