@@ -1,8 +1,10 @@
+import logging
+
+
 from vsdnemul.link import LinkFabric
-from vsdnemul.log import get_logger
 from vsdnemul.node import NodeFabric
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Dataplane(object):
@@ -15,31 +17,37 @@ class Dataplane(object):
         try:
             return self.__nodes.add_node(node = node)
         except Exception as ex:
-            logger.error(str(ex.args[0]))
+            logger.error(ex.__cause__)
 
-    def del_node(self, name):
+    def del_node(self, id):
         try:
-            self.__nodes.del_node(name = name)
+            self.__nodes.del_node(id=id)
         except Exception as ex:
-            logger.error(str(ex.args[0]))
+            logger.error(ex.__cause__)
 
     def add_link(self, link):
         try:
             return self.__links.add_link(link = link)
         except Exception as ex:
-            logger.error(ex.args[0])
+            logger.error(ex.__cause__)
 
     def del_link(self, name):
         if self.__links.is_exist(name = name):
             try:
                 self.__links.del_link(name = name)
             except Exception as ex:
-                logger.error(ex.args[0])
+                logger.error(ex.__cause__)
         else:
             logger.warning("the link was not found")
 
-    def get_node(self, name):
-        return self.__nodes.get_node(name = name)
+    def get_node(self, id):
+        return self.__nodes.get_node(id=id)
+
+    def get_node_id(self, name):
+        for n in self.__nodes.get_nodes().values():
+            if n.name.__eq__(name):
+                return n.id
+        return None
 
     def get_link(self, name):
         return self.__links.get_link(name = name)

@@ -33,7 +33,8 @@ class Node(ABC):
         self.__image = image
         self.__id = ""
         self.__cid = ""
-        self._ports = PortFabric(name)
+        self.__ports = PortFabric(name)
+        self.__config = config
 
 
     @property
@@ -54,7 +55,7 @@ class Node(ABC):
 
     @property
     def config(self):
-        return self.config
+        return self.__config
 
     @config.setter
     def config(self, value):
@@ -106,6 +107,15 @@ class Node(ABC):
     @abstractmethod
     def get_port(self, id):
         pass
+
+    @property
+    def get_ports(self):
+        return self.__ports.get_ports()
+
+    @get_ports.setter
+    def get_ports(self, value):
+        pass
+
 
     @abstractmethod
     def commit(self):
@@ -164,7 +174,7 @@ class NodeFabric(object):
         return self.__nodes[id]
 
     def get_nodes(self):
-        return self.__nodes.copy()
+        return self.__nodes
 
     def id_exist(self, id):
         return any(k == id for k in self.__nodes.keys())
