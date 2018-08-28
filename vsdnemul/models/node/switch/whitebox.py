@@ -9,6 +9,7 @@ from vsdnemul.node import Node, NodeType
 logger = logging.getLogger(__name__)
 
 
+
 class Whitebox(Node):
     def __init__(self, name, bridge_oper="br_oper0", **config):
         config.update(ports=None)
