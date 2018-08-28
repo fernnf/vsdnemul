@@ -5,7 +5,9 @@ from enum import Enum
 
 from vsdnemul.port import PortFabric, Port
 from vsdnemul.lib.dockerlib import get_status_node, get_id
-
+'''
+Class Abstract to generate new nodes models based on docker file templates. 
+'''
 
 class NodeType(Enum):
     HOST = "HOST"

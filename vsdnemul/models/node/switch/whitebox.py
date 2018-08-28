@@ -8,12 +8,13 @@ from vsdnemul.node import Node, NodeType
 
 logger = logging.getLogger(__name__)
 
+
 class Whitebox(Node):
     def __init__(self, name, bridge_oper="br_oper0", **config):
         config.update(ports=None)
         config.update(volumes=None)
         config.update(cap_add=["ALL"])
-        super(Whitebox, self).__init__(name=name, type= NodeType.SWITCH,image="vsdn/whitebox",**config)
+        super(Whitebox, self).__init__(name=name, type=NodeType.SWITCH, image="vsdn/whitebox", **config)
         self.__bridge_oper = bridge_oper
 
     @property
@@ -38,15 +39,15 @@ class Whitebox(Node):
         except Exception as ex:
             logger.error(ex.__cause__)
 
-    def set_manager(self, ip = None, port = "6640", type = "tcp"):
+    def set_manager(self, ip=None, port="6640", type="tcp"):
         try:
-            ovsdb.set_manager(ip = ip, netns = self.name, port = port, type = type)
+            ovsdb.set_manager(ip=ip, netns=self.name, port=port, type=type)
         except Exception as ex:
             logger.error(ex.__cause__)
 
-    def set_controller(self, ip = "127.0.0.1", port = "6653", bridge = "br_oper0", type = "tcp"):
+    def set_controller(self, ip="127.0.0.1", port="6653", bridge="br_oper0", type="tcp"):
         try:
-            ovsdb.set_controller(ip=ip,bridge=bridge, netns=self.name, type=type,port=port)
+            ovsdb.set_controller(ip=ip, bridge=bridge, netns=self.name, type=type, port=port)
         except Exception as ex:
             logger.error(ex.__cause__)
 
@@ -74,7 +75,7 @@ class Whitebox(Node):
 
     def commit(self):
         try:
-            docker.create_node(name=self.name,image=self.image, **self.config)
+            docker.create_node(name=self.name, image=self.image, **self.config)
             ovsdb.set_bridge(bridge=self.br_oper, netns=self.name)
             logger.info("the new whitebox ({name}) node was created".format(name=self.name))
         except Exception  as ex:
@@ -92,7 +93,4 @@ if __name__ == '__main__':
     print("creating node")
     switch = Whitebox(name="sw1")
     switch.commit()
-    #print(switch.cid)
-    #print(switch.control_addr)
-
-
+    # print(switch.control_addr)
