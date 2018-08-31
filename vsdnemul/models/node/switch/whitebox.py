@@ -152,4 +152,3 @@ class Whitebox(Node):
         except Exception as ex:
             logger.error(ex.args[0])
 
-if __name__ == '__main__':
