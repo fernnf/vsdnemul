@@ -35,7 +35,7 @@ class Node(ABC):
         self.__image = image
         self.__id = ""
         self.__cid = ""
-        self.__ports = PortFabric(name)
+        self._ports = PortFabric(name)
         self.__config = config
 
 
@@ -100,7 +100,7 @@ class Node(ABC):
         pass
 
     @abstractmethod
-    def add_port(self):
+    def add_port(self, port:Port):
         pass
     @abstractmethod
     def del_port(self, id):

@@ -1,7 +1,7 @@
 import requests
 
 from vsdnemul.lib.docker import DockerApi
-from vsdnemul.log import get_logger
+from vsdnemul.lib.log import get_logger
 from vsdnemul.node import Node, NodeType
 from vsdnemul.lib import check_not_null
 

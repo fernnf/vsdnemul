@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from vsdnemul.dataplane import Dataplane
-from vsdnemul.log import get_logger
+from vsdnemul.lib.log import get_logger
 from vsdnemul.node import NodeType
 from vsdnemul.cli import Prompt
 from vsdnemul.models.link import HostLinkVeth, DirectLinkVeth
