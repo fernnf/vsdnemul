@@ -109,6 +109,7 @@ class LinkFabric(object):
     def isExist(self, id):
         return id in self.__links
 
+    #FIXME: To create search method more opitmized
     def isExistLink(self, source: Node, target: Node):
         for l in self.__links.values():
             s = l.getSource()
@@ -125,6 +126,7 @@ class LinkFabric(object):
 
         if self.isExist(key):
             raise ValueError("the link object already exists")
+
         elif self.isExistLink(link.getSource(), link.getTarget()):
             raise ValueError("the link object already exists")
         else:
