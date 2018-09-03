@@ -42,11 +42,11 @@ class Prompt(Cmd):
             print("[>]")
 
         def list_node(name):
-            n = self.dataplane.get_node(name = name)
+            n = self.dataplane.getNode(name = name)
             print_node(node = n)
 
         def list_nodes():
-            n = self.dataplane.get_nodes()
+            n = self.dataplane.getNodes()
             if len(n) > 0:
                 for k, v in n.items():
                     print_node(v)
@@ -75,13 +75,13 @@ class Prompt(Cmd):
         if equals_ignore_case(opts.type, "whitebox"):
             node = WhiteBox(name = opts.name)
             node.create()
-            self.dataplane.add_node(node = node)
+            self.dataplane.addNode(node = node)
             print("the whitebox node ({name}) has created".format(name = node.name))
 
         elif equals_ignore_case(opts.type, "host"):
             node = Host(name = opts.name)
             node.create()
-            self.dataplane.add_node(node = node)
+            self.dataplane.addNode(node = node)
             print("the host node ({name}) has created".format(name = node.name))
 
         else:
@@ -96,9 +96,9 @@ class Prompt(Cmd):
         exist = self.dataplane.exist_node(opts.name)
 
         if exist:
-            node = self.dataplane.get_node(opts.name)
+            node = self.dataplane.getNode(opts.name)
             node.delete()
-            self.dataplane.del_node(name = opts.name)
+            self.dataplane.delNode(name = opts.name)
             print("the node {name} has removed".format(name = opts.name))
         else:
             print("the node was not found")
@@ -123,27 +123,27 @@ class Prompt(Cmd):
         target = None
 
         try:
-            source = self.dataplane.get_node(opts.source)
-            target = self.dataplane.get_node(opts.destination)
+            source = self.dataplane.getNode(opts.source)
+            target = self.dataplane.getNode(opts.destination)
             if source.type.value() == 2 and target.type.value() == 2:
                 if equals_ignore_case(opts.type, "directlinkovs"):
 
                     link = DirectLinkOvs(node_source = source, node_target = target, mtu = opts.mtu)
                     link.create()
-                    self.dataplane.add_link(link = link)
+                    self.dataplane.addLink(link = link)
                     print(success.format(tech = "link-direct-ovs", id = link.idx))
 
                 elif equals_ignore_case(opts.type, "directlinkbridge"):
 
                     link = DirectLinkBridge(node_source = source, node_target = target, mtu = opts.mtu)
                     link.create()
-                    self.dataplane.add_link(link = link)
+                    self.dataplane.addLink(link = link)
                     print(success.format(tech = "link-direct-bridge", id = link.idx))
 
                 elif equals_ignore_case(opts.type, "directvethlink"):
                     link = DirectLinkVeth(node_source = source, node_target = target, mtu = opts.mtu)
                     link.create()
-                    self.dataplane.add_link(link = link)
+                    self.dataplane.addLink(link = link)
                     print(success.format(tech = "link-direct-veth-pair", id = link.idx))
 
                 else:
@@ -183,7 +183,7 @@ class Prompt(Cmd):
                     link = HostLinkOvs(node_host = source, node_target = target, mtu = opts.mtu,
                                        ip_host = opts.address, gateway_host = opts.gateway)
                     link.create()
-                    self.dataplane.add_link(link = link)
+                    self.dataplane.addLink(link = link)
                     print(success.format(tech = "link-host-direct-ovs", id = link.idx))
 
                 elif equals_ignore_case(opts.type, "hostlinkbridge"):
@@ -191,7 +191,7 @@ class Prompt(Cmd):
                                           ip_host = opts.address, gateway_host = opts.gateway)
 
                     link.create()
-                    self.dataplane.add_link(link = link)
+                    self.dataplane.addLink(link = link)
                     print(success.format(tech = "link-host-direct-bridge", id = link.idx))
 
                 elif equals_ignore_case(opts.type, "hostlinkveth"):
@@ -200,7 +200,7 @@ class Prompt(Cmd):
                                         ip_host = opts.address, gateway_host = opts.gateway)
 
                     link.create()
-                    self.dataplane.add_link(link = link)
+                    self.dataplane.addLink(link = link)
                     print(success.format(tech = "link-host-direct-veth-pair", id = link.idx))
 
                 else:
@@ -234,11 +234,11 @@ class Prompt(Cmd):
             print("[>]")
 
         def list_link():
-            link = self.dataplane.get_link(name = opts.id)
+            link = self.dataplane.getLink(name = opts.id)
             print_link(link = link)
 
         def list_links():
-            l = self.dataplane.get_links()
+            l = self.dataplane.getLinks()
             for k, v in l.items():
                 print_link(link = v)
 
@@ -258,7 +258,7 @@ class Prompt(Cmd):
         exist = self.dataplane.exist_node(opts.name)
 
         if exist:
-            node = self.dataplane.get_node(opts.name)
+            node = self.dataplane.getNode(opts.name)
             node.get_cli_prompt(shell = opts.shell)
         else:
             print("The node was not found on topology")
@@ -269,9 +269,9 @@ class Prompt(Cmd):
     def do_delete_link(self, arg, opts):
 
         if self.dataplane.exist_link(name = opts.id):
-            link = self.dataplane.get_link(name = opts.id)
+            link = self.dataplane.getLink(name = opts.id)
             link.delete()
-            self.dataplane.del_link(name = opts.id)
+            self.dataplane.delLink(name = opts.id)
             print("the link ({id}) has deleted".format(id = opts.id))
         else:
             print("the link was not found by id ({id})".format(id = opts.id))

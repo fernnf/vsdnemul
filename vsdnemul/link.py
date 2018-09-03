@@ -1,93 +1,104 @@
+from abc import ABC, abstractmethod
 from enum import Enum
-from itertools import count
 from uuid import uuid4 as rand_id
-from abc import ABC
-from vsdnemul.lib.utils import check_not_null
+
+from vsdnemul.node import Node
 
 
 class LinkType(Enum):
-    DIRECT = "DIRECT"
-    HOST = "HOST"
-    VIRTUAL = "VIRTUAL"
-    WIFI = "WIFI"
+    DIRECT = "direct"
+    HOST = "host"
+    VIRTUAL = "virtual"
+    WIFI = "wifi"
 
     def describe(self):
         return self.name.lower()
+
+    def typeName(self):
+        return self.value
 
     @classmethod
     def is_member(cls, value):
         return any(value == item.value for item in cls)
 
 
+class LinkEncap(Enum):
+    ETHERNET = "vif"
+    OPTICAL = "vopt"
+    RADIO = "vwifi"
+    HOST = "vht"
+
+    def describe(self):
+        return self.name.lower()
+
+    def portName(self):
+        return self.value
+
+    @classmethod
+    def is_member(cls, value):
+        return any(value.value == item.value for item in cls)
+
+
 class Link(ABC):
 
-    def __init__(self, node_source, node_target, type: LinkType):
+    def __init__(self, node_source: Node, node_target: Node, type: LinkType, encap: LinkEncap):
         super(Link, self).__init__()
         self.__source = node_source
         self.__target = node_target
         self.__type = type
+        self.__encap = encap
         self.__id = rand_id()
+        self.__port_source = None
+        self.__port_target = None
 
-    @property
-    def id(self):
+    def getName(self):
+        return "link{id}".format(id=self.__id[:8])
+
+    def getType(self):
+        return self.__type
+
+    def getEncap(self):
+        return self.__encap
+
+    def getId(self):
         return self.__id
 
-    @id.setter
-    def id(self, value):
-        pass
+    def getSource(self):
+        return self.__source.getName()
 
-    @property
-    def source(self):
-        return self.__source
+    def getTarget(self):
+        return self.__target.getName()
 
-    @source.setter
-    def source(self, value):
-        pass
-
-    @property
-    def target(self):
-        return self.__target
-
-    @target.setter
-    def target(self, value):
-        pass
-
-    @property
-    def port_source(self):
+    def getPortSource(self):
         return self.__port_source
 
-    @port_source.setter
-    def port_source(self, value):
-        self.__port_source = value
+    def setPortSource(self, source: int):
+        self.__port_source = source
 
-    @property
-    def port_target(self):
+    def getPortTarget(self):
         return self.__port_target
 
-    @port_target.setter
-    def port_target(self, value):
-        self.__port_target = value
+    def setPortTarget(self, target: int):
+        self.__port_target = target
 
-    @property
-    def type(self):
-        return self.__type.describe()
+    @abstractmethod
+    def _commit(self):
+        pass
 
-    @type.setter
-    def type(self, value):
-        if LinkType.is_member(value=value):
-            self.__type = value
-        else:
-            raise ValueError("the type is not member of NodeType")
+    @abstractmethod
+    def _destroy(self):
+        pass
 
     def __dict__(self):
         return {
-            "id": "{id}".format(id=self.id),
-            "object": "{obj}".format(obj=__name__),
-            "type": "{type}".format(type=self.type),
-            "node_source": "{node_src}".format(node_src=self.node_source),
-            "node_target": "{node_tgt}".format(node_tgt=self.node_target),
-            "port_source": "{port_src}".format(port_src=self.port_source),
-            "port_target": "{port_tgt}".format(port_tgt=self.port_target),
+            "id": "{id}".format(id=self.getId()),
+            "name": "{name}".format(name=self.getName()),
+            "type": "{type}".format(type=self.getType()),
+            "encap": "{encap}".format(encap=self.getEncap()),
+            "node_source": "{node_src}".format(node_src=self.getSource()),
+            "node_target": "{node_tgt}".format(node_tgt=self.getTarget()),
+            "port_source": "{port_src}".format(port_src=self.getPortSource()),
+            "port_target": "{port_tgt}".format(port_tgt=self.getTarget()),
         }
 
 
@@ -95,37 +106,52 @@ class LinkFabric(object):
     def __init__(self):
         self.__links = {}
 
-    def add_link(self, link):
-        if self.is_exist(id=link.id):
-            raise ValueError("the node object already exists")
+    def isExist(self, id):
+        return id in self.__links
+
+    def isExistLink(self, source: Node, target: Node):
+        for l in self.__links.values():
+            s = l.getSource()
+            t = l.getTarget()
+            if s.__eq__(source.getName() or target.getName()):
+                if t.__eq__(source.getName() or target.getName()):
+                    return True
+
+        return False
+
+
+    def addLink(self, link):
+        key = link.getId()
+
+        if self.isExist(key):
+            raise ValueError("the link object already exists")
+        elif self.isExistLink(link.getSource(), link.getTarget()):
+            raise ValueError("the link object already exists")
         else:
-            key = link.id
             self.__links.update({key: link})
 
-
-    def del_link(self, id):
-        if self.is_exist(id):
+    def delLink(self, id):
+        if self.isExist(id):
             del self.__links[id]
         else:
-            ValueError("the node was not found")
+            ValueError("the node not found")
 
-    def update_link(self, id, link):
-        if not id.__eq__(link.id):
-            raise ValueError("Link id and object are different")
+    def getLinks(self):
+        return self.__links
 
-        if self.is_exist(id):
-            self.__links.update({id: link})
-        else:
-            ValueError("the node was not found")
-
-    def get_links(self):
-        return self.__links.copy()
-
-    def get_link(self, id):
-        if self.is_exist(id):
+    def getLink(self, id):
+        if self.isExist(id):
             return self.__links[id]
         else:
             ValueError("the link was not found")
 
-    def is_exist(self, id):
-        return id in self.__links
+    def updateLink(self, id, link):
+        key = link.getId()
+
+        if not id.__eq__(key):
+            raise ValueError("Link id and object are different")
+
+        if self.isExist(id):
+            self.__links.update({key: link})
+        else:
+            ValueError("the node was not found")

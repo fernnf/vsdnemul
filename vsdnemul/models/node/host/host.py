@@ -39,14 +39,14 @@ class Host(Node):
             logger.error(ex.args[0])
             return None
 
-    def commit(self):
+    def _commit(self):
         try:
             docker.create_node(name=self.name, image=self.image, **self.config)
             logger.info("the new host ({name}) node was created".format(name=self.name))
         except Exception  as ex:
             logger.error(ex.args[0])
 
-    def destroy(self):
+    def _destroy(self):
         try:
             docker.delete_node(name=self.name)
             logger.info("the host ({name}) node was deleted".format(name=self.name))

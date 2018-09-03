@@ -1,13 +1,16 @@
-import logging
 import itertools
+import logging
 from abc import ABC, abstractmethod
 from enum import Enum
+from uuid import uuid4 as rand_id
 
-from vsdnemul.port import PortFabric, Port
 from vsdnemul.lib.dockerlib import get_status_node, get_id
+
 '''
 Class Abstract to generate new nodes models based on docker file templates. 
 '''
+
+logger = logging.getLogger(__name__)
 
 class NodeType(Enum):
     HOST = "HOST"
@@ -28,171 +31,110 @@ class NodeType(Enum):
 
 class Node(ABC):
 
-    def __init__(self, name, image, type: NodeType, **config):
+    def __init__(self, name, image, type: NodeType):
         super(Node, self).__init__()
         self.__name = name
         self.__type = type
         self.__image = image
-        self.__id = ""
-        self.__cid = ""
-        self._ports = PortFabric(name)
-        self.__config = config
+        self.__id = rand_id()
+        self.__cid = None
+        self._config = dict()
 
-
-    @property
-    def image(self):
-        return self.__image
-
-    @image.setter
-    def image(self, value):
-        pass
-
-    @property
-    def name(self):
+    def getName(self):
         return self.__name
 
-    @name.setter
-    def name(self, value):
-        pass
+    def getImage(self):
+        return self.__image
 
-    @property
-    def config(self):
-        return self.__config
-
-    @config.setter
-    def config(self, value):
-        pass
-
-    @property
-    def id(self):
+    def getId(self):
         return self.__id
 
-    @id.setter
-    def id(self, value):
-        self.__id = value
-
-    @property
-    def cid(self):
-        return get_id(self.name)
-
-    @cid.setter
-    def cid(self, value):
-        pass
-
-    @property
-    def type(self):
-        return self.__type.describe()
-
-    @type.setter
-    def type(self, value):
-        if NodeType.has_member(value=value):
-            self.__type = value
-
-    @property
-    def status(self):
+    def getStatus(self):
         try:
-            return get_status_node(self.name)
+            return get_status_node(self.__name)
         except:
             return None
 
-    @status.setter
-    def status(self, value):
+    def getCid(self):
+        try:
+            return get_id(self.__name)
+        except:
+            return None
+
+    def getType(self):
+        return self.__type
+
+    def setType(self, type: NodeType):
+        self.__type = type
+
+    @abstractmethod
+    def _commit(self):
         pass
 
     @abstractmethod
-    def add_port(self, port:Port):
-        pass
-    @abstractmethod
-    def del_port(self, id):
-        pass
-
-    @abstractmethod
-    def get_port(self, id):
-        pass
-
-    @property
-    def get_ports(self):
-        return self.__ports.get_ports()
-
-    @get_ports.setter
-    def get_ports(self, value):
-        pass
-
-
-    @abstractmethod
-    def commit(self):
-        pass
-
-    @abstractmethod
-    def destroy(self):
+    def _destroy(self):
         pass
 
     def __dict__(self):
         return {
-            "id": self.id,
-            "cid": self.cid,
-            "name": self.name,
-            "image": self.image,
-            "type": self.type,
-            "status": self.status,
-            "config": self.config
+            "id": self.getId(),
+            "cid": self.getCid(),
+            "name": self.getName(),
+            "image": self.getImage(),
+            "type": self.getType().name,
+            "status": self.getStatus(),
         }
 
     def __str__(self):
         return [
-            "id={id}".format(id=self.id),
-            "cid={cid}".format(cid=self.cid),
-            "name={name}".format(name=self.name),
-            "image={image}".format(image=self.image),
-            "type={type}".format(type=self.type),
-            "status={status}".format(status=self.status),
-            "config={config}".format(config=self.config)
+            "id={id}".format(id=self.getId()),
+            "cid={cid}".format(cid=self.getCid()),
+            "name={name}".format(name=self.getName()),
+            "image={image}".format(image=self.getImage()),
+            "type={type}".format(type=self.getType().name),
+            "status={status}".format(status=self.getStatus())
         ]
+
 
 class NodeFabric(object):
 
     def __init__(self):
-        self.logger = logging.getLogger(__name__)
-        self.__next_id = itertools.count()
         self.__nodes = {}
 
-    def add_node(self, node: Node):
-        key = self.__next_id.__next__()
-        node.id = key
-        try:
-            self.__nodes.update({key: node})
-            self.logger.debug("node with id ({id}) has added".format(id=key))
-        except Exception as ex:
-            self.logger.error(ex.__cause__)
-            raise ValueError(ex.__cause__)
+    def isExist(self, id):
+        return any(k == id for k in self.__nodes.keys())
 
-    def del_node(self, id):
-        if self.id_exist(id):
+    def addNode(self, node: Node):
+        key = node.getId()
+        if not self.isExist(id=key):
+            self.__nodes.update({key: node})
+        else:
+            raise ValueError("the node not found")
+
+    def delNode(self, id):
+        if self.isExist(id):
             del self.__nodes[id]
         else:
-            raise ValueError("the id is not found")
+            raise ValueError("the node not found")
 
-    def get_node(self, id):
+    def getNode(self, id):
         return self.__nodes[id]
 
-    def get_nodes(self):
+    def getNodes(self):
         return self.__nodes
-
-    def id_exist(self, id):
-        return any(k == id for k in self.__nodes.keys())
 
     def start(self):
         try:
             for n in self.__nodes.values():
-                n.commit()
-                self.logger.info("the new node ({name}) with id ({id}) was added".format(name=n.name, id=n.id))
+                n._commit()
+                logger.info("the new node ({name}) with id ({id}) was added".format(name=n.name, id=n.id))
         except:
-            self.logger.error("It cannot create nodes ")
+            logger.error("It cannot create nodes ")
 
     def stop(self):
         try:
             for n in self.__nodes.values():
-                n.destroy()
-                self.logger.info("the node ({name}) with id ({id}) was deleted".format(name=n.name, id=n.id))
+                n._destroy()
+                logger.info("the node ({name}) with id ({id}) was deleted".format(name=n.name, id=n.id))
         except:
-            self.logger.error("It cannot delete nodes")
+            logger.error("It cannot delete nodes")

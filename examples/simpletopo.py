@@ -26,28 +26,28 @@ def Topology():
 
     data = Dataplane()
 
-    data.add_link(link1)
-    data.add_link(link2)
-    data.add_link(link3)
-    data.add_node(n1)
-    data.add_node(n2)
-    data.add_node(h1)
-    data.add_node(h2)
-    data.add_node(ctl1)
+    data.addLink(link1)
+    data.addLink(link2)
+    data.addLink(link3)
+    data.addNode(n1)
+    data.addNode(n2)
+    data.addNode(h1)
+    data.addNode(h2)
+    data.addNode(ctl1)
 
     return data
 
 
 def Controlplane(dataplane):
     def exist_ctl():
-        for k, n in dataplane.get_nodes().items():
+        for k, n in dataplane.getNodes().items():
             if n.type == NodeType.CONTROLLER:
                 return n
         return None
 
     def connect_ctl(control_ip):
         if ctl is not None:
-            for k, n in dataplane.get_nodes().items():
+            for k, n in dataplane.getNodes().items():
                 if n.type == NodeType.SWITCH:
                     n.set_controller(ip = control_ip)
 

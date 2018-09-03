@@ -52,9 +52,9 @@ class Port(object):
 
     def __dict__(self):
         return {
-            "id": "{id}".format(self.id),
-            "type": "{type}".format(self.type),
-            "name": "{name}".format(self.name),
+            "id": "{id}".format(id=self.id),
+            "type": "{type}".format(type=self.type),
+            "name": "{name}".format(name=self.name),
         }
 
     def __str__(self):
@@ -77,6 +77,7 @@ class PortFabric(object):
         key = self.__next_id.__next__()
         port.id = key
         self.__ports.update({key: port})
+        return key
 
     def del_port(self, id):
         if self.is_exist(id=id):

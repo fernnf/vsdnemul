@@ -2,15 +2,28 @@ import logging
 from enum import Enum
 
 from vsdnemul.lib import dockerlib as docker
-from vsdnemul.lib import ovsdblib as ovsdb
 from vsdnemul.lib import iproutelib as iproute
+from vsdnemul.lib import ovsdblib as ovsdb
 from vsdnemul.models.port.ethernet import Ethernet
 from vsdnemul.node import Node, NodeType
+from vsdnemul.port import Port
 
 logger = logging.getLogger(__name__)
 
-"""Self API for special commands"""
+"""Begin self API for special commands"""
 
+
+def _add_port_ns(node, ifname, new_name):
+    return iproute.add_port_ns(ifname=ifname, netns=node, new_name=new_name)
+
+def _rem_port_ns(node, ifname):
+    return iproute.delete_port(ifname=ifname,netns=node)
+
+def _add_port_ovs(db_addr, br_oper, port_name, ofport):
+    ovsdb.add_port_bridge(db_addr=db_addr, name=br_oper, port_name=port_name, ofport=ofport)
+
+def _rem_port_ovs(db_addr, br_oper, port_name):
+    ovsdb.del_port_bridge(db_addr=db_addr, name=br_oper, port_name=port_name)
 
 def _set_manager(node, target=None):
     def command():
@@ -53,7 +66,6 @@ class OF_VERSION(Enum):
 
 
 class Whitebox(Node):
-
     __ports__ = None
     __volumes__ = None
     __cap_add__ = ["ALL"]
@@ -99,7 +111,7 @@ class Whitebox(Node):
         except Exception as ex:
             logger.error(ex.args[0])
 
-    def set_controller(self, target: list, bridge="br_oper0", ):
+    def set_controller(self, target: list, bridge="br_oper0"):
         try:
             ovsdb.set_bridge_controller(name=bridge, db_addr=self.control_addr, target_addr=target)
         except Exception as ex:
@@ -111,16 +123,21 @@ class Whitebox(Node):
         except Exception as ex:
             logger.error(ex.args[0])
 
-    def add_port(self, mac=None, ip=None, mask=None):
-        port = Ethernet(mac=mac, ip=ip, mask=mask)
-
+    def add_port(self, ifname, port:Port ):
         try:
-            self._ports.add_port(port=port)
+            key = self._ports.add_port(port=port)
+            port = self._ports.get_port(id=key)
+            _add_port_ns(node=self.name, ifname=ifname, new_name=port.name)
+            _add_port_ovs(db_addr=self.control_addr, br_oper=self.br_oper, port_name=port.name, ofport=key)
+            return key
         except Exception as ex:
             logger.error(ex.args[0])
 
     def del_port(self, id):
         try:
+            port = self._ports.get_port(id=id)
+            _rem_port_ovs(db_addr=self.control_addr,br_oper=self.br_oper, port_name=port.name)
+            _rem_port_ns(node=self.name,ifname=port.name)
             self._ports.del_port(id=id)
         except Exception as ex:
             logger.error(ex.args[0])
@@ -135,7 +152,7 @@ class Whitebox(Node):
     def get_len_ports(self):
         return len(self.get_ports)
 
-    def commit(self):
+    def _commit(self):
         try:
             docker.create_node(name=self.name, image=self.image, **self.config)
             self.set_manager()
@@ -145,10 +162,9 @@ class Whitebox(Node):
         except Exception  as ex:
             logger.error(ex.args[0])
 
-    def destroy(self):
+    def _destroy(self):
         try:
             docker.delete_node(name=self.name)
             logger.info("the whitebox ({name}) node was deleted".format(name=self.name))
         except Exception as ex:
             logger.error(ex.args[0])
-
