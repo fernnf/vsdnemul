@@ -1,60 +1,95 @@
+import logging
 from uuid import uuid4
 
-from vsdnemul.link import Link
-from vsdnemul.node import Node
-
 from vsdnemul.lib import iproutelib as iproute
+from vsdnemul.link import Link, LinkEncap, LinkType
 
-MTU_DEFAULT=9000
+MTU_DEFAULT = 9000
 
-def _create_veth():
-    source = "veth{id}".format(id=str(uuid4())[:6])
-    target = "veth{id}".format(id=str(uuid4())[:6])
-    if iproute.create_pair(ifname=source, peer=target,mtu=MTU_DEFAULT):
-        return source,target
+logger = logging.getLogger(__name__)
+
+
+def _GetVethName():
+    return "veth{id}".format(id=str(uuid4())[:6])
+
+
+def _CreateVeth(mtu):
+    source = _GetVethName()
+    target = _GetVethName()
+    if iproute.create_pair(ifname=source, peer=target, mtu=mtu):
+        return source, target
     return None
 
-def _create_bridge(slaves=None):
-    bridge = "br{id}".format(id=str(uuid4())[:6])
-    if iproute.create_bridge(ifname=bridge,slaves=slaves, mtu=MTU_DEFAULT):
-        return bridge
-    return None
 
-def _add_port_br(ifname, bridge):
-    return iproute.bridge_add_port(master=bridge, slaves=[ifname])
+def _CreateBridge(name, mtu, slaves:list=None):
+    return iproute.create_bridge(ifname=name, slaves=slaves, mtu=mtu)
 
 
-def _create_link():
-    bridge = _create_bridge()
-    source = ""
-    target = ""
+def _DeleteBridge(name):
+    return iproute.delete_port(ifname=name)
 
-    def _add_link():
-        port_node, port_bridge = _create_veth()
 
-        if _add_port_br(ifname=port_bridge,bridge=bridge):
-            return port_node
-        return None
+def _CreateLink(bridge, mtu):
+    source, br_source = _CreateVeth(mtu)
+    target, br_target = _CreateVeth(mtu)
 
-    source = _add_link()
-    target = _add_link()
+    _CreateBridge(name=bridge, mtu=mtu, slaves=[br_source, br_target])
 
     return source, target
 
 
 class Bridge(Link):
+    __encap__ = LinkEncap.ETHERNET
 
-    def __init__(self, node_source:Node, node_target: Node):
-        super().__init__(node_source, node_target)
+    def __init__(self, name, node_source, node_target, type: LinkType, mtu=MTU_DEFAULT):
+        super().__init__(name=name, node_source=node_source, node_target=node_target, type=type, encap=self.__encap__)
+        self.__mtu = mtu
 
-    def _commit(self):
+    def getMtu(self):
+        return self.__mtu
 
+    def _Commit(self):
+        # try:
+        source, target = _CreateLink(bridge=self.getIfName(), mtu=self.getMtu())
+
+        node_source = self.getSource()
+        node_target = self.getTarget()
+
+        src_id = node_source.setInterface(ifname=source, encap=self.__encap__)
+        tgt_id = node_target.setInterface(ifname=target, encap=self.__encap__)
+
+        self.setPortSource(src_id)
+        self.setPortTarget(tgt_id)
+
+        logger.info(
+            "new link has created between ({src}-{src_id} <--> {tgt_id}-{tgt}))".format(src=node_source.getName(),
+                                                                                        src_id=src_id,
+                                                                                        tgt=node_target.getName(),
+                                                                                        tgt_id=tgt_id))
+
+    # except Exception as ex:
+    #    logger.error(ex.args[0])
+
+    def _Destroy(self):
         try:
-            self.source.add_port(
+            node_source = self.getSource()
+            node_target = self.getTarget()
+
+            node_source.delInferface(self.getPortSource())
+            node_target.delInferface(self.getPortTarget())
+
+            _DeleteBridge(self.getIfName())
+
+            logger.info(
+                "new link has created between ({src}-{src_id} <--> {tgt_id}-{tgt}))".format(src=node_source.getName(),
+                                                                                            src_id=self.getPortSource(),
+                                                                                            tgt=node_target.getName(),
+                                                                                            tgt_id=self.getPortTarget()))
+        except Exception as ex:
+            logger.error(ex.args[0])
 
 
+if __name__ == '__main__':
 
-    def _destroy(self):
-        pass
-
+   print(_CreateLink(bridge="bridge0", mtu=9000))
 

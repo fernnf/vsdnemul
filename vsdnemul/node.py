@@ -31,14 +31,22 @@ class NodeType(Enum):
 
 class Node(ABC):
 
+    __ports__ = ""
+    __volumes__ = ""
+    __cap_add__ = ""
+    __image__ = ""
+    __type__ = ""
+
     def __init__(self, name, image, type: NodeType):
         super(Node, self).__init__()
         self.__name = name
         self.__type = type
         self.__image = image
-        self.__id = rand_id()
         self.__cid = None
-        self._config = dict()
+        self.config = dict()
+        self.interfaces = dict()
+        self.count_interface = itertools.count()
+
 
     def getName(self):
         return self.__name
@@ -46,16 +54,13 @@ class Node(ABC):
     def getImage(self):
         return self.__image
 
-    def getId(self):
-        return self.__id
-
     def getStatus(self):
         try:
             return get_status_node(self.__name)
         except:
             return None
 
-    def getCid(self):
+    def getId(self):
         try:
             return get_id(self.__name)
         except:
@@ -68,17 +73,24 @@ class Node(ABC):
         self.__type = type
 
     @abstractmethod
-    def _commit(self):
+    def setInterface(self, ifname, encap):
         pass
 
     @abstractmethod
-    def _destroy(self):
+    def delInterface(self, id):
+        pass
+
+    @abstractmethod
+    def _Commit(self):
+        pass
+
+    @abstractmethod
+    def _Destroy(self):
         pass
 
     def __dict__(self):
         return {
             "id": self.getId(),
-            "cid": self.getCid(),
             "name": self.getName(),
             "image": self.getImage(),
             "type": self.getType().name,
@@ -88,7 +100,6 @@ class Node(ABC):
     def __str__(self):
         return [
             "id={id}".format(id=self.getId()),
-            "cid={cid}".format(cid=self.getCid()),
             "name={name}".format(name=self.getName()),
             "image={image}".format(image=self.getImage()),
             "type={type}".format(type=self.getType().name),
@@ -101,40 +112,28 @@ class NodeFabric(object):
     def __init__(self):
         self.__nodes = {}
 
-    def isExist(self, id):
-        return any(k == id for k in self.__nodes.keys())
+    def isExist(self, name):
+        return any(k == name for k in self.__nodes.keys())
 
-    def addNode(self, node: Node):
-        key = node.getId()
-        if not self.isExist(id=key):
+    def addNode(self, node):
+        key = node.getName()
+        if not self.isExist(name=key):
             self.__nodes.update({key: node})
+            node._Commit()
+            return node
         else:
             raise ValueError("the node not found")
 
-    def delNode(self, id):
-        if self.isExist(id):
-            del self.__nodes[id]
+    def delNode(self, name):
+        if self.isExist(name):
+            node = self.__nodes[name]
+            node._Destroy()
+            del self.__nodes[name]
         else:
             raise ValueError("the node not found")
 
-    def getNode(self, id):
-        return self.__nodes[id]
+    def getNode(self, name):
+        return self.__nodes[name]
 
     def getNodes(self):
         return self.__nodes
-
-    def start(self):
-        try:
-            for n in self.__nodes.values():
-                n._commit()
-                logger.info("the new node ({name}) with id ({id}) was added".format(name=n.name, id=n.id))
-        except:
-            logger.error("It cannot create nodes ")
-
-    def stop(self):
-        try:
-            for n in self.__nodes.values():
-                n._destroy()
-                logger.info("the node ({name}) with id ({id}) was deleted".format(name=n.name, id=n.id))
-        except:
-            logger.error("It cannot delete nodes")

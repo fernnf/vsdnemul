@@ -96,7 +96,7 @@ class Onos(Node):
         except Exception as ex:
             logger.error(str(ex.args[0]))
 
-    def _commit(self):
+    def _Commit(self):
         try:
             docker.create_node(name=self.name, image=self.image, **self.config)
             logger.info("the new controller onos ({name}) node was created".format(name=self.name))
@@ -106,7 +106,7 @@ class Onos(Node):
         except Exception as ex:
             logger.error(ex.args[0])
 
-    def _destroy(self):
+    def _Destroy(self):
         try:
             docker.delete_node(name=self.name)
             logger.info("the controller onos  ({name}) node was deleted".format(name=self.name))

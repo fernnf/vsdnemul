@@ -41,8 +41,11 @@ class LinkEncap(Enum):
 
 class Link(ABC):
 
-    def __init__(self, node_source: Node, node_target: Node, type: LinkType, encap: LinkEncap):
+    __encap__ = ""
+
+    def __init__(self, name, node_source, node_target, type: LinkType, encap: LinkEncap):
         super(Link, self).__init__()
+        self.__name = name
         self.__source = node_source
         self.__target = node_target
         self.__type = type
@@ -52,6 +55,9 @@ class Link(ABC):
         self.__port_target = None
 
     def getName(self):
+        return self.__name
+
+    def getIfName(self):
         return "link{id}".format(id=self.__id[:8])
 
     def getType(self):
@@ -82,11 +88,11 @@ class Link(ABC):
         self.__port_target = target
 
     @abstractmethod
-    def _commit(self):
+    def _Commit(self):
         pass
 
     @abstractmethod
-    def _destroy(self):
+    def _Destroy(self):
         pass
 
     def __dict__(self):
@@ -106,23 +112,18 @@ class LinkFabric(object):
     def __init__(self):
         self.__links = {}
 
-    def isExist(self, id):
-        return id in self.__links
+    def isExist(self, name):
+        return name in self.__links
 
     #FIXME: To create search method more opitmized
-    def isExistLink(self, source: Node, target: Node):
-        for l in self.__links.values():
-            s = l.getSource()
-            t = l.getTarget()
-            if s.__eq__(source.getName() or target.getName()):
-                if t.__eq__(source.getName() or target.getName()):
-                    return True
+    def isExistLink(self, source, target):
+        src = any(l.getSource() == source or l.getTarget() == source for l in self.__links.values())
+        tgt = any(l.getSource() == target or l.getTarget() == target for l in self.__links.values())
 
-        return False
-
+        return src and tgt
 
     def addLink(self, link):
-        key = link.getId()
+        key = link.getName()
 
         if self.isExist(key):
             raise ValueError("the link object already exists")
@@ -130,30 +131,23 @@ class LinkFabric(object):
         elif self.isExistLink(link.getSource(), link.getTarget()):
             raise ValueError("the link object already exists")
         else:
+            link._Commit()
             self.__links.update({key: link})
 
-    def delLink(self, id):
-        if self.isExist(id):
-            del self.__links[id]
+    def delLink(self, name):
+        if self.isExist(name):
+            link = self.__links[name]
+            link._Destroy()
+            del(self.__links[name])
         else:
             ValueError("the node not found")
 
     def getLinks(self):
         return self.__links
 
-    def getLink(self, id):
-        if self.isExist(id):
-            return self.__links[id]
+    def getLink(self, name):
+        if self.isExist(name):
+            return self.__links[name]
         else:
             ValueError("the link was not found")
 
-    def updateLink(self, id, link):
-        key = link.getId()
-
-        if not id.__eq__(key):
-            raise ValueError("Link id and object are different")
-
-        if self.isExist(id):
-            self.__links.update({key: link})
-        else:
-            ValueError("the node was not found")

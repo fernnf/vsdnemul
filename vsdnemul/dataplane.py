@@ -18,9 +18,9 @@ class Dataplane(object):
         except Exception as ex:
             logger.error(ex.args[0])
 
-    def delNode(self, id):
+    def delNode(self, name):
         try:
-            self.__nodes.delNode(id=id)
+            self.__nodes.delNode(name)
         except Exception as ex:
             logger.error(ex.args[0])
 
@@ -30,24 +30,24 @@ class Dataplane(object):
         except Exception as ex:
             logger.error(ex.args[0])
 
-    def delLink(self, id):
+    def delLink(self, name):
 
         try:
-            self.__links.delLink(id=id)
+            self.__links.delLink(name)
         except Exception as ex:
             logger.error(ex.args[0])
 
-    def getNode(self, id):
-        return self.__nodes.getNode(id=id)
+    def getNode(self, name):
+        return self.__nodes.getNode(name)
 
     def getNodeId(self, name):
         for n in self.__nodes.getNodes().values():
-            if n.name.__eq__(name):
-                return n.id
-        return None
+            if n.getName().__eq__(name):
+                return n.getId()
+        return self.__nodes.getNode(name).getId()
 
-    def getLink(self, id):
-        return self.__links.getLink(id=id)
+    def getLink(self, name):
+        return self.__links.getLink(name)
 
     def getNodes(self):
         return self.__nodes.getNodes()
@@ -55,38 +55,33 @@ class Dataplane(object):
     def getLinks(self):
         return self.__links.getLinks()
 
-    def start(self):
+    def getCountNodes(self):
+        return self.__nodes.getNodes().__len__()
 
-        def commitNodes():
-            for key, node in self.__nodes.getNodes().items():
-                logger.info("Creating node ({key}:{name}) ".format(name=node.name, key=key))
-                node._commit()
+    def getCountLinks(self):
+        return self.__links.getLinks().__len__()
 
-        def commitLinks():
-            for key, link in self.__links.getLinks().items():
-                logger.info("Creating link ({key}:{name})".format(name=link.name, key=key))
-                s, t = link._commit()
-                self.__nodes.update_node(idx=s.idx, node=s)
-                self.__nodes.update_node(idx=t.idx, node=t)
-
-        try:
-            commitNodes()
-            commitLinks()
-        except Exception as ex:
-            logger.error(ex.args[0])
 
     def stop(self):
         def destroyLinks():
-            for link in self.__links.getLinks().values():
-                logger.info("Deleting link ({key}:{name})".format(name=link.name, key=key))
-                link._destroy()
+            for key,link in self.__links.getLinks().items():
+                logger.info("Deleting link ({key}:{name})".format(name=link.getName(), key=link.getId()))
+                link._Destroy()
 
         def destroyNodes():
-            for node in self.__nodes.getNodes().values():
-                logger.info("Deleting node ({key}:{name}) ".format(name=node.name, key=key))
-                node._destroy()
+            for key,node in self.__nodes.getNodes().items():
+                logger.info("Deleting node ({key}:{name}) ".format(name=node.getName(), key=node.getCid()))
+                node._Destroy()
         try:
-            destroyLinks()
-            destroyNodes()
+            if self.getCountLinks() > 0:
+                destroyLinks()
+            else:
+                logger.warning("no links to destroy")
+
+            if self.getCountNodes() > 0:
+                destroyNodes()
+            else:
+                logger.warning("no links to destroy")
+
         except Exception as ex:
             logger.error(ex.args[0])
