@@ -17,6 +17,7 @@ def topology():
 
     l1 = dp.addLink(Bridge(name="l1", node_source=sw1, node_target=sw2, type=LinkType.DIRECT))
 
+    print(dp.getLinks())
     return dp
 
 

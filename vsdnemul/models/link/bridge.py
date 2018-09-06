@@ -42,46 +42,46 @@ class Bridge(Link):
     __encap__ = LinkEncap.ETHERNET
 
     def __init__(self, name, node_source, node_target, type: LinkType, mtu=MTU_DEFAULT):
-        super().__init__(name=name, node_source=node_source, node_target=node_target, type=type, encap=self.__encap__)
+        super(Bridge, self).__init__(name=name, node_source=node_source, node_target=node_target, type=type, encap=self.__encap__)
         self.__mtu = mtu
 
     def getMtu(self):
         return self.__mtu
 
     def _Commit(self):
-        # try:
-        source, target = _CreateLink(bridge=self.getIfName(), mtu=self.getMtu())
+        try:
+            source, target = _CreateLink(bridge=self.getIfName(), mtu=self.getMtu())
 
-        node_source = self.getSource()
-        node_target = self.getTarget()
+            node_source = self.getSource()
+            node_target = self.getTarget()
 
-        src_id = node_source.setInterface(ifname=source, encap=self.__encap__)
-        tgt_id = node_target.setInterface(ifname=target, encap=self.__encap__)
+            src_id = node_source.setInterface(ifname=source, encap=self.__encap__)
+            tgt_id = node_target.setInterface(ifname=target, encap=self.__encap__)
 
-        self.setPortSource(src_id)
-        self.setPortTarget(tgt_id)
+            self.setPortSource(src_id)
+            self.setPortTarget(tgt_id)
 
-        logger.info(
-            "new link has created between ({src}-{src_id} <--> {tgt_id}-{tgt}))".format(src=node_source.getName(),
+            logger.info(
+            "The new link has created between ({src}-{src_id} <--> {tgt_id}-{tgt}))".format(src=node_source.getName(),
                                                                                         src_id=src_id,
                                                                                         tgt=node_target.getName(),
                                                                                         tgt_id=tgt_id))
 
-    # except Exception as ex:
-    #    logger.error(ex.args[0])
+        except Exception as ex:
+            logger.error(ex.args[0])
 
     def _Destroy(self):
         try:
             node_source = self.getSource()
             node_target = self.getTarget()
 
-            node_source.delInferface(self.getPortSource())
-            node_target.delInferface(self.getPortTarget())
+            node_source.delInterface(self.getPortSource())
+            node_target.delInterface(self.getPortTarget())
 
             _DeleteBridge(self.getIfName())
 
             logger.info(
-                "new link has created between ({src}-{src_id} <--> {tgt_id}-{tgt}))".format(src=node_source.getName(),
+                "The link has deleted between ({src}-{src_id} <--> {tgt_id}-{tgt}))".format(src=node_source.getName(),
                                                                                             src_id=self.getPortSource(),
                                                                                             tgt=node_target.getName(),
                                                                                             tgt_id=self.getPortTarget()))

@@ -25,10 +25,10 @@ class Dataplane(object):
             logger.error(ex.args[0])
 
     def addLink(self, link):
-        try:
-            return self.__links.addLink(link)
-        except Exception as ex:
-            logger.error(ex.args[0])
+        #try:
+        return self.__links.addLink(link)
+       # except Exception as ex:
+       #     logger.error(ex.args[0])
 
     def delLink(self, name):
 
@@ -70,7 +70,7 @@ class Dataplane(object):
 
         def destroyNodes():
             for key,node in self.__nodes.getNodes().items():
-                logger.info("Deleting node ({key}:{name}) ".format(name=node.getName(), key=node.getCid()))
+                logger.info("Deleting node ({key}:{name}) ".format(name=node.getName(), key=node.getId()))
                 node._Destroy()
         try:
             if self.getCountLinks() > 0:

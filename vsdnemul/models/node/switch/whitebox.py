@@ -1,12 +1,11 @@
 import logging
 from enum import Enum
-import itertools
+import traceback
 
 from vsdnemul.lib import dockerlib as docker
 from vsdnemul.lib import iproutelib as iproute
 from vsdnemul.lib import ovsdblib as ovsdb
 from vsdnemul.node import Node, NodeType
-from vsdnemul.port import Port
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +82,7 @@ class OF_VERSION(Enum):
     OF_13 = "OpenFlow13"
     OF_14 = "OpenFlow14"
 
+
 class Whitebox(Node):
     __cap_add__ = ["ALL"]
     __image__ = "vsdn/whitebox"
@@ -157,8 +157,8 @@ class Whitebox(Node):
             logger.error(ex.args[0])
 
     def setInterface(self, ifname, encap):
-        id = self.count_interface.__next__()
-        interface = encap.portName(self)+id
+        id = str(self.count_interface.__next__())
+        interface = encap.portName() + id
         try:
             iproute.add_port_ns(ifname=ifname, netns=self.getName(), new_name=interface)
             ovsdb.add_port_bridge(db_addr=self.getControlAddr(), name=self.getBrOper(), port_name=interface,
@@ -166,6 +166,7 @@ class Whitebox(Node):
             self.interfaces.update({id: interface})
             return id
         except Exception as ex:
+            traceback.print_exc()
             logger.error(ex.args[0])
 
     def delInterface(self, id):
@@ -174,8 +175,8 @@ class Whitebox(Node):
 
         try:
             ovsdb.del_port_bridge(db_addr=self.getControlAddr(), name=self.getBrOper(), port_name=interface)
-            iproute.delete_port(ifname=interface,netns=self.getName())
-            del(self.interfaces[id])
+            iproute.delete_port(ifname=interface, netns=self.getName())
+            del (self.interfaces[id])
         except Exception as ex:
             logger.error(ex.args[0])
 
@@ -197,8 +198,3 @@ class Whitebox(Node):
             logger.info("the whitebox ({name}) node was deleted".format(name=self.getName()))
         except Exception as ex:
             logger.error(ex.args[0])
-
-
-
-
-

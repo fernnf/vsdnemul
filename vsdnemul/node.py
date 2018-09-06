@@ -45,7 +45,7 @@ class Node(ABC):
         self.__cid = None
         self.config = dict()
         self.interfaces = dict()
-        self.count_interface = itertools.count()
+        self.count_interface = itertools.count(start=1, step=1)
 
 
     def getName(self):

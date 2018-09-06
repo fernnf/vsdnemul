@@ -50,7 +50,7 @@ class Link(ABC):
         self.__target = node_target
         self.__type = type
         self.__encap = encap
-        self.__id = rand_id()
+        self.__id = str(rand_id())
         self.__port_source = None
         self.__port_target = None
 
@@ -70,10 +70,10 @@ class Link(ABC):
         return self.__id
 
     def getSource(self):
-        return self.__source.getName()
+        return self.__source
 
     def getTarget(self):
-        return self.__target.getName()
+        return self.__target
 
     def getPortSource(self):
         return self.__port_source
