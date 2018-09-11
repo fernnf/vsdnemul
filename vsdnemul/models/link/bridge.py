@@ -89,7 +89,3 @@ class Bridge(Link):
             logger.error(ex.args[0])
 
 
-if __name__ == '__main__':
-
-   print(_CreateLink(bridge="bridge0", mtu=9000))
-

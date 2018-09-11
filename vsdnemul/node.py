@@ -13,13 +13,13 @@ Class Abstract to generate new nodes models based on docker file templates.
 logger = logging.getLogger(__name__)
 
 class NodeType(Enum):
-    HOST = "HOST"
-    SWITCH = "SWITCH"
-    ROUTER = "ROUTER"
-    WIFI_ROUTER = "WIFI_ROUTER"
-    CONTROLLER = "CONTROLLER"
-    SERVER = "SERVER"
-    HYPERVISOR = "SDN HYPERVISOR"
+    HOST = "host"
+    SWITCH = "switch"
+    ROUTER = "router"
+    WIFI_ROUTER = "wifi_router"
+    CONTROLLER = "controller"
+    SERVER = "server"
+    HYPERVISOR = "sdn_hypervisor"
 
     def describe(self):
         return self.name.lower()
@@ -71,6 +71,7 @@ class Node(ABC):
 
     def setType(self, type: NodeType):
         self.__type = type
+
 
     @abstractmethod
     def setInterface(self, ifname, encap):

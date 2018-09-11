@@ -11,21 +11,18 @@ logger = logging.getLogger(__name__)
 """Begin self API for special commands"""
 
 
-def _get_mngt_addr(node):
+def _GetManagerAddr(node):
     def get_ip():
         return iproute.get_interface_addr(ifname="eth0", netns=node)
 
     return "tcp:{ip}:6640".format(ip=get_ip())
 
 
-def _get_ip_controller(node):
-    def get_ip():
-        return iproute.get_interface_addr(ifname="eth0", netns=node)
-
-    return get_ip()
+def _GetIpController(node):
+    return iproute.get_interface_addr(ifname="eth0", netns=node)
 
 
-def _disable_app(ctl_ip, name_app):
+def _DisableApp(ctl_ip, name_app):
     url = "http://{addr}:8181/onos/v1/applications/{app}/deactive".format(addr=ctl_ip, app=name_app)
     with requests.Session() as r:
         a = requests.adapters.HTTPAdapter(max_retries=10)
@@ -35,7 +32,7 @@ def _disable_app(ctl_ip, name_app):
             raise RuntimeError("cannot disable application")
 
 
-def _enable_app(ctl_ip, name_app):
+def _EnableApp(ctl_ip, name_app):
     URL = "http://{addr}:8181/onos/v1/applications/{app}/active".format(addr=ctl_ip, app=name_app)
 
     with requests.Session() as r:
@@ -56,59 +53,50 @@ class Onos(Node):
     __cap_add__ = ["SYS_ADMIN", "NET_ADMIN"]
     __type__ = NodeType.CONTROLLER
 
-    def __init__(self, name, **config):
-        config.update(ports=self.__ports__)
-        config.update(volumes=self.__volumes__)
-        config.update(cap_add=self.__cap_add__)
-        super(Onos, self).__init__(name=name, image=self.__image__, type=self.__type__, **config)
+    def __init__(self, name):
+        super(Onos, self).__init__(name=name, image=self.__image__, type=self.__type__)
+        self.config.update(ports=self.__ports__)
+        self.config.update(cap_add=self.__cap_add__)
+        self.config.update(volumes=self.__volumes__)
 
-    @property
-    def control_addr(self):
+
+    def getManagerAddr(self):
+        return _GetManagerAddr(node=self.getName())
+
+    def getIpController(self):
+        return _GetIpController(node=self.getName())
+
+    def setStartApp(self, app_name):
         try:
-            return _get_mngt_addr(self.name)
+            _EnableApp(self.getIpController(), name_app=app_name)
         except Exception as ex:
             logger.error(ex.args[0])
-            return None
 
-    @control_addr.setter
-    def control_addr(self, value):
+    def setStopApp(self, app_name):
+        try:
+            _DisableApp(self.getIpController(), name_app=app_name)
+        except Exception as ex:
+            logger.error(ex.args[0])
+
+    def setInterface(self, ifname, encap):
         pass
 
-    @property
-    def ip_controller(self):
-        return _get_ip_controller(self.name)
-
-    @ip_controller.setter
-    def ip_controller(self, value):
+    def delInterface(self, id):
         pass
-
-    def start_app(self, app_name):
-
-        try:
-            _enable_app(ctl_ip=self.ip_controller, name_app=app_name)
-        except Exception as ex:
-            logger.error(str(ex.args[0]))
-
-    def stop_app(self, app_name):
-
-        try:
-            _disable_app(ctl_ip=self.ip_controller, name_app=app_name)
-        except Exception as ex:
-            logger.error(str(ex.args[0]))
 
     def _Commit(self):
         try:
-            docker.create_node(name=self.name, image=self.image, **self.config)
-            logger.info("the new controller onos ({name}) node was created".format(name=self.name))
+            docker.create_node(name=self.getName(), image=self.getImage(), **self.config)
+            logger.info("the new controller onos ({name}) node was created".format(name=self.getName()))
             logger.info(
                 "the controller web interface can be accessed by address http://{ip}:8181/onos/ui/index.html".format(
-                    ip=self.ip_controller))
+                    ip=self.getIpController()))
         except Exception as ex:
             logger.error(ex.args[0])
 
     def _Destroy(self):
         try:
-            docker.delete_node(name=self.name)
-            logger.info("the controller onos  ({name}) node was deleted".format(name=self.name))
+            docker.delete_node(name=self.getName())
+            logger.info("the controller onos ({name}) node was deleted".format(name=self.getName()))
         except Exception as ex:
             logger.error(ex.args[0])

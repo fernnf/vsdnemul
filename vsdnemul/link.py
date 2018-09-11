@@ -26,7 +26,6 @@ class LinkEncap(Enum):
     ETHERNET = "vif"
     OPTICAL = "vopt"
     RADIO = "vwifi"
-    HOST = "vht"
 
     def describe(self):
         return self.name.lower()
