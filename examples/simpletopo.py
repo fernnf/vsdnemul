@@ -2,7 +2,7 @@
 from vsdnemul.dataplane import Dataplane
 from vsdnemul.lib.log import get_logger
 from vsdnemul.node import NodeType
-from vsdnemul.cli import Prompt
+from vsdnemul.cli_old import Prompt
 from vsdnemul.models.link import HostLinkVeth, DirectLinkVeth
 from vsdnemul.models.node.host.host_node import Host
 from vsdnemul.models.node.controller.onos_node import Onos

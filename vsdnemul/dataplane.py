@@ -25,10 +25,10 @@ class Dataplane(object):
             logger.error(ex.args[0])
 
     def addLink(self, link):
-        #try:
-        return self.__links.addLink(link)
-       # except Exception as ex:
-       #     logger.error(ex.args[0])
+        try:
+            return self.__links.addLink(link)
+        except Exception as ex:
+            logger.error(ex.args[0])
 
     def delLink(self, name):
 

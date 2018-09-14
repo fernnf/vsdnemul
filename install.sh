@@ -24,9 +24,9 @@ function check {
 
 function template {
 
-    HOST=templates/host/Dockerfile
-    ONOS=templates/onos/Dockerfile
-    WHITEBOX=templates/whitebox/Dockerfile
+    HOST=template/host/Dockerfile
+    ONOS=template/onos/Dockerfile
+    WHITEBOX=template/whitebox/Dockerfile
 
     echo "Installing docker devices ..."
     echo "* HOST computer models"
@@ -90,7 +90,7 @@ case $1 in
         echo "option not found"
         echo "please use the following options:"
         echo "  [check] --------- for checking command necessaries."
-        echo "  [models] ------ for installing devices docker."
+        echo "  [template] ------ for installing devices docker."
         echo "  [library] ------- for installing only library."
         echo "  [all] ----------- for executing all options before"
 esac

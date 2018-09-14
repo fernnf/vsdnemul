@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from uuid import uuid4 as rand_id
 
-from vsdnemul.lib.dockerlib import get_status_node, get_id
+from vsdnemul.lib.dockerlib import get_status_node, get_id, get_control_ip
 
 '''
 Class Abstract to generate new nodes models based on docker file templates. 
@@ -47,6 +47,8 @@ class Node(ABC):
         self.interfaces = dict()
         self.count_interface = itertools.count(start=1, step=1)
 
+    def getControlIp(self):
+        return get_control_ip(self.__name)
 
     def getName(self):
         return self.__name
@@ -123,7 +125,7 @@ class NodeFabric(object):
             node._Commit()
             return node
         else:
-            raise ValueError("the node not found")
+            raise ValueError("the node already exists".format(name=key))
 
     def delNode(self, name):
         if self.isExist(name):
