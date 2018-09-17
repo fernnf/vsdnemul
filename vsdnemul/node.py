@@ -1,8 +1,13 @@
+import argparse
 import itertools
 import logging
 from abc import ABC, abstractmethod
 from enum import Enum
-from uuid import uuid4 as rand_id
+
+import cmd2
+from cmd2 import with_argparser, with_category
+from terminaltables import AsciiTable
+
 
 from vsdnemul.lib.dockerlib import get_status_node, get_id, get_control_ip
 
@@ -11,6 +16,9 @@ Class Abstract to generate new nodes models based on docker file templates.
 '''
 
 logger = logging.getLogger(__name__)
+
+
+CAT_NODE_MANAGER = "Node Emulation Command"
 
 class NodeType(Enum):
     HOST = "host"
@@ -30,7 +38,6 @@ class NodeType(Enum):
 
 
 class Node(ABC):
-
     __ports__ = ""
     __volumes__ = ""
     __cap_add__ = ""
@@ -73,7 +80,6 @@ class Node(ABC):
 
     def setType(self, type: NodeType):
         self.__type = type
-
 
     @abstractmethod
     def setInterface(self, ifname, encap):
@@ -140,3 +146,70 @@ class NodeFabric(object):
 
     def getNodes(self):
         return self.__nodes
+
+
+class CliNode(cmd2.Cmd):
+
+
+    def __init__(self, dataplane=None):
+        super(CliNode, self).__init__()
+        self.dp = dataplane
+
+    list_parser = argparse.ArgumentParser()
+    list_parser.add_argument('-a', '--all', action='store_true', dest="all", help='display all nodes from emulation')
+    list_parser.add_argument('-i', '--id', action="store", dest="id",
+                             help="retrieve all information from specific node")
+    list_parser.set_defaults(all=False)
+    list_parser.set_defaults(id=None)
+
+    @with_category(CAT_NODE_MANAGER)
+    @with_argparser(list_parser)
+    def do_list(self, opts):
+        """Manager node options of the emulation"""
+
+        def print_data(node):
+            data = []
+            self.poutput(msg="")
+            cid = ["ID", "{id}".format(id=node.getId())]
+            data.append(cid)
+            name = ["Name", "{name}".format(name=node.getName())]
+            data.append(name)
+            type = ["Type", "{type}".format(type=node.getType().describe())]
+            data.append(type)
+            ipmgt = ["Ip Control", "{ip}".format(ip=node.getControlIp())]
+            data.append(ipmgt)
+            status = ["Status", "{status}".format(status=node.getStatus())]
+            data.append(status)
+
+            tables = AsciiTable(data, title="Node: {name}".format(name=node.getName()))
+            tables.justify_columns[2] = 'right'
+
+            self.poutput(msg=tables.table)
+            self.poutput(msg="")
+
+        def list_all():
+            nodes = self.dp.getNodes()
+
+            for n in nodes.values():
+                print_data(node=n)
+
+        if opts.id is not None:
+            try:
+                node = self.dp.getNode(opts.id)
+                print_data(node=node)
+            except:
+                self.perror("the node not exists")
+        elif opts.all:
+            list_all()
+        else:
+            self.perror("option unknown")
+
+
+
+    def do_quit(self, arg):
+        "Exits the emulator"
+        print("Quitting")
+        raise SystemExit
+
+    def do_exit(self, s):
+        return True
