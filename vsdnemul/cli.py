@@ -1,16 +1,13 @@
-import argparse
-
 import cmd2
-from cmd2 import with_argparser, with_category
-from terminaltables import AsciiTable
-from vsdnemul.node import CliNode
+from cmd2 import with_category
+
 from vsdnemul.link import CliLink
+from vsdnemul.node import CliNode
 
 CMD_CAT_MANAGER_NODE = "Manager Resources Emulation"
 
 
 class Cli(cmd2.Cmd):
-
 
     def __init__(self, dataplane=None):
         super().__init__(use_ipython=False)
@@ -34,7 +31,3 @@ class Cli(cmd2.Cmd):
         i.prompt = self.prompt[:-7] + 'Link]# '
         i.cmdloop()
 
-
-if __name__ == '__main__':
-    cli = Cli()
-    cli.cmdloop()

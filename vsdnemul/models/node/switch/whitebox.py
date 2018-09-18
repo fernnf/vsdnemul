@@ -1,6 +1,5 @@
 import logging
 from enum import Enum
-import traceback
 
 from vsdnemul.lib import dockerlib as docker
 from vsdnemul.lib import iproutelib as iproute
