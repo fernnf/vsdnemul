@@ -6,8 +6,9 @@ vSDNEmul an SDN library for developing computer topology based on container dock
 
  - [Docker ](www.docker.com) (17.12.0-ce or later)
  - [Python](www.python.org) (3.6 or later)
- - [OpenvSwitch ](openvswitch.org) (2.7 or later)
+ - [OpenvSwitch ](openvswitch.org) (2.9 or later)
  - [IPRoute2](http://kernel.org/pub/linux/utils/net/iproute2/) (4.11.0 or later)
+ - [Ryu](https://osrg.github.io/ryu/) (4.28 or later)
  - Any Linux OS (4.3 or later) - (Developed and Tested on Fedora 26) 
 
 ### Installation
