@@ -189,7 +189,12 @@ class CliLink(cmd2.Cmd):
             data.append(source)
             target = ["Target", "{tgt}".format(tgt=link.getTarget().getName())]
             data.append(target)
-
+            port_source = ["Port Source", "{psrc}".format(psrc=link.getPortSource())]
+            data.append(port_source)
+            port_target = ["Port Target", "{ptgt}".format(ptgt=link.getPortTarget())]
+            data.append(port_target)
+            model = ["Model", "{mdl}".format(mdl=link.__class__.__name__)]
+            data.append(model)
             tables = AsciiTable(data, title="Link: {name}".format(name=link.getName()))
             tables.justify_columns[2] = 'right'
 
@@ -204,7 +209,7 @@ class CliLink(cmd2.Cmd):
 
         if opts.id is not None:
             try:
-                link = self.dp.getNode(opts.id)
+                link = self.dp.getLink(opts.id)
                 print_data(link=link)
             except:
                 self.perror("the link not exists")

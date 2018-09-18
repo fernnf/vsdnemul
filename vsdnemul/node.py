@@ -9,7 +9,7 @@ from cmd2 import with_argparser, with_category
 from terminaltables import AsciiTable
 
 
-from vsdnemul.lib.dockerlib import get_status_node, get_id, get_control_ip
+from vsdnemul.lib.dockerlib import get_status_node, get_id, get_control_ip, get_shell
 
 '''
 Class Abstract to generate new nodes models based on docker file templates. 
@@ -205,11 +205,21 @@ class CliNode(cmd2.Cmd):
             self.perror("option unknown")
 
 
+    cli_parser =  argparse.ArgumentParser()
+    cli_parser.add_argument('-i', '--id', action="store", dest="id", help="get cli prompt from a specific node")
+    cli_parser.set_defaults(id=None)
+    @with_category(CAT_NODE_MANAGER)
+    @with_argparser(cli_parser)
+    def do_cli(self, opts):
+        """Get a cli prompt from a node of the emulation"""
+        try:
+            if opts.id is not None:
+                get_shell(name=opts.id)
+            else:
+                self.perror("id option cannot be null")
+        except Exception as ex:
+            self.perror(ex.args[0])
 
-    def do_quit(self, arg):
-        "Exits the emulator"
-        print("Quitting")
-        raise SystemExit
 
     def do_exit(self, s):
         return True

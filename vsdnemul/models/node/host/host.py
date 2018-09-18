@@ -82,6 +82,7 @@ class Host(Node):
         except Exception as ex:
             logger.error(ex.args[0])
 
+
     def delInterface(self, id):
         interface = self.interfaces[id]
         try:
