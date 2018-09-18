@@ -223,4 +223,3 @@ class CliNode(cmd2.Cmd):
 
     def do_exit(self, s):
         return True
-
