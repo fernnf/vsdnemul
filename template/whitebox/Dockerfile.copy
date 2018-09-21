@@ -1,9 +1,9 @@
-FROM alpine:edge
-RUN apk update 
-RUN apk add --upgrade busybox 
-RUN apk add openvswitch tcpdump nano iproute2 ethtool bash util-linux
-COPY boot.sh /bin/boot.sh
+FROM fedora/systemd-systemd
+RUN dnf update -y
+RUN dnf install -y openvswitch tcpdump nano iproute ethtool bash net-tools
+
 ENV PS1="[vsdn:whitebox \u@\h]# "
+ENV container="docker"
 
 LABEL br.ufpa.label.name="WhiteBox"\
       br.ufpa.label.description="Whitebox Switch"\
@@ -13,6 +13,4 @@ LABEL br.ufpa.label.name="WhiteBox"\
       br.ufpa.label.version="0.1"\
       br.ufpa.label.license="Apache2"
 
-ENTRYPOINT [ "/bin/sh" ]
-
-CMD ["/bin/boot.sh"]
+RUN systemctl enable openvswitch

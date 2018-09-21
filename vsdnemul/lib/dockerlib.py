@@ -34,11 +34,12 @@ def __create(image, **params):
 
 
 def __delete(name):
+    delete_namespace(name=name)
     client = docker.from_env()
     container = client.containers.get(container_id=name)
     container.stop()
     container.remove()
-    delete_namespace(name=name)
+
 
 
 def __pause(name):

@@ -1,16 +1,31 @@
 import logging
-
+import traceback
 from vsdnemul.link import LinkFabric
 from vsdnemul.node import NodeFabric
+from vsdnemul.lib import utils
 
 logger = logging.getLogger(__name__)
 
+def _AddNamespceDir():
+    try:
+        utils.add_namespace_dir()
+    except Exception as ex:
+        logger.warning(ex.args[0])
+
+def _RemNamespaceDir():
+    try:
+        utils.rem_namespace_dir()
+    except Exception as ex:
+        traceback.print_exc()
+        logger.warning(ex.args[0])
 
 class Dataplane(object):
 
     def __init__(self):
         self.__nodes = NodeFabric()
         self.__links = LinkFabric()
+
+        _AddNamespceDir()
 
     def addNode(self, node):
         try:
@@ -82,6 +97,5 @@ class Dataplane(object):
                 destroyNodes()
             else:
                 logger.warning("no links to destroy")
-
         except Exception as ex:
-            logger.error(ex.args[0])
+            logger.error(ex.args)

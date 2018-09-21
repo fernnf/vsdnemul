@@ -1,5 +1,7 @@
 import logging
+import traceback
 from enum import Enum
+import time
 
 from vsdnemul.lib import dockerlib as docker
 from vsdnemul.lib import iproutelib as iproute
@@ -9,7 +11,6 @@ from vsdnemul.node import Node, NodeType
 logger = logging.getLogger(__name__)
 
 """Begin self API for special commands"""
-
 
 def _SetManager(node, target: list):
     def command():
@@ -31,7 +32,7 @@ def _DelManager(node):
 def _SetOpenflowVersion(db_addr, protocols: list, bridge):
     table = ["Bridge"]
     args = [bridge, "protocols={version}".format(version=protocols)]
-    ovsdb.set_ovsdb(db_addr=db_addr, table=table, args=args)
+    ovsdb.set_ovsdb(db_addr=db_addr, table=table, value=args)
 
 
 def _SetController(bridge, target: list, db_addr):
@@ -76,7 +77,7 @@ def _DelBridge(bridge, db_addr):
 """ End self API"""
 
 
-class OF_VERSION(Enum):
+class OfVersion(Enum):
     OF_10 = "OpenFlow10"
     OF_13 = "OpenFlow13"
     OF_14 = "OpenFlow14"
@@ -86,7 +87,7 @@ class Whitebox(Node):
     __cap_add__ = ["ALL"]
     __image__ = "vsdn/whitebox"
     __type__ = NodeType.SWITCH
-    __volumes__ = None
+    __volumes__ = {"/sys/fs/cgroup": {"bind": "/sys/fs/cgroup", "mode": "ro"}}
     __ports__ = None
 
     def __init__(self, name, bridge_oper="br_oper0"):
@@ -156,44 +157,49 @@ class Whitebox(Node):
             logger.error(ex.args[0])
 
     def setInterface(self, ifname, encap):
-        id = str(self.count_interface.__next__())
-        interface = encap.portName() + id
+        idx = str(self.count_interface.__next__())
+        interface = encap.portName() + idx
         try:
             iproute.add_port_ns(ifname=ifname, netns=self.getName(), new_name=interface)
             ovsdb.add_port_bridge(db_addr=self.getControlAddr(), name=self.getBrOper(), port_name=interface,
-                                  ofport=id)
-            self.interfaces.update({id: interface})
-            return id
+                                  ofport=idx)
+            self.interfaces.update({idx: interface})
+            return idx
         except Exception as ex:
-            traceback.print_exc()
             logger.error(ex.args[0])
 
-    def delInterface(self, id):
+    def delInterface(self, idx):
 
-        interface = self.interfaces[id]
+        interface = self.interfaces[idx]
 
         try:
             ovsdb.del_port_bridge(db_addr=self.getControlAddr(), name=self.getBrOper(), port_name=interface)
             iproute.delete_port(ifname=interface, netns=self.getName())
-            del (self.interfaces[id])
+            del (self.interfaces[idx])
         except Exception as ex:
             logger.error(ex.args[0])
 
     def _Commit(self):
         try:
-            docker.create_node(name=self.getName(), image=self.getImage(), **self.config)
-            if self.getStatus().__eq__("running"):
-                self.setManager(target=["ptcp:6640"])
-                self.setBridge(bridge=self.getBrOper())
-            else:
-                logger.warning("the node is not running")
-            logger.info("the new whitebox ({name}) node was created".format(name=self.getName()))
+            if docker.create_node(name=self.getName(), image=self.getImage(), **self.config):
+                logger.info("the new whitebox ({name}) node was created".format(name=self.getName()))
+                if self.getStatus().__eq__("running"):
+                    logger.info("setting whitebox configuration")
+                    # We need that openvswitch process already has stared
+                    time.sleep(1)
+                    self.setManager(target=["ptcp:6640"])
+                    self.setBridge(bridge=self.getBrOper())
+
+                else:
+                    logger.warning("the node is not running")
+
         except Exception as ex:
-            logger.error(ex.with_traceback(ex.__traceback__))
+            logger.error(ex.args[0])
 
     def _Destroy(self):
         try:
             docker.delete_node(name=self.getName())
             logger.info("the whitebox ({name}) node was deleted".format(name=self.getName()))
         except Exception as ex:
+            traceback.print_exc()
             logger.error(ex.args[0])

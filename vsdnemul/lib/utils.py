@@ -1,10 +1,11 @@
 import ipaddress
 import random
 from pathlib import Path
+import os
+import names
+import shutil
 
 from vsdnemul.lib import dockerlib as docker
-
-import names
 
 
 def check_not_null(value, msg):
@@ -14,33 +15,47 @@ def check_not_null(value, msg):
         return value
 
 
-def create_namespace(name: str, pid: int):
-    dir_dest = Path("/var/run/netns")
-    dir_src = Path("/proc/{pid}/ns/net".format(pid=pid))
-    dir_tgt = Path("/var/run/netns/{name}".format(name=name))
-
-    if not dir_dest.exists():
-        dir_dest.mkdir()
-
-    if dir_src.exists():
-        if dir_tgt.is_symlink():
-            dir_tgt.unlink()
-        dir_tgt.symlink_to(dir_src.as_posix())
+def add_namespace_dir():
+    dir = Path("/var/run/netns")
+    if not dir.exists():
+        dir.mkdir()
     else:
-        OSError("the namespace not exist")
+        raise FileExistsError("the namespace directory already exists")
+
+
+def rem_namespace_dir():
+    dir = Path("/var/run/netns")
+
+    if dir.exists():
+        shutil.rmtree(dir.as_posix())
+    else:
+        raise FileNotFoundError("the namespace directory not found")
+
+
+def create_namespace(name: str, pid: int):
+    dst = Path("/var/run/netns")
+    src = Path("/proc/{pid}/ns/net".format(pid=pid))
+    tgt = Path("/var/run/netns/{name}".format(name=name))
+
+    if not dst.exists():
+        raise FileNotFoundError("directory /var/run/netns not found")
+
+    if not src.exists():
+        raise FileNotFoundError("directory /proc/{pid}/ns/net not found".format(pid=pid))
+
+    if not tgt.exists():
+        tgt.symlink_to(src.as_posix())
+    else:
+        raise FileExistsError("the namespace already exists")
 
 
 def delete_namespace(name: str):
-    dir_tgt = Path("/var/run/netns")
-    file_tgt = Path("/var/run/netns/{name}".format(name=name))
+    tgt = Path("/var/run/netns/{name}".format(name=name))
 
-    if dir_tgt.exists():
-        if file_tgt.is_symlink():
-            file_tgt.unlink()
-        else:
-            OSError("namespace with name not exist")
+    if tgt.exists():
+        tgt.unlink()
     else:
-        raise OSError("folder namespace not exist")
+        raise FileNotFoundError("the symlink /var/run/netns/{name} not found".format(name=name))
 
 
 def clean_namespaces():
@@ -51,7 +66,7 @@ def is_valid_ip(addr: str):
     try:
         ipaddress.ip_address(address=addr)
         return True
-    except Exception as ex:
+    except:
         return False
 
 
