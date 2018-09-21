@@ -2,7 +2,7 @@ FROM alpine:edge
 RUN apk update 
 RUN apk add --upgrade busybox 
 RUN apk add openvswitch tcpdump nano iproute2 ethtool bash util-linux
-COPY boot.sh /bin/boot.sh
+COPY template/whitebox/boot.sh /bin/boot.sh
 ENV PS1="[vsdn:whitebox \u@\h]# "
 
 LABEL br.ufpa.label.name="WhiteBox"\
