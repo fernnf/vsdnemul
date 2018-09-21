@@ -2,11 +2,10 @@ import argparse
 from abc import ABC, abstractmethod
 from enum import Enum
 from uuid import uuid4 as rand_id
-from terminaltables import AsciiTable
 
 import cmd2
-
 from cmd2 import with_category, with_argparser
+from terminaltables import AsciiTable
 
 CAT_LINK_MANAGER = "Link Emulation Command"
 
@@ -121,10 +120,15 @@ class LinkFabric(object):
 
     # FIXME: To create search method more opitmized
     def isExistLink(self, source, target):
-        src = any(l.getSource() == source or l.getTarget() == source for l in self.__links.values())
-        tgt = any(l.getSource() == target or l.getTarget() == target for l in self.__links.values())
 
-        return src and tgt
+        src = any(
+            l.getSource().getName().__eq__(source.getName()) and l.getTarget().getName().__eq__(target.getName()) for l
+            in self.__links.values())
+        tgt = any(
+            l.getSource().getName().__eq__(target.getName()) and l.getTarget().getName().__eq__(source.getName()) for l
+            in self.__links.values())
+
+        return src or tgt
 
     def addLink(self, link):
         key = link.getName()
@@ -137,6 +141,7 @@ class LinkFabric(object):
         else:
             link._Commit()
             self.__links.update({key: link})
+            return link
 
     def delLink(self, name):
         if self.isExist(name):
@@ -183,7 +188,7 @@ class CliLink(cmd2.Cmd):
             data.append(name)
             type = ["Type", "{type}".format(type=link.getType().describe())]
             data.append(type)
-            encap = ["Encapsulation","{encap}".format(encap=link.getEncap().describe())]
+            encap = ["Encapsulation", "{encap}".format(encap=link.getEncap().describe())]
             data.append(encap)
             source = ["Source", "{src}".format(src=link.getSource().getName())]
             data.append(source)
@@ -218,8 +223,5 @@ class CliLink(cmd2.Cmd):
         else:
             self.perror("option unknown")
 
-
-
     def do_exit(self, s):
         return True
-

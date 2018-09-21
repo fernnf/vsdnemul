@@ -7,7 +7,6 @@ from vsdnemul.lib.utils import check_not_null, create_namespace, delete_namespac
 
 
 def __create(image, **params):
-
     client = docker.from_env()
 
     params.update(
@@ -39,7 +38,6 @@ def __delete(name):
     container = client.containers.get(container_id=name)
     container.stop()
     container.remove()
-
 
 
 def __pause(name):
@@ -79,7 +77,6 @@ def __id(name):
 
 
 def __shell(name, shell="bash"):
-
     terminal = Path("/usr/bin/xterm")
     docker = Path("/usr/bin/docker")
     if terminal.is_file():
@@ -89,7 +86,6 @@ def __shell(name, shell="bash"):
         subprocess.Popen(cmd, shell=True)
     else:
         raise ValueError("xterm is not  found")
-
 
 
 def __rename(name, new_name):
@@ -116,7 +112,7 @@ def __control_ip(name):
 
 
 def get_id(name):
-    check_not_null(name,"the image name cannot be null")
+    check_not_null(name, "the image name cannot be null")
     try:
         return __id(name=name)
     except Exception as ex:
@@ -141,7 +137,7 @@ def delete_node(name):
 
 
 def pause_node(name):
-    check_not_null(name,"the image name cannot be null")
+    check_not_null(name, "the image name cannot be null")
     try:
         __pause(name=name)
     except Exception as ex:
@@ -157,7 +153,7 @@ def run_cmd(name, cmd):
 
 
 def resume_node(name):
-    check_not_null(name,"the image name cannot be null")
+    check_not_null(name, "the image name cannot be null")
 
     try:
         __resume(name=name)
@@ -190,7 +186,7 @@ def get_shell(name, shell="bash"):
 
 
 def rename_node(name, new_name):
-    check_not_null(name,"the image name cannot be null")
+    check_not_null(name, "the image name cannot be null")
     check_not_null(new_name, "the new image name cannot be null")
 
     try:

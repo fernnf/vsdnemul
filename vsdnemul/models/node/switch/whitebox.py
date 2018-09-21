@@ -12,6 +12,19 @@ logger = logging.getLogger(__name__)
 
 """Begin self API for special commands"""
 
+def _CheckOpenvSwitch(node):
+    cmd = "/usr/bin/ovs-vsctl get Open_vSwitch . external_ids:system-id"
+    try:
+        ret, output = docker.run_cmd(name=node, cmd=cmd)
+        if ret == 0:
+            return True
+        else:
+            return False
+    except:
+        return False
+
+
+
 def _SetManager(node, target: list):
     def command():
         cmd = "/usr/bin/ovs-vsctl set-manager"
@@ -184,9 +197,12 @@ class Whitebox(Node):
             if docker.create_node(name=self.getName(), image=self.getImage(), **self.config):
                 logger.info("the new whitebox ({name}) node was created".format(name=self.getName()))
                 if self.getStatus().__eq__("running"):
+                    p = False
+                    while not p:
+                         p = _CheckOpenvSwitch(node=self.getName())
+
                     logger.info("setting whitebox configuration")
                     # We need that openvswitch process already has stared
-                    time.sleep(3)
                     self.setManager(target=["ptcp:6640"])
                     self.setBridge(bridge=self.getBrOper())
 
