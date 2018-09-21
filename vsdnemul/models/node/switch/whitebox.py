@@ -186,7 +186,7 @@ class Whitebox(Node):
                 if self.getStatus().__eq__("running"):
                     logger.info("setting whitebox configuration")
                     # We need that openvswitch process already has stared
-                    time.sleep(1)
+                    time.sleep(3)
                     self.setManager(target=["ptcp:6640"])
                     self.setBridge(bridge=self.getBrOper())
 
