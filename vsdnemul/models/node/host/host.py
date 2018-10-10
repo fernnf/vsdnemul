@@ -3,6 +3,7 @@ import logging
 from vsdnemul.lib import dockerlib as docker
 from vsdnemul.lib import iproutelib as iproute
 from vsdnemul.lib import utils
+from vsdnemul.lib.utils import check_not_null
 from vsdnemul.node import Node, NodeType
 
 logger = logging.getLogger(__name__)
@@ -16,13 +17,12 @@ def _GetManagerAddr(node):
 
 
 class Host(Node):
-
     __volumes__ = {"/sys/fs/cgroup": {"bind": "/sys/fs/cgroup", "mode": "ro"}}
     __cap_add__ = ["ALL"]
     __image__ = "vsdn/host"
     __type__ = NodeType.HOST
 
-    def __init__(self, name, ip =None, mask = None, gateway = None):
+    def __init__(self, name, ip=None, mask=None, gateway=None):
 
         super(Host, self).__init__(name, image=self.__image__, type=self.__type__)
         self.config.update(volumes=self.__volumes__)
@@ -49,7 +49,7 @@ class Host(Node):
         return self.__mask
 
     def setMask(self, value):
-        self.__mask =  value
+        self.__mask = value
 
     def getGateway(self):
         return self.__gateway
@@ -59,29 +59,31 @@ class Host(Node):
 
     def sendCommand(self, value):
         try:
-            return docker.run_cmd(name = self.getName(), cmd = value)
+            return docker.run_cmd(name=self.getName(), cmd=value)
         except Exception as ex:
             logger.error(str(ex.args[0]))
 
     def setInterface(self, ifname, encap):
+        check_not_null(self.__ip, "for setting the ip is need a IP address")
+        check_not_null(self.__mask, "for setting the ip is need a MASK address")
         id = str(self.count_interface.__next__())
         interface = encap.portName() + id
         addr = ""
         if self.__ip is not None:
             if self.__mask is not None:
-                addr ="{ip}/{mask}".format(ip=self.__ip, mask=self.__mask)
+                addr = "{ip}/{mask}".format(ip=self.__ip, mask=self.__mask)
             else:
                 raise ValueError("for setting the ip is need a mask address")
 
         try:
             iproute.add_port_ns(ifname=ifname, netns=self.getName(), new_name=interface)
-            iproute.config_port_address(ifname=interface, ip_addr=addr, gateway=self.getGateway(), netns=self.getName())
+            iproute.config_port_address(ifname=interface, ip_addr=self.getIp(), mask=self.getMask(),
+                                        gateway=self.getGateway(), netns=self.getName())
             utils.disable_rx_off(netns=self.getName(), port_name=interface)
             self.interfaces.update({id: interface})
             return id
         except Exception as ex:
             logger.error(ex.args[0])
-
 
     def delInterface(self, id):
         interface = self.interfaces[id]

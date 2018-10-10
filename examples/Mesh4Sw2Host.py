@@ -8,6 +8,7 @@ from vsdnemul.models.node.controller.onos import Onos
 from vsdnemul.cli import Cli
 
 if __name__ == '__main__':
+
     logger = get_logger(__name__)
 
     # Define Dataplane
@@ -49,8 +50,10 @@ if __name__ == '__main__':
     sw2.setController(target=mgnt, bridge="br_oper0")
     sw3.setController(target=mgnt, bridge="br_oper0")
     sw4.setController(target=mgnt, bridge="br_oper0")
-
+    
+    # Manager Emulation by CLI
     cli = Cli(dp)
     cli.cmdloop()
 
+    # Stopping Emulation
     dp.stop()
