@@ -42,7 +42,7 @@ def _DelManager(node):
     docker.run_cmd(name=node, cmd=cmd)
 
 
-def _SetOpenflowVersion(db_addr, protocols: list, bridge):
+def _SetOpenflowVersion(db_addr, protocols, bridge):
     table = ["Bridge"]
     args = [bridge, "protocols={version}".format(version=protocols)]
     ovsdb.set_ovsdb(db_addr=db_addr, table=table, value=args)
@@ -87,13 +87,20 @@ def _DelBridge(bridge, db_addr):
         raise RuntimeError(ex.args[0])
 
 
+def _GetBrDpid(db_addr, bridge):
+
+    table = ["Bridge"]
+    value = [bridge, "datapath_id"]
+    return ovsdb.get_ovsdb(db_addr=db_addr, table=table, value=value)
+
+def _SetBrDpid(db_addr, bridge, dpid):
+    table = ["Bridge"]
+    value = [bridge, "other_config:datapath-id={dpid}".format(dpid=dpid)]
+    ovsdb.set_ovsdb(db_addr=db_addr, table=table, value=value)
+
 """ End self API"""
 
 
-class OfVersion(Enum):
-    OF_10 = "OpenFlow10"
-    OF_13 = "OpenFlow13"
-    OF_14 = "OpenFlow14"
 
 
 class Whitebox(Node):
@@ -103,13 +110,16 @@ class Whitebox(Node):
     __volumes__ = {"/sys/fs/cgroup": {"bind": "/sys/fs/cgroup", "mode": "ro"}}
     __ports__ = None
 
-    def __init__(self, name, bridge_oper="br_oper0"):
+    def __init__(self, name, bridge_oper="br_oper0", dpid=None, ofversion=None):
         super(Whitebox, self).__init__(name, image=self.__image__, type=self.__type__)
         self.config.update(volumes=self.__volumes__)
         self.config.update(cap_add=self.__cap_add__)
         self.config.update(ports=self.__ports__)
 
-        self.__br_oper = bridge_oper
+        self._br_oper = bridge_oper
+        self._br_oper_dpid = dpid
+        self._br_oper_ofver = ofversion
+
 
     @classmethod
     def commit(cls, name, bridge_oper="br_oper0"):
@@ -118,7 +128,20 @@ class Whitebox(Node):
         return node
 
     def getBrOper(self):
-        return self.__br_oper
+        return self._br_oper
+
+    def getDpid(self, bridge="br_oper0"):
+        try:
+            return _GetBrDpid(db_addr=self.getControlAddr(), bridge=bridge)
+        except Exception as ex:
+            logger.error(ex.args[0])
+            return None
+
+    def setDpid(self, dpid, bridge="br_oper0"):
+        try:
+            _SetBrDpid(db_addr=self.getControlAddr(), bridge=bridge, dpid=dpid)
+        except Exception as ex:
+            logger.error(ex.args[0])
 
     def getControlAddr(self):
         try:
@@ -202,9 +225,14 @@ class Whitebox(Node):
                          p = _CheckOpenvSwitch(node=self.getName())
 
                     logger.info("setting whitebox configuration")
-                    # We need that openvswitch process already has stared
+                    # We need to known if the openvswitch process already has started
                     self.setManager(target=["ptcp:6640"])
                     self.setBridge(bridge=self.getBrOper())
+                    if self._br_oper_dpid is not None:
+                        self.setDpid(bridge=self.getBrOper(), dpid=self._br_oper_dpid)
+
+                    if self._br_oper_ofver is not None:
+                        self.setOpenflowVersion(bridge=self.getBrOper(), protocols=self._br_oper_ofver)
 
                 else:
                     logger.warning("the node is not running")

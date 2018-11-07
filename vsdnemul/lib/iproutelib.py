@@ -20,7 +20,7 @@ def _add_port_ns(ifname, netns, new_name=None):
         else:
             ipr.link('set', index=idx, net_ns_fd=netns, state="up")
 
-        ipr.close()
+
 
 
 def _create_pair(ifname, peer, netns=None, mtu=1500):
@@ -40,7 +40,7 @@ def _create_pair(ifname, peer, netns=None, mtu=1500):
             ipr.link("set", index=ifpeer, mtu=mtu)
             ipr.link("set", index=ifpeer, state="up")
 
-            ipr.close()
+
 
     def create_ns():
         with NetNS(netns=netns) as ipr:
@@ -54,7 +54,7 @@ def _create_pair(ifname, peer, netns=None, mtu=1500):
             ipr.link("set", index=ifpeer, mtu=mtu)
             ipr.link("set", index=ifpeer, state="up")
 
-            ipr.close()
+
 
     if netns is None:
         create()
@@ -78,7 +78,7 @@ def _create_bridge(ifname, slaves=None, netns=None, mtu=1500):
                     ipr.link("set", index=port, master=inet)
 
             ipr.link("set", index=inet, state="up")
-            ipr.close()
+
 
     def create_ns():
         with NetNS(netns=netns) as ipr:
@@ -93,7 +93,7 @@ def _create_bridge(ifname, slaves=None, netns=None, mtu=1500):
                     ipr.link("set", index=port, master=inet)
 
             ipr.link("set", index=inet, state="up")
-            ipr.close()
+
 
     if netns is None:
         create()
@@ -112,7 +112,7 @@ def _bridge_add_port(master, slaves=[], netns=None):
                 slave = ipr.link_lookup(ifname=i)[0]
                 ipr.link("set", index=slave, master=inet)
 
-            ipr.close()
+
 
     def addporns():
         with NetNS(netns=netns) as ipr:
@@ -122,7 +122,7 @@ def _bridge_add_port(master, slaves=[], netns=None):
                 slave = ipr.link_lookup(ifname=i)[0]
                 ipr.link("set", index=slave, master=inet)
 
-            ipr.close()
+
 
     if netns is None:
         addport()
@@ -138,7 +138,7 @@ def _bridge_del_port(master, slaves=[], netns=None):
                 slave = ipr.link_lookup(ifname=i)[0]
                 ipr.link("set", index=slave, master=0)
 
-            ipr.close()
+
 
     def delportns():
         with NetNS(netns=netns) as ipr:
@@ -146,7 +146,7 @@ def _bridge_del_port(master, slaves=[], netns=None):
                 slave = ipr.link_lookup(ifname=i)[0]
                 ipr.link("set", index=slave, master=0)
 
-            ipr.close()
+
 
 
     if netns is None:
@@ -161,13 +161,13 @@ def _delete_interface(ifname, netns=None):
         with IPRoute() as ipr:
             inet = ipr.link_lookup(ifname=ifname)[0]
             ipr.link("del", index=inet)
-            ipr.close()
+
 
     def delportns():
         with NetNS(netns=netns) as ipr:
             inet = ipr.link_lookup(ifname=ifname)[0]
             ipr.link("del", index=inet)
-            ipr.close()
+
 
     if netns is None:
         delport()
@@ -305,7 +305,7 @@ def delete_port(ifname, netns=None):
         _delete_interface(ifname=ifname, netns=netns)
         return True
     except Exception as ex:
-        logger.error(ex.args[0])
+        logger.error(ex)
         return False
 
 
@@ -322,7 +322,6 @@ def config_port_address(ifname, ip_addr, mask, gateway=None, netns=None):
     try:
         _config_ip_address(ifname=ifname, ip_addr=ip_addr, mask=mask, gateway=gateway, netns=netns)
     except Exception as ex:
-        traceback.print_exc()
         logger.error(ex.__cause__)
 
 

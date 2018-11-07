@@ -19,11 +19,11 @@ def set_ovsdb(db_addr=LOCAL, table=[], value=[]):
         raise RuntimeError(ex.args[0])
 
 
-def get_ovsdb(db_addr=LOCAL, table=[], args=[]):
+def get_ovsdb(db_addr=LOCAL, table=[], value=[]):
     ovsdb = vsctl.VSCtl(db_addr)
     command = "get"
-    args = table + args
-    run = vsctl.VSCtlCommand(command, args)
+    value = table + value
+    run = vsctl.VSCtlCommand(command, value)
     try:
         ovsdb.run_command([run])
         return run.result
@@ -42,7 +42,6 @@ def exists_bridge(name, db_addr=LOCAL):
     except Exception as ex:
         raise RuntimeError(ex.args[0])
 
-
 def add_bridge(name, db_addr=LOCAL, protocols=None, datapath_id=None):
     ovsdb = vsctl.VSCtl(db_addr)
 
@@ -56,12 +55,12 @@ def add_bridge(name, db_addr=LOCAL, protocols=None, datapath_id=None):
     def set_ofversion():
         table = ["Bridge"]
         value = [name, "protocols={version}".format(version=protocols)]
-        set_ovsdb(table, value)
+        set_ovsdb(db_addr=db_addr,table=table, value=value)
 
     def set_dpid():
         table = ["Bridge"]
         value = [name, "other-config:datapath-id={dpid}".format(dpid=datapath_id)]
-        set_ovsdb(table, value)
+        set_ovsdb(db_addr=db_addr,table=table, value=value)
 
     try:
         if not exists_bridge(name=name, db_addr=db_addr):

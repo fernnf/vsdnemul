@@ -56,10 +56,7 @@ class LinkPair(Link):
     def _Destroy(self):
         try:
             node_source = self.getSource()
-            node_target = self.getTarget()
-
             node_source.delInterface(self.getPortSource())
-            node_target.delInterface(self.getPortTarget())
 
         except Exception as ex:
             logger.error(ex.args[0])

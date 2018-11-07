@@ -24,33 +24,14 @@ function check {
 
 function template {
 
-    HOST=template/host/Dockerfile
-    ONOS=template/onos/Dockerfile
-    WHITEBOX=template/whitebox/Dockerfile
+    echo "Installing docker emulate models..."
 
-    echo "Installing docker devices ..."
-    echo "* HOST computer models"
-    $DC build --rm -f ${HOST} -t vsdn/host:latest --no-cache=true . &> /dev/null
-    if [ $? -ne 0 ]
-    then
-        echo "Cannot install host models in docker"
-        exit
-    fi
-    echo "* ONOS network controller models"
-    $DC build --rm -f ${ONOS} -t vsdn/onos:latest --no-cache=true . &> /dev/null
-    if [ $? -ne 0 ]
-    then
-        echo "Cannot install onos models in docker"
-        exit
-    fi
-    echo "* WHITEBOX network switch models"
-    $DC build --rm -f ${WHITEBOX} -t vsdn/whitebox:latest --no-cache=true . &> /dev/null
-    #&> /dev/null
-    if [ $? -ne 0 ]
-    then
-        echo "Cannot install whitebox models in docker"
-        exit
-    fi
+    ARRAY=($(ls template/*/Dockerfile))
+    for i in ${ARRAY[@]}; do
+        echo "* Creating model ${i}"
+        $DC build --rm -f ${i} -t vsdn/host:latest --no-cache=true . &>1 /dev/null
+        echo "Created"
+    done
     echo "DONE"
 
 }

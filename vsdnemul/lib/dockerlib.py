@@ -125,7 +125,7 @@ def create_node(name, image, **params):
         params.update(name=name, hostname=name)
         return __create(image=image, **params)
     except Exception as ex:
-        raise RuntimeError(ex.__cause__)
+        raise RuntimeError(ex)
 
 
 def delete_node(name):

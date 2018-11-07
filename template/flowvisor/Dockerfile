@@ -1,16 +1,20 @@
-FROM debian:wheezy
+FROM centos:6.10
 
-RUN apt-get update -y
+RUN yum update -y && yum install wget sudo nano -y
 
-RUN apt-get install wget -y
+WORKDIR /root
 
-RUN wget -q http://updates.onlab.us/GPG-KEY-ONLAB -O- | apt-key add -
+RUN wget http://updates.onlab.us/GPG-KEY-ONLAB
 
-RUN sh -c "echo 'deb http://updates.onlab.us/debian stable/' > /etc/apt/sources.list.d/flowvisor.list"
+RUN rpm --import GPG-KEY-ONLAB
 
-RUN apt-get update -y && apt-get install flowvisor=0.8.17-3 -y
+RUN echo -e "[onlab] \nname=ON.Lab Software Releases \nbaseurl=http://updates.onlab.us/rpm/stable \nenabled=1 \ngpgcheck=1" >> /etc/yum.repos.d/onlab.repo
 
-RUN fvconfig generate /etc/flowvisor/config.json localhost 123456
+RUN yum update -y
+
+RUN yum install flowvisor -y
+
+RUN fvconfig generate /etc/flowvisor/config.json flowvisor flowvisor
 
 RUN sed -i 's/"run_topology_server": false/"run_topology_server": true/' /etc/flowvisor/config.json
 
@@ -19,6 +23,11 @@ RUN fvconfig load /etc/flowvisor/config.json
 RUN sed -i -e "s/\/sbin\/flowvisor /\/sbin\/flowvisor -l /ig" /etc/init.d/flowvisor
 
 ENV TERM=vt100
+
+ENV HOME /root
+
+ENV BUILD_NUMBER docker
+
 ENV PS1="[vsdn:host \u@\h]# "
 
 LABEL br.ufpa.label.name="FlowVisor"\
@@ -29,3 +38,8 @@ LABEL br.ufpa.label.name="FlowVisor"\
       br.ufpa.label.version="0.2"\
       br.ufpa.label.license="Apache2"
 
+COPY template/flowvisor/boot.sh /bin/boot.sh
+
+ENTRYPOINT [ "/bin/sh" ]
+
+CMD ["/bin/boot.sh"]
