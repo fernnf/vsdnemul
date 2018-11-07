@@ -26,10 +26,10 @@ function template {
 
     echo "Installing docker emulate models..."
 
-    ARRAY=($(ls template/*/Dockerfile))
+    ARRAY=( "vsdn/flowvisor" "vsdn/host" "vsdn/onos" "vsdn/openvirtex" "vsdn/whitebox" )
     for i in ${ARRAY[@]}; do
-        echo "* Creating model ${i}"
-        $DC build --rm -f ${i} -t vsdn/host:latest --no-cache=true . &>1 /dev/null
+        echo "* Downloading model ${i}"
+        $DC pull ${i}:latest
         echo "Created"
     done
     echo "DONE"
