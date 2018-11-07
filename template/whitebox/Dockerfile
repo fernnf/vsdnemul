@@ -18,6 +18,7 @@ LABEL br.ufpa.label.name="WhiteBox"\
       br.ufpa.label.version="0.1"\
       br.ufpa.label.license="Apache2"
 
+
 ENTRYPOINT [ "/bin/sh" ]
 
 CMD ["/bin/boot.sh"]
