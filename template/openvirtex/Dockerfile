@@ -10,15 +10,13 @@ RUN wget http://mirror.nbtelecom.com.br/apache/maven/maven-3/3.6.0/binaries/apac
 
 RUN tar -xvzf apache-maven-3.6.0-bin.tar.gz && mv apache-maven-3.6.0 maven
 
-RUN git clone https://github.com/OPENNETWORKINGLAB/OpenVirteX.git openvertix -b 0.0-MAINT
+RUN wget https://github.com/fernnf/vsdnemul/blob/master/template/openvirtex/openvertix.tar.gz?raw=true -O openvirtex.tar.gz
 
-WORKDIR openvertix
+RUN ls
 
-RUN sed -i '129 s/verify/none/' pom.xml
+RUN tar -xvzf openvertix.tar.gz
 
-RUN ../maven/bin/mvn clean install
 
-WORKDIR /
 
 RUN chmod +x /openvertix/utils/ovxctl.py && ln -s /openvertix/utils/ovxctl.py /usr/bin/ovxctl
 
