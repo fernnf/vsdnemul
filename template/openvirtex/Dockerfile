@@ -10,13 +10,9 @@ RUN wget http://mirror.nbtelecom.com.br/apache/maven/maven-3/3.6.0/binaries/apac
 
 RUN tar -xvzf apache-maven-3.6.0-bin.tar.gz && mv apache-maven-3.6.0 maven
 
-RUN wget https://github.com/fernnf/vsdnemul/blob/master/template/openvirtex/openvertix.tar.gz?raw=true -O openvirtex.tar.gz
+RUN wget https://github.com/fernnf/vsdnemul/blob/master/template/openvirtex/openvirtex.tar.gz?raw=true -O openvirtex.tar.gz
 
-RUN ls
-
-RUN tar -xvzf openvertix.tar.gz
-
-
+RUN tar -xvzf openvirtex.tar.gz
 
 RUN chmod +x /openvertix/utils/ovxctl.py && ln -s /openvertix/utils/ovxctl.py /usr/bin/ovxctl
 
