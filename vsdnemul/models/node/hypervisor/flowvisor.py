@@ -156,9 +156,9 @@ class FlowVisor(Node):
     def _Commit(self):
         try:
             docker.create_node(name=self.getName(), image=self.getImage(), **self.config)
-            status = False
             logger.info("the new hypervisor ({name}) node was created".format(name=self.getName()))
             logger.info("waiting for flowvisor process")
+            status = False
             while not status:
                 status = _checkStatus(addr=self.getControlIp(), port=8081)
 
@@ -171,4 +171,4 @@ class FlowVisor(Node):
             logger.info("the hypervisor ({name}) node was deleted".format(name=self.getName()))
 
         except Exception as ex:
-            logger.error(ex.args[0])
+            logger.error(ex)

@@ -16,6 +16,8 @@ RUN tar -xvzf openvirtex.tar.gz
 
 RUN chmod +x /openvertix/utils/ovxctl.py && ln -s /openvertix/utils/ovxctl.py /usr/bin/ovxctl
 
+ENV PS1="[vsdn:hypervisorop  \u@\h]# "
+
 LABEL br.ufpa.label.name="OpenVirteX"\
       br.ufpa.label.description="Hypervisor SDN"\
       br.ufpa.label.vendor="Federal University of Para"\

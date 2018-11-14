@@ -30,6 +30,7 @@ class Host(Node):
         self.__ip = ip
         self.__mask = mask
         self.__gateway = gateway
+        self.__mac ={}
 
     def getControlAddr(self):
         try:
@@ -56,6 +57,12 @@ class Host(Node):
     def setGateway(self, value):
         self.__gateway = value
 
+    def getMacAddress(self, id):
+        try:
+            return self.__mac.get(id)
+        except Exception as ex:
+            logger.error("interface not found")
+
     def sendCommand(self, value):
         try:
             return docker.run_cmd(name=self.getName(), cmd=value)
@@ -74,6 +81,11 @@ class Host(Node):
                                             gateway=self.getGateway(), netns=self.getName())
             utils.disable_rx_off(netns=self.getName(), port_name=interface)
             self.interfaces.update({id: interface})
+
+            mac = iproute.get_interface_mac(ifname=interface, netns=self.getName())
+
+            self.__mac.update({id:mac})
+
             return id
         except Exception as ex:
             logger.error(ex.args[0])

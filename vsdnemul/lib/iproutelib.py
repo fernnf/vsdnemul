@@ -221,6 +221,23 @@ def _get_interface_addr(ifname, netns=None):
 
     return (get_addr() if netns is None else get_ns_addr())
 
+def _get_interface_mac(ifname, netns=None):
+    check_not_null(ifname, "the interface name cannot be null")
+
+    def get_mac():
+        with IPRoute() as ipr:
+            idx = ipr.link_lookup(ifname=ifname)
+            inet = ipr.link("get", index=idx)
+            ret = inet[0]['attrs'][18][1]
+            return ret
+    def get_mac_ns():
+        with NetNS(netns=netns) as ipr:
+            idx = ipr.link_lookup(ifname=ifname)
+            inet = ipr.link("get", index=idx)
+            ret = inet[0]['attrs'][19][1]
+            return ret
+
+    return (get_mac() if netns is None else get_mac_ns())
 
 def _switch_on(ifname, netns=None):
     check_not_null(ifname, "the interface name cannot be null")
@@ -328,6 +345,9 @@ def config_port_address(ifname, ip_addr, mask, gateway=None, netns=None):
 def get_interface_addr(ifname, netns=None):
     return _get_interface_addr(ifname=ifname, netns=netns)
 
+
+def get_interface_mac(ifname, netns=None):
+    return _get_interface_mac(ifname, netns)
 
 def switch_on(ifname, netns=None):
     try:

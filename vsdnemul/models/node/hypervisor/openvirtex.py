@@ -1,25 +1,36 @@
-import urllib3
 import json
 import logging
+import socket
+import time
 
-from vsdnemul.node import Node, NodeType
-from vsdnemul.lib.log import get_logger
+import urllib3
+
 from vsdnemul.lib import dockerlib as docker
+from vsdnemul.lib.log import get_logger
+from vsdnemul.node import Node, NodeType
 
 logger = logging.getLogger(__name__)
 
 PROTOCOL_SUPPORTED = ["tcp"]
 
-def _checkUrl(url):
 
+def _checkStatus(addr, port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    result = sock.connect_ex((addr, port))
+    if result == 0:
+        return True
+    else:
+        return False
+
+
+def _checkUrl(url):
     parts = url.split(":")
 
     if len(parts) != 3:
         raise Exception("url is not valid")
 
-    if parts[1] not in PROTOCOL_SUPPORTED:
+    if not parts[0] in PROTOCOL_SUPPORTED:
         raise Exception("Protocol not supported")
-
     try:
         int(parts[2])
     except Exception as ex:
@@ -29,8 +40,7 @@ def _checkUrl(url):
 
 
 def _makeReqConnect(addr, data, path, cmd):
-
-    url = "http://{addr}:8080/{path}".format(addr=addr,path=path)
+    url = "http://{addr}:8080/{path}".format(addr=addr, path=path)
     conn = urllib3.PoolManager()
     headers = urllib3.util.make_headers(basic_auth="admin:", )
     headers.update({'content-type': 'application/json'})
@@ -40,6 +50,7 @@ def _makeReqConnect(addr, data, path, cmd):
 
     return conn.request("POST", url=url, body=json.dumps(p), headers=headers)
 
+
 def _makeReqNetwork(ctl_url, net_addr, net_mask):
     data = {}
 
@@ -48,6 +59,7 @@ def _makeReqNetwork(ctl_url, net_addr, net_mask):
     data["mask"] = int(net_mask)
 
     return data
+
 
 def _makeReqSwitch(tenant, dpids, dpid):
     data = {}
@@ -73,7 +85,7 @@ def _makeReqLink(tenant, src_vdpid, src_vport, dst_vdpid, dst_vport, algo, bkp):
     data = {}
 
     data["tenantId"] = tenant
-    data["srcDpid"] =  src_vdpid
+    data["srcDpid"] = src_vdpid
     data["srcPort"] = src_vport
     data["dstDpid"] = dst_vdpid
     data["dstPort"] = dst_vport
@@ -89,7 +101,7 @@ def _makeReqHost(tenant, vdpid, vport, mac):
     data["tenantId"] = tenant
     data["vdpid"] = vdpid
     data["vport"] = vport
-    data["mac"] =  mac
+    data["mac"] = mac
 
     return data
 
@@ -103,7 +115,6 @@ def _makeReqStart(tenant):
 
 
 class OpenVirtex(Node):
-
     __image__ = "vsdn/openvirtex"
     __cap_add__ = ["ALL"]
     __volumes__ = {"/sys/fs/cgroup": {"bind": "/sys/fs/cgroup", "mode": "ro"}}
@@ -111,79 +122,97 @@ class OpenVirtex(Node):
 
     logger = get_logger(__name__)
 
-    def __init__(self, name, image):
-        super().__init__(name, image, type=self.__type__)
+    def __init__(self, name):
+        super().__init__(name, image=self.__image__, type=self.__type__)
         self.config.update(cap_add=self.__cap_add__)
         self.config.update(volumes=self.__volumes__)
 
     def getManagerAddr(self):
         return "tcp:{ip}:6633".format(ip=self.getControlIp())
 
-    def createNetwork(self, ctl_url,net_addr, net_mask):
+    def createNetwork(self, ctl_url, net_addr, net_mask):
         try:
-            url = _checkUrl(ctl_url)
+            time.sleep(2)
+            url = [_checkUrl(ctl_url)]
             addr = net_addr
             mask = int(net_mask)
 
             req = _makeReqNetwork(url, addr, mask)
             ret = _makeReqConnect(self.getControlIp(), req, "tenant", "createNetwork")
-
-            return json.loads(ret.data)["result"]
+            tnt = json.loads(ret.data)["result"].get("tenantId")
+            logger.info("new virtual network created tenant={t}".format(t=tnt))
+            return tnt
 
         except Exception as ex:
             logger.error(ex)
 
-
-    def createSwitch(self,tenant, dpids, dpid):
+    def createSwitch(self, tenant, dpids):
         try:
+            time.sleep(1)
             tnt = int(tenant)
             dps = [int(dp.replace(":", ""), 16) for dp in dpids.split(",")]
-            dp = int(dpid.replace(":", ""), 16)
+            dp = 0
 
             req = _makeReqSwitch(tnt, dps, dp)
             ret = _makeReqConnect(self.getControlIp(), req, "tenant", "createSwitch")
+            switchId = json.loads(ret.data)["result"].get("vdpid")
 
-            return json.loads(ret.data)["result"]
+            sw_name = '00:' + ':'.join([("%x" % switchId)[i:i + 2] for i in range(0, len(("%x" % switchId)), 2)])
+
+            logger.info("new virtual switch created tenant={t} switch={s}".format(t=tnt, s=sw_name))
+            return sw_name
 
         except Exception as ex:
             logger.error(ex)
 
-    def createPort(self,tenant, dpid, port):
+    def createPort(self, tenant, dpid, port):
         try:
+            time.sleep(1)
             tnt = int(tenant)
             dp = int(dpid.replace(":", ""), 16)
             pt = int(port)
 
             req = _makeReqPort(tnt, dp, pt)
             ret = _makeReqConnect(self.getControlIp(), req, "tenant", "createPort")
+            vport = json.loads(ret.data)["result"].get("vport")
 
-            return json.loads(ret.data)["result"]
+            logger.info("new virtual port created tenant={t} switch={s} port={p}".format(t=tnt, s=dpid, p=vport))
+
+            return str(vport)
 
         except Exception as ex:
             logger.error(ex)
 
-    def connectLink(self,tenant, src_vdpid, src_vport, dst_vdpid, dst_vport, algo="spf", bkp="1"):
+    def connectLink(self, tenant, src_vdpid, src_vport, dst_vdpid, dst_vport, algo="spf", bkp="1"):
 
         try:
+            time.sleep(1)
             tnt = int(tenant)
-            s_dp = int(src_vdpid.split(":"), 16)
+            s_dp = int(src_vdpid.replace(":", ""), 16)
             s_pt = int(src_vport)
-            d_dp = int(dst_vdpid.split(":"), 16)
+            d_dp = int(dst_vdpid.replace(":", ""), 16)
             d_pt = int(dst_vport)
             al = algo
             bk = int(bkp)
 
-            req = _makeReqLink(tnt,s_dp,s_pt,d_dp,d_pt,al,bk)
+            req = _makeReqLink(tnt, s_dp, s_pt, d_dp, d_pt, al, bk)
             ret = _makeReqConnect(self.getControlIp(), req, "tenant", "connectLink")
+            link = json.loads(ret.data)["result"].get("linkId")
 
-            return json.loads(ret.data)["result"]
+            logger.info(
+                "new virtual link created tenant={t} switch={s1}/{p1}<->{s2}/{p2} vlink={v}".format(t=tnt, s1=src_vdpid,
+                                                                                                    p1=src_vport,
+                                                                                                    s2=dst_vdpid,
+                                                                                                    p2=dst_vport,
+                                                                                                    v=link))
+            return link
 
         except Exception as ex:
             logger.error(ex)
 
-
-    def connectHost(self,tenant, vdpid, vport, mac):
+    def connectHost(self, tenant, vdpid, vport, mac):
         try:
+            time.sleep(1)
             tnt = int(tenant)
             vdp = int(vdpid.replace(":", ""), 16)
             vpt = int(vport)
@@ -191,7 +220,9 @@ class OpenVirtex(Node):
 
             req = _makeReqHost(tnt, vdp, vpt, mc)
             ret = _makeReqConnect(self.getControlIp(), req, "tenant", "connectHost")
-
+            logger.info(
+                "new virtual host created tenant={t} switch={s} port={p} mac={m}".format(t=tnt, s=vdpid, p=vport,
+                                                                                         m=mac))
             return json.loads(ret.data)["result"]
 
         except Exception as ex:
@@ -199,15 +230,35 @@ class OpenVirtex(Node):
 
     def startNetwork(self, tenant):
         try:
+            time.sleep(1)
             tnt = int(tenant)
 
             req = _makeReqStart(tnt)
-            ret = _makeReqConnect(self.getControlIp(), req, "tenant", "startSwitch")
-
-            return json.loads(ret.data)["result"]
+            ret = _makeReqConnect(self.getControlIp(), req, "tenant", "startNetwork")
+            start = json.loads(ret.data)["result"].get("isBooted")
+            host = json.loads(ret.data)["result"].get("host")
+            logger.info(
+                "new virtual host created tenant={t} host={h} start={s}".format(t=tenant, h=host, s=start))
+            return start
 
         except Exception as ex:
             logger.error(ex)
+
+    def checkSwitchConnected(self):
+        def connect():
+            req = {}
+            ret = _makeReqConnect(self.getControlIp(), req, "status", "getPhysicalTopology")
+            rep = json.loads(ret.data)["result"].get("switches")
+            logger.info("swichted connected ({s})".format(s=len(rep)))
+            if len(rep) > 0:
+                return True
+            else:
+                return False
+        try:
+            return connect()
+        except Exception as ex:
+            logger.error("not connected..: {xe}".format(xe=ex))
+            return False
 
     def setInterface(self, ifname, encap):
         pass
@@ -219,12 +270,18 @@ class OpenVirtex(Node):
         try:
             docker.create_node(name=self.getName(), image=self.getImage(), **self.config)
             logger.info("the new hypervisor ({name}) node was created".format(name=self.getName()))
-            logger.info("waiting for flowvisor process")
+            logger.info("waiting for openvirtex process")
             status = False
-            while not False:
+            while not status:
+                status = _checkStatus(self.getControlIp(),8080)
 
-
-        pass
+        except Exception as ex:
+            logger.error(ex)
 
     def _Destroy(self):
-        pass
+        try:
+            docker.delete_node(name=self.getName())
+            logger.info("the hypervisor ({name}) node was deleted".format(name=self.getName()))
+
+        except Exception as ex:
+            logger.error(ex)
