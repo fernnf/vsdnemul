@@ -16,7 +16,9 @@ RUN chmod +x /openvirtex/utils/ovxctl.py && ln -s /openvirtex/utils/ovxctl.py /u
 
 RUN apk add supervisor
 
-RUN cat $'[unix_http_server] \n\
+RUN mkdir -p /data/db
+
+RUN echo $'[unix_http_server] \n\
 file=/run/supervisord.sock \n\
 \n\
 [supervisord] \n\
@@ -28,10 +30,10 @@ nodaemon=true \n\
 supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface \n\
 \n\
 [supervisorctl] \n\
-serverurl=unix:///run/supervisord.sock \n\
+serverurl=unix:///var/run/supervisord.sock \n\
 \n\
 [program:mongod] \n\
-command=/usr/bin/mongod \n\
+command=/usr/bin/mongod --bind_ip 0.0.0.0 \n\
 \n\
 [program:openvirtex] \n\
 command=/openvirtex/scripts/ovx.sh \n'\

@@ -114,6 +114,25 @@ def _makeReqStart(tenant):
     return data
 
 
+def _makeReqSwitchStart(tenant, vdpid):
+    data = {}
+
+    data["tenantId"] = tenant
+    data["vdpid"] = vdpid
+
+    return data
+
+
+def _makeReqPortStart(tenant, vdpid, vport):
+    data = {}
+
+    data["tenantId"] = tenant
+    data["vdpid"] = vdpid
+    data["vport"] = vport
+
+    return data
+
+
 class OpenVirtex(Node):
     __image__ = "vsdn/openvirtex"
     __cap_add__ = ["ALL"]
@@ -236,13 +255,58 @@ class OpenVirtex(Node):
             req = _makeReqStart(tnt)
             ret = _makeReqConnect(self.getControlIp(), req, "tenant", "startNetwork")
             start = json.loads(ret.data)["result"].get("isBooted")
-            host = json.loads(ret.data)["result"].get("host")
             logger.info(
-                "new virtual host created tenant={t} host={h} start={s}".format(t=tenant, h=host, s=start))
-            return start
+                "new virtual host created tenant={t} start={s}".format(t=tenant, s=start))
+            return bool(start)
 
         except Exception as ex:
             logger.error(ex)
+            return False
+
+    def startSwitch(self, tenant, vdpid):
+
+        try:
+            time.sleep(1)
+
+            tnt = int(tenant)
+            vdp = int(vdpid.replace(":", ""), 16)
+
+            req = _makeReqSwitchStart(tnt, vdp)
+            ret = _makeReqConnect(self.getControlIp(), req, "tenant", "startSwitch")
+
+            error = json.loads(ret.data).get("error")
+
+            if error is None:
+                return True
+            else:
+                logger.error(str(error))
+                return False
+
+        except Exception as ex:
+            logger.error(ex)
+            return False
+
+    def startPort(self, tenant, vdpid, vport):
+        try:
+            time.sleep(1)
+
+            tnt = int(tenant)
+            vdp = int(vdpid.replace(":", ""), 16)
+            vp = int(vport)
+
+            req =  _makeReqPortStart(tnt,vdp,vp)
+            ret = _makeReqConnect(self.getControlIp(), req, "tenant", "startPort")
+
+            error = json.loads(ret.data).get("error")
+
+            if error is None:
+                return True
+            else:
+                logger.error(str(error))
+                return False
+        except Exception as ex:
+            logger.error(ex)
+            return False
 
     def checkSwitchConnected(self):
         def connect():
@@ -254,6 +318,7 @@ class OpenVirtex(Node):
                 return True
             else:
                 return False
+
         try:
             return connect()
         except Exception as ex:
@@ -273,7 +338,7 @@ class OpenVirtex(Node):
             logger.info("waiting for openvirtex process")
             status = False
             while not status:
-                status = _checkStatus(self.getControlIp(),8080)
+                status = _checkStatus(self.getControlIp(), 8080)
 
         except Exception as ex:
             logger.error(ex)

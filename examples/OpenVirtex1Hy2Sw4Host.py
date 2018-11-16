@@ -1,3 +1,5 @@
+import logging
+
 from vsdnemul.cli import Cli
 from vsdnemul.dataplane import Dataplane
 from vsdnemul.lib.log import get_logger
@@ -52,25 +54,36 @@ if __name__ == '__main__':
 
         tnt = hr1.createNetwork(ctl_url=mngt_ctl, net_addr="10.0.0.0", net_mask="24")
 
-        hr1.startNetwork(tenant=tnt)
-
         vsw1 = hr1.createSwitch(tenant=tnt, dpids="00:00:00:00:00:00:00:01")
         vsw1port1 = hr1.createPort(tenant=tnt, dpid="00:00:00:00:00:00:00:01", port="1")
         vsw1port2 = hr1.createPort(tenant=tnt, dpid="00:00:00:00:00:00:00:01", port="3")
-
 
         vsw2 = hr1.createSwitch(tenant=tnt, dpids="00:00:00:00:00:00:00:02")
         vsw2port1 = hr1.createPort(tenant=tnt, dpid="00:00:00:00:00:00:00:02", port="1")
         vsw2port2 = hr1.createPort(tenant=tnt, dpid="00:00:00:00:00:00:00:02", port="3")
 
         link = hr1.connectLink(tenant=tnt, src_vdpid=vsw1, src_vport=vsw1port2, dst_vdpid=vsw2, dst_vport=vsw2port2,
-                           algo="spf", bkp="1")
+                               algo="spf", bkp="1")
 
         h1mac1 = h1.getMacAddress("1")
         h3mac1 = h3.getMacAddress("1")
 
         hr1.connectHost(tenant=tnt, vdpid=vsw1, vport=vsw1port1, mac=h1mac1)
         hr1.connectHost(tenant=tnt, vdpid=vsw2, vport=vsw2port1, mac=h3mac1)
+
+        hr1.startNetwork(tenant=tnt)
+
+        if hr1.startSwitch(tnt, vsw1):
+            hr1.startPort(tnt, vsw1, vsw1port1)
+            hr1.startPort(tnt, vsw1, vsw1port2)
+        else:
+            logging.info("Cannot start switch")
+
+        if hr1.startSwitch(tnt, vsw2):
+            hr1.startPort(tnt, vsw2, vsw2port1)
+            hr1.startPort(tnt, vsw2, vsw2port2)
+        else:
+            logging.info("Cannot start switch")
 
     status = False
 
