@@ -146,9 +146,6 @@ def _bridge_del_port(master, slaves=[], netns=None):
                 slave = ipr.link_lookup(ifname=i)[0]
                 ipr.link("set", index=slave, master=0)
 
-
-
-
     if netns is None:
         delport()
     else:

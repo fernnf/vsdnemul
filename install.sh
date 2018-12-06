@@ -1,3 +1,6 @@
+
+
+
 #!/usr/bin/env bash
 
 PY="/usr/bin/python3"
