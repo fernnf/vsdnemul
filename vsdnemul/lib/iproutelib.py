@@ -1,6 +1,4 @@
 import logging
-from ipaddress import IPv4Interface
-import traceback
 
 from pyroute2 import IPRoute, NetNS
 
@@ -21,12 +19,9 @@ def _add_port_ns(ifname, netns, new_name=None):
             ipr.link('set', index=idx, net_ns_fd=netns, state="up")
 
 
-
-
 def _create_pair(ifname, peer, netns=None, mtu=1500):
     check_not_null(ifname, "the interface name cannot be null")
     check_not_null(peer, "the peer interface name cannot be null")
-
 
     def create():
         with IPRoute() as ipr:
@@ -35,12 +30,10 @@ def _create_pair(ifname, peer, netns=None, mtu=1500):
             ifnet = ipr.link_lookup(ifname=ifname)[0]
             ifpeer = ipr.link_lookup(ifname=peer)[0]
 
-            ipr.link("set", index=ifnet,  mtu=mtu)
+            ipr.link("set", index=ifnet, mtu=mtu)
             ipr.link("set", index=ifnet, state="up")
             ipr.link("set", index=ifpeer, mtu=mtu)
             ipr.link("set", index=ifpeer, state="up")
-
-
 
     def create_ns():
         with NetNS(netns=netns) as ipr:
@@ -54,16 +47,14 @@ def _create_pair(ifname, peer, netns=None, mtu=1500):
             ipr.link("set", index=ifpeer, mtu=mtu)
             ipr.link("set", index=ifpeer, state="up")
 
-
-
     if netns is None:
         create()
     else:
         create_ns()
 
+
 def _create_bridge(ifname, slaves=None, netns=None, mtu=1500):
     check_not_null(ifname, "the interface name cannot be null")
-
 
     def create():
         with IPRoute() as ipr:
@@ -79,7 +70,6 @@ def _create_bridge(ifname, slaves=None, netns=None, mtu=1500):
 
             ipr.link("set", index=inet, state="up")
 
-
     def create_ns():
         with NetNS(netns=netns) as ipr:
             ipr.link("add", ifname=ifname, kind="bridge")
@@ -93,7 +83,6 @@ def _create_bridge(ifname, slaves=None, netns=None, mtu=1500):
                     ipr.link("set", index=port, master=inet)
 
             ipr.link("set", index=inet, state="up")
-
 
     if netns is None:
         create()
@@ -112,8 +101,6 @@ def _bridge_add_port(master, slaves=[], netns=None):
                 slave = ipr.link_lookup(ifname=i)[0]
                 ipr.link("set", index=slave, master=inet)
 
-
-
     def addporns():
         with NetNS(netns=netns) as ipr:
             inet = ipr.link_lookup(ifname=master)[0]
@@ -122,12 +109,11 @@ def _bridge_add_port(master, slaves=[], netns=None):
                 slave = ipr.link_lookup(ifname=i)[0]
                 ipr.link("set", index=slave, master=inet)
 
-
-
     if netns is None:
         addport()
     else:
         addporns()
+
 
 def _bridge_del_port(master, slaves=[], netns=None):
     check_not_null(master, "the master bridge name cannot be null")
@@ -138,8 +124,6 @@ def _bridge_del_port(master, slaves=[], netns=None):
                 slave = ipr.link_lookup(ifname=i)[0]
                 ipr.link("set", index=slave, master=0)
 
-
-
     def delportns():
         with NetNS(netns=netns) as ipr:
             for i in slaves:
@@ -151,6 +135,7 @@ def _bridge_del_port(master, slaves=[], netns=None):
     else:
         delportns()
 
+
 def _delete_interface(ifname, netns=None):
     check_not_null(ifname, "the interface name cannot be null")
 
@@ -159,17 +144,16 @@ def _delete_interface(ifname, netns=None):
             inet = ipr.link_lookup(ifname=ifname)[0]
             ipr.link("del", index=inet)
 
-
     def delportns():
         with NetNS(netns=netns) as ipr:
             inet = ipr.link_lookup(ifname=ifname)[0]
             ipr.link("del", index=inet)
 
-
     if netns is None:
         delport()
     else:
         delportns()
+
 
 def _config_ip_address(ifname, ip_addr, mask, gateway=None, netns=None):
     check_not_null(ifname, "the interface name cannot be null")
@@ -183,8 +167,6 @@ def _config_ip_address(ifname, ip_addr, mask, gateway=None, netns=None):
             if gateway is not None:
                 ipr.route("add", dst="default", gateway=gateway)
 
-
-
     def configipns():
         with NetNS(netns=netns) as ipr:
             inet = ipr.link_lookup(ifname=ifname)[0]
@@ -193,12 +175,10 @@ def _config_ip_address(ifname, ip_addr, mask, gateway=None, netns=None):
             if gateway is not None:
                 ipr.route("add", dst="default", gateway=gateway)
 
-
     if netns is None:
         configip()
     else:
         configipns()
-
 
 
 def _get_interface_addr(ifname, netns=None):
@@ -218,6 +198,7 @@ def _get_interface_addr(ifname, netns=None):
 
     return (get_addr() if netns is None else get_ns_addr())
 
+
 def _get_interface_mac(ifname, netns=None):
     check_not_null(ifname, "the interface name cannot be null")
 
@@ -227,6 +208,7 @@ def _get_interface_mac(ifname, netns=None):
             inet = ipr.link("get", index=idx)
             ret = inet[0]['attrs'][18][1]
             return ret
+
     def get_mac_ns():
         with NetNS(netns=netns) as ipr:
             idx = ipr.link_lookup(ifname=ifname)
@@ -235,6 +217,7 @@ def _get_interface_mac(ifname, netns=None):
             return ret
 
     return (get_mac() if netns is None else get_mac_ns())
+
 
 def _switch_on(ifname, netns=None):
     check_not_null(ifname, "the interface name cannot be null")
@@ -345,6 +328,7 @@ def get_interface_addr(ifname, netns=None):
 
 def get_interface_mac(ifname, netns=None):
     return _get_interface_mac(ifname, netns)
+
 
 def switch_on(ifname, netns=None):
     try:

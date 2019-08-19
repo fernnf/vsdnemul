@@ -23,43 +23,41 @@ from vsdnemul.models.node.switch.whitebox import Whitebox
 from vsdnemul.models.node.controller.onos import Onos
 from vsdnemul.cli import Cli
 
+from IPython import embed
+
+import logging
 
 if __name__ == '__main__':
-
     logger = get_logger(__name__)
 
     dp = Dataplane()
 
-    # Adding nodes to dataplane
+    # Adding SDN Switch
+    sw1 = dp.addNode(Whitebox(name="sw1", bridge_oper="tswitch0", dpid="0000000000000001", ofversion="OpenFlow13"))
+    sw2 = dp.addNode(Whitebox(name="sw2", bridge_oper="tswitch0", dpid="0000000000000002", ofversion="OpenFlow13"))
 
-    sw1 = dp.addNode(Whitebox(name="sw1"))
-    print(sw1.getControlAddr())
+    # Adding Two Hosts Clientscl
+    h1 = dp.addNode(Host(name="h1", ip="10.0.0.1", mask="24"))
 
-    h1 = dp.addNode(Host(name="h1"))
-    print(h1.getControlAddr())
+    h2 = dp.addNode(Host(name="h2", ip="10.0.0.2", mask="24"))
 
-    h2 = dp.addNode(Host(name="h2"))
-    print(h2.getControlAddr())
-
-    # add link to dataplane
-
+    # Creating Link Connection
+    # Link Between h1 to sw1
     l1 = dp.addLink(LinkPair(name="l1", node_source=sw1, node_target=h1, type=LinkType.HOST))
-    l2 = dp.addLink(LinkPair(name="l2", node_source=sw1, node_target=h2, type=LinkType.HOST))
+    # Link Between h2 to sw2
+    l2 = dp.addLink(LinkPair(name="l2", node_source=sw2, node_target=h2, type=LinkType.HOST))
+    # Link Between sw1 to sw2
+    l3 = dp.addLink(LinkPair(name="l3", node_source=sw1, node_target=sw2, type=LinkType.DIRECT))
+    # Creating a SDN Controller and setting to switch
+    ctl = dp.addNode(Onos(name="ctl1"))
+    ctl1 = "tcp:{ip}:6653".format(ip="172.17.0.1")
+    ctl2 = "tcp:{ip}:6654".format(ip="172.17.0.1")
+    sw1.setController(target=ctl1, bridge="tswitch0")
+    sw2.setController(target=ctl2, bridge="tswitch0")
 
-    # add controller
-
-    #ctl = dp.addNode(Onos(name="ctl1"))
-    mgnt = "tcp:{ip}:6653".format(ip="172.17.0.1")
-
-    sw1.setController(target=mgnt, bridge="br_oper0")
-
+    # enabling cli
     cli = Cli(dp)
     cli.cmdloop()
-
+    # embed()
+    # destroing all elements after the experiment.
     dp.stop()
-
-
-
-
-
-
