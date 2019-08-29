@@ -22,6 +22,6 @@ setup(name = 'vsdnemul',
       author_email = 'fernnf@gmail.com',
       description = 'A SDN topology emulator to create specific topologies for research and development in SDN',
       keywords = "SDN Networking Emulator",
-      install_requires = ['pyroute2', 'docker', 'cmd2', 'requests', 'names', 'ryu', 'terminaltables', 'IPython'],
+      install_requires=  ['pyroute2', 'docker', 'cmd2', 'requests', 'names', 'ryu', 'terminaltables', 'IPython'],
       include_package_data = True,
       zip_safe = False)
