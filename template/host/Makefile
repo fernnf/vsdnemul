@@ -1,5 +1,5 @@
-DOCKER_PRJ="vsdn/vsdnbox:latest"
-DOCKER_NAME=vsdnbox
+DOCKER_PRJ="vsdn/host:latest"
+DOCKER_NAME=host
 DOCKER_APP=docker
 
 all: build
@@ -10,7 +10,7 @@ build:
 	$(DOCKER_APP) build --no-cache -t $(DOCKER_PRJ) .
 
 run:
-	$(DOCKER_APP) run -d -p 10000:10000/tcp --name $(DOCKER_NAME) --privileged $(DOCKER_PRJ)
+	$(DOCKER_APP) run -d  --name $(DOCKER_NAME) --privileged $(DOCKER_PRJ)
 
 del:
 	$(DOCKER_APP) rm -f $(DOCKER_NAME) && $(DOCKER_APP) rmi $(DOCKER_NAME)

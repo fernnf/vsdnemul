@@ -3,8 +3,8 @@ RUN apk update
 RUN apk add --upgrade busybox 
 RUN apk add openvswitch tcpdump nano iproute2 ethtool bash util-linux wget
 WORKDIR /bin
-RUN wget https://raw.githubusercontent.com/fernnf/vsdnemul/master/template/whitebox/boot.sh
-
+COPY boot.sh .
+RUN chmod +x boot.sh
 
 WORKDIR /
 

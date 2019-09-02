@@ -1,4 +1,4 @@
-FROM alpine:edge
+FROM alpine:latest
 RUN apk update
 RUN apk add iperf3 tcpdump iputils nano ethtool iproute2 net-tools bash
 

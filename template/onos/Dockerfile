@@ -1,4 +1,4 @@
-FROM onosproject/onos
+FROM onosproject/onos:latest
 RUN apk update
 RUN apk add bash tcpdump
 ENV PS1="[vsdn:onos \u@\h]# "

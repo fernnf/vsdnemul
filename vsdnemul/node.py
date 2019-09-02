@@ -24,7 +24,6 @@ import cmd2
 from cmd2 import with_argparser, with_category
 from terminaltables import AsciiTable
 
-
 from vsdnemul.lib.dockerlib import get_status_node, get_id, get_control_ip, get_shell
 
 '''
@@ -33,8 +32,8 @@ Class Abstract to generate new nodes models based on docker file templates.
 
 logger = logging.getLogger(__name__)
 
-
 CAT_NODE_MANAGER = "Node Emulation Command"
+
 
 class NodeType(Enum):
     HOST = "host"
@@ -59,6 +58,7 @@ class Node(ABC):
     __cap_add__ = ""
     __image__ = ""
     __type__ = ""
+    __environment__ = ""
 
     def __init__(self, name, image, type: NodeType):
         super(Node, self).__init__()
@@ -166,7 +166,6 @@ class NodeFabric(object):
 
 class CliNode(cmd2.Cmd):
 
-
     def __init__(self, dataplane=None):
         super(CliNode, self).__init__()
         self.dp = dataplane
@@ -220,10 +219,10 @@ class CliNode(cmd2.Cmd):
         else:
             self.perror("option unknown")
 
-
-    cli_parser =  argparse.ArgumentParser()
+    cli_parser = argparse.ArgumentParser()
     cli_parser.add_argument('-i', '--id', action="store", dest="id", help="get cli prompt from a specific node")
     cli_parser.set_defaults(id=None)
+
     @with_category(CAT_NODE_MANAGER)
     @with_argparser(cli_parser)
     def do_cli(self, opts):
@@ -235,7 +234,6 @@ class CliNode(cmd2.Cmd):
                 self.perror("id option cannot be null")
         except Exception as ex:
             self.perror(ex.args[0])
-
 
     def do_exit(self, s):
         return True

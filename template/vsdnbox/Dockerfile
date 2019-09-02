@@ -1,7 +1,7 @@
 FROM fedora:latest
 RUN dnf update -y
 
-RUN dnf install -y openvswitch wget supervisor git util-linux net-tools gcc procps
+RUN dnf install -y openvswitch wget git util-linux net-tools gcc procps nano iputils hostname
 
 RUN dnf install -y snappy-devel python3-devel libyaml-devel openvswitch-devel
 
@@ -11,12 +11,6 @@ RUN git clone https://github.com/fernnf/vsdnagent.git
 WORKDIR /code/vsdnagent
 
 RUN pip3 install -r requirements.txt
-WORKDIR /etc
-COPY supervisord.conf .
-WORKDIR /
-COPY ovsdb.sh .
-RUN chmod +x ovsdb.sh
-
 COPY vsdnagent.sh .
 RUN chmod +x vsdnagent.sh
 
@@ -35,5 +29,4 @@ LABEL br.ufpa.label.name="VSDNBox"\
 
 RUN dnf clean all
 
-CMD "/usr/bin/supervisord"
-#CMD "/usr/bin/supervisord"
+CMD ["/bin/bash", "vsdnagent.sh"]

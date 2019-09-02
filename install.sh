@@ -27,14 +27,9 @@ function check {
 
 function template {
 
-    echo "Installing docker emulate models..."
-
-    ARRAY=( "vsdn/flowvisor" "vsdn/host" "vsdn/onos" "vsdn/openvirtex" "vsdn/whitebox" )
-    for i in ${ARRAY[@]}; do
-        echo "* Downloading model ${i}"
-        $DC pull ${i}:latest
-        echo "Created"
-    done
+    echo "Installing models images .."
+    cd template/
+    make all
     echo "DONE"
 
 }

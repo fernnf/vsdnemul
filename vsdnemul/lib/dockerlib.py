@@ -31,7 +31,6 @@ def __create(image, **params):
         privileged=True,
         stdin_open=True,
         init=True,
-        environment=["container=docker"],
         ipc_mode="shareable",
         security_opt=["label=disable"]
     )

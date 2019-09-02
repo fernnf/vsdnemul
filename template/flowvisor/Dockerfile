@@ -42,6 +42,8 @@ WORKDIR /bin
 
 RUN wget https://raw.githubusercontent.com/fernnf/vsdnemul/master/template/flowvisor/boot.sh
 
+COPY boot.sh .
+
 WORKDIR /
 
 ENTRYPOINT [ "/bin/sh" ]

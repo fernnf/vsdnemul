@@ -8,7 +8,7 @@ ENV JAVA_HOME=/usr/lib/jvm/java-1.7-openjdk
 
 RUN wget http://mirror.nbtelecom.com.br/apache/maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.tar.gz
 
-RUN wget https://github.com/fernnf/vsdnemul/blob/master/template/openvirtex/openvirtex.tar.gz?raw=true -O openvirtex.tar.gz
+COPY openvirtex.tar.gz .
 
 RUN tar -xvzf openvirtex.tar.gz
 
@@ -53,8 +53,4 @@ LABEL br.ufpa.label.name="OpenVirteX"\
 
 
 CMD ["supervisord", "-c", "/etc/supervisord.conf"]
-
-#ENTRYPOINT ["/bin/sh"]
-
-#CMD ["/openvertix/scripts/ovx.sh"]
 

@@ -101,7 +101,7 @@ def rem_bridge(name, db_addr=LOCAL):
         raise RuntimeError(ex.args[0])
 
 
-def set_bridge_controller(name, db_addr=LOCAL, target_addr=[]):
+def set_bridge_controller(name, target_addr, db_addr=LOCAL):
     ovsdb = vsctl.VSCtl(db_addr)
     command = "set-controller"
     args = [name, target_addr]
