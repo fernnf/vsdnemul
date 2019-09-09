@@ -14,6 +14,12 @@ RUN pip3 install -r requirements.txt
 COPY vsdnagent.sh .
 RUN chmod +x vsdnagent.sh
 
+WORKDIR /root
+RUN https://github.com/fernnf/benchtraffic.git
+RUN pip3 install -r requirements.txt
+
+RUN mkdir /root/results
+
 ENV PS1="[vsdn:vsdnbox \u@\h]#"
 ENV ORCH_REALM="realm1"
 ENV OVS_ADDR="tcp:127.0.0.1:6640"

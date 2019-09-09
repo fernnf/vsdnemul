@@ -107,11 +107,24 @@ def _set_bridge_dpid(db_addr, bridge, dpid):
     ovsdb.set_ovsdb(db_addr=db_addr, table=table, value=value)
 
 
+def _run_throughput_test(node, name, loop, num_macs, output):
+    cmd = "python3 /root/benchtraffic.py -g true -l {l} -c {nm} -m 1 -n {n} -o {o}"
+    json = docker.run_cmd(name=node, cmd=cmd.format(l=loop, nm=num_macs, n=name, o=output))
+    return json
+
+
+def _run_latency_test(node, name, loop, num_macs, output):
+    cmd = "python3 /root/benchtraffic.py -g true -l {l} -c {nm} -m 0 -n {n} -o {o}"
+    json = docker.run_cmd(name=node, cmd=cmd.format(l=loop, nm=num_macs, n=name, o=output))
+    return json
+
+
 class VSDNBox(Node):
     __environment__ = ["container=docker"]
     __image__ = "vsdn/vsdnbox"
     __type__ = NodeType.SWITCH
-    __volumes__ = {"/sys/fs/cgroup": {"bind": "/sys/fs/cgroup", "mode": "ro"}}
+    __volumes__ = {"/sys/fs/cgroup": {"bind": "/sys/fs/cgroup", "mode": "ro"},
+                   "/root/results": {"bind": "/root/results", "mode": "rw"}}
     __cap_add__ = ["ALL"]
 
     def __init__(self, name, orches_ip, dpid=None, ofversion=None, bridge="tswitch0", type=NodeType.SWITCH):
@@ -223,6 +236,15 @@ class VSDNBox(Node):
             del (self.interfaces[idx])
         except Exception as ex:
             logger.error(ex.args[0])
+
+    def run_throughput_test(self, name, loop, num_macs, output):
+        try:
+            import json
+            j = _run_throughput_test(self.getName(), name=name, loop=loop, num_macs=num_macs, output=output)
+            ret = json.loads(j)
+            return ret
+        except Exception as ex:
+            logger.error(str(ex))
 
     def _Commit(self):
 

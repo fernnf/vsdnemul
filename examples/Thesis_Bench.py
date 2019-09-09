@@ -31,7 +31,7 @@ if __name__ == '__main__':
     dp = Dataplane()
     orch = dp.addNode(VSDNOrches("orch"))
     ip_orch = orch.getControlIp()
-    for i in range(1, 16):
+    for i in range(1, 2):
         dp.addNode(VSDNBox(name="sw{}".format(i), orches_ip=ip_orch, dpid="000000000000000{}".format(i), ofversion=["OpenFlow13"]))
 
     cli = Cli(dp)
