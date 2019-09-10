@@ -32,7 +32,7 @@ def set_ovsdb(db_addr=LOCAL, table=[], value=[]):
         ovsdb.run_command([run])
         return run.result
     except Exception as ex:
-        raise RuntimeError(ex.args[0])
+        raise RuntimeError(str(ex))
 
 
 def get_ovsdb(db_addr=LOCAL, table=[], value=[]):
@@ -58,6 +58,7 @@ def exists_bridge(name, db_addr=LOCAL):
     except Exception as ex:
         raise RuntimeError(ex.args[0])
 
+
 def add_bridge(name, db_addr=LOCAL, protocols=None, datapath_id=None):
     ovsdb = vsctl.VSCtl(db_addr)
 
@@ -71,12 +72,12 @@ def add_bridge(name, db_addr=LOCAL, protocols=None, datapath_id=None):
     def set_ofversion():
         table = ["Bridge"]
         value = [name, "protocols={version}".format(version=protocols)]
-        set_ovsdb(db_addr=db_addr,table=table, value=value)
+        set_ovsdb(db_addr=db_addr, table=table, value=value)
 
     def set_dpid():
         table = ["Bridge"]
-        value = [name, "other-config:datapath-id={dpid}".format(dpid=datapath_id)]
-        set_ovsdb(db_addr=db_addr,table=table, value=value)
+        value = [name, "other_config:datapath-id={dpid}".format(dpid=datapath_id)]
+        set_ovsdb(db_addr=db_addr, table=table, value=value)
 
     try:
         if not exists_bridge(name=name, db_addr=db_addr):
@@ -86,7 +87,7 @@ def add_bridge(name, db_addr=LOCAL, protocols=None, datapath_id=None):
         if datapath_id is not None:
             set_dpid()
     except Exception as ex:
-        raise RuntimeError(ex.args[0])
+        raise RuntimeError(str(ex) + " " + datapath_id)
 
 
 def rem_bridge(name, db_addr=LOCAL):
@@ -125,7 +126,7 @@ def del_bridge_controller(name, db_addr=LOCAL):
         raise RuntimeError(ex.args[0])
 
 
-def add_port_bridge(db_addr, name, port_name, ofport=None):
+def add_port_bridge(db_addr, name, port_name, patch=False, peer=None, ofport=None):
     ovsdb = vsctl.VSCtl(db_addr)
 
     def adding():
@@ -139,10 +140,25 @@ def add_port_bridge(db_addr, name, port_name, ofport=None):
         value = [port_name, "ofport_request={ofport}".format(ofport=ofport)]
         set_ovsdb(db_addr, table, value)
 
+    def set_patch():
+        table = ["Interface"]
+        value = [port_name, "type=patch"]
+        set_ovsdb(db_addr, table, value)
+
+    def set_peer():
+        table = ["Interface"]
+        value = [port_name, "options:peer={}".format(peer)]
+        set_ovsdb(db_addr, table, value)
+
     try:
         adding()
         if ofport is not None:
             set_ofport()
+        if patch:
+            set_patch()
+            if peer is None:
+                raise ValueError("patch must have peer port")
+            set_peer()
     except Exception as ex:
         raise RuntimeError(ex.args[0])
 

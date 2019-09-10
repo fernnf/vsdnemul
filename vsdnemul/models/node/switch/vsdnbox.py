@@ -13,7 +13,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-
+import json
 import logging
 
 from vsdnemul.lib import dockerlib as docker
@@ -81,7 +81,7 @@ def _get_service_addr(node):
     return "tcp:{ip}:6640".format(ip=_get_ip(node))
 
 
-def _set_bridge(bridge, db_addr, protocols: list = None, datapath_id=None):
+def _set_bridge(bridge, db_addr, protocols=None, datapath_id=None):
     try:
         ovsdb.add_bridge(name=bridge, db_addr=db_addr, protocols=protocols, datapath_id=datapath_id)
     except Exception as ex:
@@ -91,6 +91,20 @@ def _set_bridge(bridge, db_addr, protocols: list = None, datapath_id=None):
 def _del_bridge(bridge, db_addr):
     try:
         ovsdb.rem_bridge(name=bridge, db_addr=db_addr)
+    except Exception as ex:
+        raise RuntimeError(ex.args[0])
+
+
+def _set_port(db_addr, bridge, port, patch=False, peer=None, ofport=None):
+    try:
+        ovsdb.add_port_bridge(db_addr, bridge, port, patch, peer, ofport)
+    except Exception as ex:
+        raise RuntimeError(ex.args[0])
+
+
+def _del_port(db_addr, bridge, port):
+    try:
+        ovsdb.del_port_bridge(db_addr, bridge, port)
     except Exception as ex:
         raise RuntimeError(ex.args[0])
 
@@ -108,15 +122,15 @@ def _set_bridge_dpid(db_addr, bridge, dpid):
 
 
 def _run_throughput_test(node, name, loop, num_macs, output):
-    cmd = "python3 /root/benchtraffic.py -g true -l {l} -c {nm} -m 1 -n {n} -o {o}"
+    cmd = "python3 /root/benchtraffic.py -l {l} -c {nm} -m 1 -n {n} -o {o}"
     json = docker.run_cmd(name=node, cmd=cmd.format(l=loop, nm=num_macs, n=name, o=output))
     return json
 
 
 def _run_latency_test(node, name, loop, num_macs, output):
-    cmd = "python3 /root/benchtraffic.py -g true -l {l} -c {nm} -m 0 -n {n} -o {o}"
-    json = docker.run_cmd(name=node, cmd=cmd.format(l=loop, nm=num_macs, n=name, o=output))
-    return json
+    cmd = "python3 /root/benchtraffic/benchtraffic.py -g true -l {l} -c {nm} -m 0 -n {n} -o {o}"
+    j = docker.run_cmd(name=node, cmd=cmd.format(l=loop, nm=num_macs, n=name, o=output))
+    return j
 
 
 class VSDNBox(Node):
@@ -191,7 +205,7 @@ class VSDNBox(Node):
         except Exception as ex:
             logger.error(ex.args[0])
 
-    def set_bridge(self, bridge, protocols: list = None, datapath_id=None):
+    def set_bridge(self, bridge, protocols=None, datapath_id=None):
         try:
             _set_bridge(bridge=bridge, db_addr=self.get_control_uri(), protocols=protocols, datapath_id=datapath_id)
         except Exception as ex:
@@ -203,7 +217,7 @@ class VSDNBox(Node):
         except Exception as ex:
             logger.error(ex.args[0])
 
-    def set_ofversion(self, bridge="tswitch0", protocols: list = None):
+    def set_ofversion(self, bridge="tswitch0", protocols=None):
         try:
             _set_ofversion(db_addr=self.get_control_uri(), protocols=protocols, bridge=bridge)
         except Exception as ex:
@@ -213,7 +227,19 @@ class VSDNBox(Node):
         try:
             return docker.run_cmd(name=self.getName(), cmd=cmd)
         except Exception as ex:
-            raise RuntimeError(str(ex))
+            logger.error(str(ex))
+
+    def set_port(self, bridge, port, peer=None, portnum=None, patch=False):
+        try:
+            _set_port(db_addr=self.get_control_uri(), bridge=bridge, port=port, patch=patch, peer=peer, ofport=portnum)
+        except Exception as ex:
+            logger.error(str(ex))
+
+    def del_port(self, bridge, port):
+        try:
+            _del_port(db_addr=self.get_control_uri(), bridge=bridge, port=port)
+        except Exception as ex:
+            logger.error(str(ex))
 
     def setInterface(self, ifname, encap):
 
@@ -240,7 +266,16 @@ class VSDNBox(Node):
     def run_throughput_test(self, name, loop, num_macs, output):
         try:
             import json
-            j = _run_throughput_test(self.getName(), name=name, loop=loop, num_macs=num_macs, output=output)
+            j = _run_throughput_test(node=self.getName(), name=name, loop=loop, num_macs=num_macs, output=output)
+            ret = json.loads(j)
+            return ret
+        except Exception as ex:
+            logger.error(str(ex))
+
+    def run_latency_test(self, name, loop, num_macs, output):
+        try:
+            import json
+            j = _run_latency_test(node=self.getName(), name=name, loop=loop, num_macs=num_macs, output=output)
             ret = json.loads(j)
             return ret
         except Exception as ex:
@@ -270,6 +305,7 @@ class VSDNBox(Node):
                 self.set_ofversion(bridge=self.get_bridge_oper(), protocols=self.ofversion)
 
             self.set_controller(target="tcp:127.0.0.1:6653", bridge="tswitch0")
+
             logger.info("done")
 
         try:

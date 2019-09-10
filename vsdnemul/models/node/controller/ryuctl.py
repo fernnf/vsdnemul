@@ -58,3 +58,9 @@ class Ryuctl(Node):
             logger.info("the RYU controller ({name}) node was deleted".format(name=self.getName()))
         except Exception as ex:
             logger.error(str(ex))
+
+    def setInterface(self, ifname, encap):
+        pass
+
+    def delInterface(self, id):
+        pass

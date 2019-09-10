@@ -15,10 +15,13 @@ COPY vsdnagent.sh .
 RUN chmod +x vsdnagent.sh
 
 WORKDIR /root
-RUN https://github.com/fernnf/benchtraffic.git
-RUN pip3 install -r requirements.txt
+RUN git clone https://github.com/fernnf/benchtraffic.git
+RUN pip3 install -r benchtraffic/requirements.txt
 
 RUN mkdir /root/results
+
+
+WORKDIR /code/vsdnagent
 
 ENV PS1="[vsdn:vsdnbox \u@\h]#"
 ENV ORCH_REALM="realm1"
