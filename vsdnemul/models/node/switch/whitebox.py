@@ -241,7 +241,7 @@ class Whitebox(Node):
                     logger.info("setting whitebox configuration")
                     # We need to known if the openvswitch process already has started
                     #self.setManager(target=["ptcp:6640"])
-                    #self.setBridge(bridge=self.getBrOper())
+                    self.setBridge(bridge=self.getBrOper())
 
                     #if self._br_oper_dpid is not None:
                     #    self.setDpid(bridge=self.getBrOper(), dpid=self._br_oper_dpid)
