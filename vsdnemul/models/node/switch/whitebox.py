@@ -21,7 +21,6 @@ from vsdnemul.lib import dockerlib as docker
 from vsdnemul.lib import iproutelib as iproute
 from vsdnemul.lib import ovsdblib as ovsdb
 from vsdnemul.node import Node, NodeType
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -236,6 +235,7 @@ class Whitebox(Node):
                     p = False
                     while not p:
                         p = _CheckOpenvSwitch(node=self.getName())
+                        logger.info("trying connect")
 
                     logger.info("setting whitebox configuration")
                     # We need to known if the openvswitch process already has started
