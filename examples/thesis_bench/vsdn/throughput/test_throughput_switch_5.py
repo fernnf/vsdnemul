@@ -27,20 +27,6 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-#  GERCOM - Federal University of Pará - Brazil
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
 
 import csv
 import json
@@ -145,16 +131,18 @@ def create_slice_vsdn(dp, ctl):
         log.info("openflows configured")
 
     def config_dut_port(n, b):
-        cmd_veth = "/usr/sbin/ip link add {p1} type veth peer name {p2}"
-        cmd_up = "/usr/sbin/ip link set {p1} up"
-        n.run_command(cmd=cmd_veth.format(p1="dut1", p2="link1"))
-        n.run_command(cmd=cmd_veth.format(p1="dut2", p2="link2"))
+        cmd_veth = "/sbin/ip link add {p1} type veth peer name {p2}"
+        cmd_up = "/sbin/ip link set {p1} up"
+        o1 = n.run_command(cmd=cmd_veth.format(p1="dut1", p2="veth0"))
+        log.info(o1)
+        o2 = n.run_command(cmd=cmd_veth.format(p1="dut2", p2="veth1"))
+        log.info(o2)
         n.run_command(cmd=cmd_up.format(p1="dut1"))
         n.run_command(cmd=cmd_up.format(p1="dut2"))
-        n.run_command(cmd=cmd_up.format(p1="link1"))
-        n.run_command(cmd=cmd_up.format(p1="link2"))
-        n.set_port(bridge=b, port="link1", portnum="1")
-        n.set_port(bridge=b, port="link2", portnum="2")
+        n.run_command(cmd=cmd_up.format(p1="veth0"))
+        n.run_command(cmd=cmd_up.format(p1="veth1"))
+        n.set_port(bridge=b, port="veth0", portnum="1")
+        n.set_port(bridge=b, port="veth1", portnum="2")
         log.info("dut ports configured")
 
     for n in dp.getNodes().values():
@@ -184,7 +172,7 @@ if __name__ == '__main__':
     ctl_addr = "tcp:{}:6653".format(ctl.getControlIp())
     threads = []
     stats = []
-    create_switches_vsdn(dp, 5, ip_orch)
+    create_switches_vsdn(dp, 1, ip_orch)
     create_slice_vsdn(dp, ctl=ctl_addr)
     signal.set()
     statis = threading.Thread(target=get_statistic_container, args=(stats, 'orch'))

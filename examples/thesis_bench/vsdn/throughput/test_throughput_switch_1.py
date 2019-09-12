@@ -49,9 +49,16 @@ log = logging.getLogger(__name__)
 signal = threading.Event()
 
 
+def gen_dpid(i):
+    t = "0000000000000000"
+    off_set = len(i)
+    o = t[:-off_set] + i
+    return o
+
+
 def create_switches_vsdn(dp, n, a):
     for i in range(0, n):
-        dp.addNode(VSDNBox(name="sw{}".format(i + 1), orches_ip=a, dpid="000000000000000{}".format(i + 1),
+        dp.addNode(VSDNBox(name="sw{}".format(i + 1), orches_ip=a, dpid=gen_dpid(str(i+1)).format(i + 1),
                            ofversion="OpenFlow13"))
 
 
