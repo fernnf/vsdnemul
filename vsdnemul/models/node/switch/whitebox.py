@@ -237,6 +237,7 @@ class Whitebox(Node):
                     #    p = _CheckOpenvSwitch(node=self.getName())
                     #    logger.info("trying connect")
 
+
                     logger.info("setting whitebox configuration")
                     # We need to known if the openvswitch process already has started
                     self.setManager(target=["ptcp:6640"])
