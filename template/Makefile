@@ -11,6 +11,8 @@ build:
 	$(MAKE) -C onos/ build
 	$(MAKE) -C host/ build
 	$(MAKE) -C flowvisor/ build
+	$(MAKE) -C vsdnorches/ build
+	$(MAKE) -C ryu/ build
 
 del:
 	$(MAKE) -C whitebox/ clean

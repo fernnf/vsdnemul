@@ -1,10 +1,8 @@
-FROM fedora:latest
-RUN dnf update -y
-RUN dnf install -y git net-tools snappy-devel gcc gcc-c++
+FROM alpine:latest
 
+RUN apk --update add util-linux net-tools iputils python3 py3-pip openssl ca-certificates git bash
 
-
-RUN dnf install -y python3-snappy python3-pip python3-devel
+RUN apk --update add --virtual build-dependencies python3-dev build-base wget libffi-dev openssl-dev linux-headers snappy-dev
 
 WORKDIR /root
 
@@ -12,22 +10,16 @@ RUN git clone https://github.com/fernnf/vsdnorches.git
 
 WORKDIR vsdnorches/
 
-RUN pip3 install -r requirements.txt
+RUN pip3 install --upgrade pip && pip3 install -r requirements.txt
 
-RUN /usr/local/bin/crossbar init
+RUN /usr/bin/crossbar init
 
-WORKDIR .crossbar
+RUN rm .crossbar/config.json
 
-RUN rm config.json
+COPY config.json .crossbar/
 
-COPY config.json .
-
-RUN dnf clean packages
-
-WORKDIR /root/vsdnorches/
+RUN  apk del build-dependencies
 
 ENV PS1="[vsdn:vsdnorches \u@\h]#"
-
-EXPOSE 8080
 
 CMD ["crossbar", "start"]

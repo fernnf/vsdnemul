@@ -1,27 +1,32 @@
-FROM fedora:latest
-RUN dnf update -y
+FROM alpine:latest
 
-RUN dnf install -y openvswitch wget git util-linux net-tools gcc procps nano iputils hostname
+RUN apk --update add openvswitch util-linux net-tools nano iputils python3 py3-pip openssl ca-certificates git bash
 
-RUN dnf install -y snappy-devel python3-devel libyaml-devel openvswitch-devel
+RUN apk --update add --virtual build-dependencies python3-dev build-base wget libffi-dev openssl-dev
+
 
 RUN mkdir /code
 WORKDIR /code
 RUN git clone https://github.com/fernnf/vsdnagent.git
 WORKDIR /code/vsdnagent
 
-RUN pip3 install -r requirements.txt
+RUN pip3 install --upgrade pip && pip3 install -r requirements.txt
+
 COPY vsdnagent.sh .
+
 RUN chmod +x vsdnagent.sh
 
 WORKDIR /root
+
 RUN git clone https://github.com/fernnf/benchtraffic.git
+
 RUN pip3 install -r benchtraffic/requirements.txt
 
-RUN mkdir /root/results
-
+RUN  apk del build-dependencies
 
 WORKDIR /code/vsdnagent
+
+RUN mkdir /root/results
 
 ENV PS1="[vsdn:vsdnbox \u@\h]#"
 ENV ORCH_REALM="realm1"
@@ -35,7 +40,5 @@ LABEL br.ufpa.label.name="VSDNBox"\
       br.ufpa.label.application="vSDNagent"\
       br.ufpa.label.version="0.1"\
       br.ufpa.label.license="Apache2"
-
-RUN dnf clean all
 
 CMD ["/bin/bash", "vsdnagent.sh"]

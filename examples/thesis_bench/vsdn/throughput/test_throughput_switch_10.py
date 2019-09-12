@@ -13,13 +13,44 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+#
+#  GERCOM - Federal University of Pará - Brazil
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+#  GERCOM - Federal University of Pará - Brazil
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 
+import csv
 import json
 import logging
+import os
+import subprocess
 import threading
+import time
 import uuid
 
-from vsdnemul.cli import Cli
 from vsdnemul.dataplane import Dataplane
 from vsdnemul.lib.log import get_logger
 from vsdnemul.models.node.controller.ryuctl import Ryuctl
@@ -28,6 +59,8 @@ from vsdnemul.models.node.switch.vsdnbox import VSDNBox
 from vsdnemul.node import NodeType
 
 log = logging.getLogger(__name__)
+
+signal = threading.Event()
 
 
 def create_switches_vsdn(dp, n, a):
@@ -50,26 +83,49 @@ def run_latency(node, name, loop, macs, output):
     log.info(json.loads(ret[1]))
 
 
-def run_throughput_test(dp, name, loop, macs, output):
+def run_throughput_test(ths, dp, name, loop, macs, output):
     for a in dp.getNodes().values():
         if a.__type__.name == NodeType.SWITCH.name:
             log.info("initializing throughput test on node {}".format(a.getName()))
-            t = threading.Thread(target=run_throughput, args=(a, name + a.getName(), loop, macs, output+"/"+a.getName()))
+            t = threading.Thread(target=run_throughput,
+                                 args=(a, name + a.getName(), loop, macs, output + "/" + a.getName()))
             t.setName(a.getName())
             t.start()
+            ths.append(t)
         else:
             log.info("Node is not switch")
 
 
-def run_latency_test(dp, name, loop, macs, output):
+def run_latency_test(ths, dp, name, loop, macs, output):
     for a in dp.getNodes().values():
         if a.__type__.name == NodeType.SWITCH.name:
             log.info("initializing latency test on node {}".format(a.getName()))
             t = threading.Thread(target=run_latency, args=(a, name + a.getName(), loop, macs, output))
             t.setName(a.getName())
             t.start()
+            ths.append(t)
         else:
             log.info("Node is not switch")
+
+
+def get_statistic_container(statis, name):
+    while signal.is_set():
+        cmd = 'docker stats --no-stream --format "{{.CPUPerc}}:{{.MemUsage}}:{{.MemPerc}}" ' + name
+        out = subprocess.check_output(cmd, shell=True)
+        o = str(out, encoding='utf8').strip()
+        statis.append(o.split(":"))
+
+
+def gen_statis(dir, stats):
+    with open('{}/statis.csv'.format(dir), mode='w') as csv_file:
+        header = ["CPU_USAGE(%)", "MEMORY(MiB)", "MEMORY_TOTAL(GiB)", "MEMORY_USAGE(%)"]
+        writer = csv.DictWriter(csv_file, fieldnames=header, delimiter=' ')
+        writer.writeheader()
+        for i in stats:
+            writer.writerow(
+                {"CPU_USAGE(%)": i[0][:-1], "MEMORY(MiB)": i[1].split("/")[0].strip()[:-3],
+                 "MEMORY_TOTAL(GiB)": i[1].split("/")[1].strip()[:-3],
+                 "MEMORY_USAGE(%)": i[2][:-1]})
 
 
 def create_slice_vsdn(dp, ctl):
@@ -114,18 +170,41 @@ def create_slice_vsdn(dp, ctl):
 
 
 if __name__ == '__main__':
+    output = "/root/results/throughput/1switch"
+    try:
+        os.makedirs(output)
+    except Exception as ex:
+        pass
+
     logger = get_logger(__name__)
     dp = Dataplane()
     ctl = dp.addNode(Ryuctl("clt"))
     orch = dp.addNode(VSDNOrches("orch"))
     ip_orch = orch.getControlIp()
     ctl_addr = "tcp:{}:6653".format(ctl.getControlIp())
-
-    create_switches_vsdn(dp, 2, ip_orch)
+    threads = []
+    stats = []
+    create_switches_vsdn(dp, 10, ip_orch)
     create_slice_vsdn(dp, ctl=ctl_addr)
-    run_throughput_test(dp=dp, loop="5", macs="10000", name="test_3switch_", output="/root/results")
+    signal.set()
+    statis = threading.Thread(target=get_statistic_container, args=(stats, 'orch'))
+    statis.start()
+    run_throughput_test(ths=threads, dp=dp, loop="20", macs="10000", name="1switch", output=output)
 
-    cli = Cli(dp)
-    cli.cmdloop()
+    test_on = True
 
+    while test_on:
+        count = len(threads)
+        for th in threads:
+            if not th.isAlive():
+                count = count - 1
+        if count == 0:
+            test_on = False
+            signal.clear()
+            statis.join()
+
+        log.info("threads are working")
+        time.sleep(1)
+
+    gen_statis(output, stats)
     dp.stop()

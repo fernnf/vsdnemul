@@ -126,6 +126,13 @@ def __control_ip(name):
     return container.attrs["NetworkSettings"]["IPAddress"]
 
 
+def __stats(name):
+    check_not_null(name, "the container name cannot be null")
+    client = docker.from_env()
+    container = client.containers.get(container_id=name)
+    return container.stats(stream=False)
+
+
 def get_id(name):
     check_not_null(name, "the image name cannot be null")
     try:
@@ -224,5 +231,12 @@ def get_control_ip(name):
 
     try:
         return __control_ip(name=name)
+    except Exception as ex:
+        raise RuntimeError(ex.__cause__)
+
+
+def get_statis(name):
+    try:
+        return __stats(name)
     except Exception as ex:
         raise RuntimeError(ex.__cause__)
