@@ -1,6 +1,6 @@
 FROM onosproject/onos:latest
-RUN apk update
-RUN apk add bash tcpdump
+#RUN apk update
+#RUN apk add bash tcpdump
 ENV PS1="[vsdn:onos \u@\h]# "
 RUN sed -i "s/SYS_APPS=drivers/SYS_APPS=drivers,openflow,fwd,proxyarp,ovsdb/" /root/onos/bin/onos-service
 
