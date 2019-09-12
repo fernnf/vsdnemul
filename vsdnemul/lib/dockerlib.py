@@ -35,8 +35,8 @@ def __create(image, **params):
         security_opt=["label=disable"]
     )
 
-    client.containers.run(image=image, **params)
-    container = client.containers.get(container_id=params.get("name"))
+    container = client.containers.run(image=image, **params)
+    # client.containers.get(container_id=params.get("name"))
     status = container.attrs["State"]["Status"]
 
     if status.__eq__("running"):
