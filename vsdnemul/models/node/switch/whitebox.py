@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 def _CheckOpenvSwitch(node):
-    cmd = "/usr/bin/ovs-vsctl get Open_vSwitch . external_ids:system-id"
+    cmd = "ovs-vsctl get Open_vSwitch . external_ids:system-id"
     try:
         ret, output = docker.run_cmd(name=node, cmd=cmd)
         if ret == 0:
@@ -39,16 +39,11 @@ def _CheckOpenvSwitch(node):
         return False
 
 
-def _SetManager(node, target: list):
-    def command():
-        cmd = "/usr/bin/ovs-vsctl set-manager"
-        if len(target) < 0:
-            raise ValueError("the target cannot be null")
-        for t in target:
-            cmd = cmd + " " + t
-        return cmd
-
-    docker.run_cmd(name=node, cmd=command())
+def _SetManager(node, target):
+    cmd = "ovs-vsctl set-manager " + target
+    ret, output = docker.run_cmd(name=node, cmd=cmd)
+    if ret != 0:
+        raise RuntimeError(output)
 
 
 def _DelManager(node):
@@ -162,7 +157,7 @@ class Whitebox(Node):
             logger.error(ex.args[0])
             return None
 
-    def setManager(self, target: list = None):
+    def setManager(self, target):
         try:
             _SetManager(node=self.getName(), target=target)
         except Exception as ex:
@@ -233,22 +228,21 @@ class Whitebox(Node):
                 logger.info("the new whitebox ({name}) node was created".format(name=self.getName()))
                 if self.getStatus().__eq__("running"):
                     p = False
-                    #while not p:
-                    #    p = _CheckOpenvSwitch(node=self.getName())
-                    #    logger.info("trying connect")
-
+                    while not p:
+                        p = _CheckOpenvSwitch(node=self.getName())
+                        logger.info("trying connect")
 
                     logger.info("setting whitebox configuration")
                     # We need to known if the openvswitch process already has started
-                    #self.setManager(target=["ptcp:6640"])
+                    self.setManager(target="ptcp:6640")
                     self.setBridge(bridge=self.getBrOper())
 
-                    #if self._br_oper_dpid is not None:
+                    # if self._br_oper_dpid is not None:
                     #    self.setDpid(bridge=self.getBrOper(), dpid=self._br_oper_dpid)
 
-                    #if self._br_oper_ofver is not None:
+                    # if self._br_oper_ofver is not None:
                     #    self.setOpenflowVersion(bridge=self.getBrOper(), protocols=self._br_oper_ofver)
-                    #logger.info("setting done")
+                    # logger.info("setting done")
                 else:
                     logger.warning("the node is not running")
 
