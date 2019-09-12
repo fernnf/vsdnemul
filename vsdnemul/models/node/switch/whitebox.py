@@ -21,6 +21,7 @@ from vsdnemul.lib import dockerlib as docker
 from vsdnemul.lib import iproutelib as iproute
 from vsdnemul.lib import ovsdblib as ovsdb
 from vsdnemul.node import Node, NodeType
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -245,7 +246,7 @@ class Whitebox(Node):
 
                     if self._br_oper_ofver is not None:
                         self.setOpenflowVersion(bridge=self.getBrOper(), protocols=self._br_oper_ofver)
-
+                    logger.info("setting done")
                 else:
                     logger.warning("the node is not running")
 
