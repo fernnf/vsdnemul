@@ -233,9 +233,9 @@ class Whitebox(Node):
                 logger.info("the new whitebox ({name}) node was created".format(name=self.getName()))
                 if self.getStatus().__eq__("running"):
                     p = False
-                    while not p:
-                        p = _CheckOpenvSwitch(node=self.getName())
-                        logger.info("trying connect")
+                    #while not p:
+                    #    p = _CheckOpenvSwitch(node=self.getName())
+                    #    logger.info("trying connect")
 
                     logger.info("setting whitebox configuration")
                     # We need to known if the openvswitch process already has started
