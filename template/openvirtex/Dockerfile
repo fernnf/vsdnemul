@@ -6,7 +6,7 @@ RUN apk add openjdk7 git bash nano python mongodb
 
 ENV JAVA_HOME=/usr/lib/jvm/java-1.7-openjdk
 
-RUN wget http://mirror.nbtelecom.com.br/apache/maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.tar.gz
+RUN wget http://archive.apache.org/dist/maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.tar.gz
 
 COPY openvirtex.tar.gz .
 
