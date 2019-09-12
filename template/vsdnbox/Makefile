@@ -7,7 +7,7 @@ all: build
 clean: del
 
 build:
-	$(DOCKER_APP) build --no-cache -t $(DOCKER_PRJ) .
+	$(DOCKER_APP) build  -t $(DOCKER_PRJ) .
 
 run:
 	$(DOCKER_APP) run -d --name $(DOCKER_NAME) --privileged $(DOCKER_PRJ)
