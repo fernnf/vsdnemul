@@ -65,22 +65,21 @@ def run_throughput(node, name, loop, macs, output):
     cmd = "python3 /root/benchtraffic/benchtraffic.py -l {l} -c {m} -m 1 -n {n} -t {t}"
     ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output))
     log.info("throughput test has finished on {}".format(node.getName()))
-    log.info(ret[1])
+    log.info(str(ret[1], encoding="utf-8"))
 
 
 def run_latency(node, name, loop, macs, output):
     cmd = "python3 /root/benchtraffic/benchtraffic.py -l {l} -c {m} -m 0 -n {n} -t {t}"
     ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output))
     log.info("latency test has finished on {}".format(node.getName()))
-    log.info(ret[1])
+    log.info(str(ret[1], encoding="utf-8"))
 
 
-def run_throughput_test(ths, dp, name, loop, macs, output):
+def run_throughput_test(ths, dp, loop, macs, output):
     for a in dp.getNodes().values():
         if a.__type__.name == NodeType.SWITCH.name:
             log.info("initializing throughput test on node {}".format(a.getName()))
-            t = threading.Thread(target=run_throughput,
-                                 args=(a, name + a.getName(), loop, macs, output + "/" + a.getName()))
+            t = threading.Thread(target=run_throughput, args=(a, a.getName(), loop, macs, output))
             t.setName(a.getName())
             t.start()
             ths.append(t)
@@ -88,12 +87,11 @@ def run_throughput_test(ths, dp, name, loop, macs, output):
             log.info("Node is not switch")
 
 
-def run_latency_test(ths, dp, name, loop, macs, output):
+def run_latency_test(ths, dp, loop, macs, output):
     for a in dp.getNodes().values():
         if a.__type__.name == NodeType.SWITCH.name:
             log.info("initializing latency test on node {}".format(a.getName()))
-            t = threading.Thread(target=run_latency, args=(a, name + a.getName(), loop, macs, output))
-            os.mkdir(output + "/" + a.getName())
+            t = threading.Thread(target=run_latency, args=(a, a.getName(), loop, macs, output))
             t.setName(a.getName())
             t.start()
             ths.append(t)
@@ -165,13 +163,14 @@ def create_slice_vsdn(dp, ctl):
 
 
 if __name__ == '__main__':
-    output = "/root/results/throughput/1switch"
+    logger = get_logger(__name__)
+
+    output = "/root/results/throughput/switches-1"
     try:
         os.makedirs(output)
     except Exception as ex:
-        pass
+        log.error(str(ex))
 
-    logger = get_logger(__name__)
     dp = Dataplane()
     ctl = dp.addNode(Ryuctl("clt"))
     orch = dp.addNode(VSDNOrches("orch"))
@@ -184,7 +183,7 @@ if __name__ == '__main__':
     signal.set()
     statis = threading.Thread(target=get_statistic_container, args=(stats, 'orch'))
     statis.start()
-    run_throughput_test(ths=threads, dp=dp, loop="15", macs="10000", name="1switch", output=output)
+    run_throughput_test(ths=threads, dp=dp, loop="15", macs="10000", output=output)
 
     test_on = True
 

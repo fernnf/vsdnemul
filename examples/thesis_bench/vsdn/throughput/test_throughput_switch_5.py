@@ -27,9 +27,22 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+#
+#  GERCOM - Federal University of Pará - Brazil
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 
 import csv
-import json
 import logging
 import os
 import subprocess
@@ -49,9 +62,16 @@ log = logging.getLogger(__name__)
 signal = threading.Event()
 
 
+def gen_dpid(i):
+    t = "0000000000000000"
+    off_set = len(i)
+    o = t[:-off_set] + i
+    return o
+
+
 def create_switches_vsdn(dp, n, a):
     for i in range(0, n):
-        dp.addNode(VSDNBox(name="sw{}".format(i + 1), orches_ip=a, dpid="000000000000000{}".format(i + 1),
+        dp.addNode(VSDNBox(name="sw{}".format(i + 1), orches_ip=a, dpid=gen_dpid(str(i + 1)).format(i + 1),
                            ofversion="OpenFlow13"))
 
 
@@ -59,22 +79,21 @@ def run_throughput(node, name, loop, macs, output):
     cmd = "python3 /root/benchtraffic/benchtraffic.py -l {l} -c {m} -m 1 -n {n} -t {t}"
     ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output))
     log.info("throughput test has finished on {}".format(node.getName()))
-    log.info(ret[1])
+    log.info(str(ret[1], encoding="utf-8"))
 
 
 def run_latency(node, name, loop, macs, output):
     cmd = "python3 /root/benchtraffic/benchtraffic.py -l {l} -c {m} -m 0 -n {n} -t {t}"
     ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output))
     log.info("latency test has finished on {}".format(node.getName()))
-    log.info(json.loads(ret[1]))
+    log.info(str(ret[1], encoding="utf-8"))
 
 
-def run_throughput_test(ths, dp, name, loop, macs, output):
+def run_throughput_test(ths, dp, loop, macs, output):
     for a in dp.getNodes().values():
         if a.__type__.name == NodeType.SWITCH.name:
             log.info("initializing throughput test on node {}".format(a.getName()))
-            t = threading.Thread(target=run_throughput,
-                                 args=(a, name + a.getName(), loop, macs, output + "/" + a.getName()))
+            t = threading.Thread(target=run_throughput, args=(a, a.getName(), loop, macs, output))
             t.setName(a.getName())
             t.start()
             ths.append(t)
@@ -82,11 +101,11 @@ def run_throughput_test(ths, dp, name, loop, macs, output):
             log.info("Node is not switch")
 
 
-def run_latency_test(ths, dp, name, loop, macs, output):
+def run_latency_test(ths, dp, loop, macs, output):
     for a in dp.getNodes().values():
         if a.__type__.name == NodeType.SWITCH.name:
             log.info("initializing latency test on node {}".format(a.getName()))
-            t = threading.Thread(target=run_latency, args=(a, name + a.getName(), loop, macs, output))
+            t = threading.Thread(target=run_latency, args=(a, a.getName(), loop, macs, output))
             t.setName(a.getName())
             t.start()
             ths.append(t)
@@ -158,13 +177,13 @@ def create_slice_vsdn(dp, ctl):
 
 
 if __name__ == '__main__':
-    output = "/root/results/throughput/1switch"
+    logger = get_logger(__name__)
+    output = "/root/results/throughput/switches-5"
     try:
         os.makedirs(output)
     except Exception as ex:
-        pass
+        log.error(str(ex))
 
-    logger = get_logger(__name__)
     dp = Dataplane()
     ctl = dp.addNode(Ryuctl("clt"))
     orch = dp.addNode(VSDNOrches("orch"))
@@ -172,12 +191,12 @@ if __name__ == '__main__':
     ctl_addr = "tcp:{}:6653".format(ctl.getControlIp())
     threads = []
     stats = []
-    create_switches_vsdn(dp, 5, ip_orch)
+    create_switches_vsdn(dp, 1, ip_orch)
     create_slice_vsdn(dp, ctl=ctl_addr)
     signal.set()
     statis = threading.Thread(target=get_statistic_container, args=(stats, 'orch'))
     statis.start()
-    run_throughput_test(ths=threads, dp=dp, loop="15", macs="10000", name="1switch", output=output)
+    run_throughput_test(ths=threads, dp=dp, loop="15", macs="10000", output=output)
 
     test_on = True
 
@@ -191,6 +210,7 @@ if __name__ == '__main__':
             test_on = False
             signal.clear()
             statis.join()
+
         time.sleep(1)
 
     gen_statis(output, stats)
