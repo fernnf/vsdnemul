@@ -59,14 +59,14 @@ def run_throughput(node, name, loop, macs, output):
     cmd = "python3 /root/benchtraffic/benchtraffic.py -l {l} -c {m} -m 1 -n {n} -t {t}"
     ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output))
     log.info("throughput test has finished on {}".format(node.getName()))
-    #log.info(json.loads(ret[1]))
+    log.info(ret[1])
 
 
 def run_latency(node, name, loop, macs, output):
     cmd = "python3 /root/benchtraffic/benchtraffic.py -l {l} -c {m} -m 0 -n {n} -t {t}"
     ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output))
     log.info("latency test has finished on {}".format(node.getName()))
-    #log.info(json.loads(ret[1]))
+    log.info(ret[1])
 
 
 def run_throughput_test(ths, dp, name, loop, macs, output):
@@ -190,8 +190,6 @@ if __name__ == '__main__':
             test_on = False
             signal.clear()
             statis.join()
-
-        log.info("threads are working")
         time.sleep(1)
 
     gen_statis(output, stats)
