@@ -40,7 +40,7 @@ def _CheckOpenvSwitch(node):
 
 
 def _SetManager(node, target):
-    cmd = ["ovs-vsctl", "--no-wait", "set-manager", target]
+    cmd = ["ovs-vsctl", "set-manager", target]
     ret, output = docker.run_cmd(name=node, cmd=cmd)
     if ret != 0:
         raise RuntimeError(output)
