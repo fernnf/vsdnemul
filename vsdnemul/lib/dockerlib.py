@@ -70,7 +70,7 @@ def __resume(name):
 def __exec(name, cmd):
     client = docker.from_env()
     container = client.containers.get(container_id=name)
-    return container.exec_run(cmd=cmd, )
+    return container.exec_run(cmd=cmd)
 
 
 def __pid(name):
