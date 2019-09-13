@@ -172,12 +172,12 @@ if __name__ == '__main__':
     ctl_addr = "tcp:{}:6653".format(ctl.getControlIp())
     threads = []
     stats = []
-    create_switches_vsdn(dp, 1, ip_orch)
+    create_switches_vsdn(dp, 50, ip_orch)
     create_slice_vsdn(dp, ctl=ctl_addr)
     signal.set()
     statis = threading.Thread(target=get_statistic_container, args=(stats, 'orch'))
     statis.start()
-    run_throughput_test(ths=threads, dp=dp, loop="20", macs="10000", name="1switch", output=output)
+    run_throughput_test(ths=threads, dp=dp, loop="15", macs="10000", name="1switch", output=output)
 
     test_on = True
 

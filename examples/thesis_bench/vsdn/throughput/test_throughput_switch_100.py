@@ -59,14 +59,14 @@ def run_throughput(node, name, loop, macs, output):
     cmd = "python3 /root/benchtraffic/benchtraffic.py -l {l} -c {m} -m 1 -n {n} -t {t}"
     ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output))
     log.info("throughput test has finished on {}".format(node.getName()))
-    log.info(json.loads(ret[1]))
+    #log.info(json.loads(ret[1]))
 
 
 def run_latency(node, name, loop, macs, output):
     cmd = "python3 /root/benchtraffic/benchtraffic.py -l {l} -c {m} -m 0 -n {n} -t {t}"
     ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output))
     log.info("latency test has finished on {}".format(node.getName()))
-    log.info(json.loads(ret[1]))
+    #log.info(json.loads(ret[1]))
 
 
 def run_throughput_test(ths, dp, name, loop, macs, output):
@@ -172,12 +172,12 @@ if __name__ == '__main__':
     ctl_addr = "tcp:{}:6653".format(ctl.getControlIp())
     threads = []
     stats = []
-    create_switches_vsdn(dp, 1, ip_orch)
+    create_switches_vsdn(dp, 100, ip_orch)
     create_slice_vsdn(dp, ctl=ctl_addr)
     signal.set()
     statis = threading.Thread(target=get_statistic_container, args=(stats, 'orch'))
     statis.start()
-    run_throughput_test(ths=threads, dp=dp, loop="20", macs="10000", name="1switch", output=output)
+    run_throughput_test(ths=threads, dp=dp, loop="15", macs="10000", name="1switch", output=output)
 
     test_on = True
 
