@@ -62,14 +62,14 @@ def create_switches_vsdn(dp, n, a):
 
 
 def run_throughput(node, name, loop, macs, output):
-    cmd = "python3 /root/benchtraffic/benchtraffic.py -l {l} -c {m} -m 1 -n {n} -t {t}"
+    cmd = "python3 /root/benchtraffic/benchtraffic.py -l {l} -c {m} -m 1 -n {n} -d {t}"
     ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output))
     log.info("throughput test has finished on {}".format(node.getName()))
     log.info(str(ret[1], encoding="utf-8"))
 
 
 def run_latency(node, name, loop, macs, output):
-    cmd = "python3 /root/benchtraffic/benchtraffic.py -l {l} -c {m} -m 0 -n {n} -t {t}"
+    cmd = "python3 /root/benchtraffic/benchtraffic.py -l {l} -c {m} -m 0 -n {n} -d {t}"
     ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output))
     log.info("latency test has finished on {}".format(node.getName()))
     log.info(str(ret[1], encoding="utf-8"))
