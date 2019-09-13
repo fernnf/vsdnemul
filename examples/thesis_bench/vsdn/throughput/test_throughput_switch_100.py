@@ -29,7 +29,6 @@
 #  limitations under the License.
 
 import csv
-import json
 import logging
 import os
 import subprocess
@@ -186,6 +185,7 @@ if __name__ == '__main__':
         for th in threads:
             if not th.isAlive():
                 count = count - 1
+        log.info("threads actives:{}".format(count))
         if count == 0:
             test_on = False
             signal.clear()

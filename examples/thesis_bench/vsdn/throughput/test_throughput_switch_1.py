@@ -29,7 +29,6 @@
 #  limitations under the License.
 
 import csv
-import json
 import logging
 import os
 import subprocess
@@ -58,7 +57,7 @@ def gen_dpid(i):
 
 def create_switches_vsdn(dp, n, a):
     for i in range(0, n):
-        dp.addNode(VSDNBox(name="sw{}".format(i + 1), orches_ip=a, dpid=gen_dpid(str(i+1)).format(i + 1),
+        dp.addNode(VSDNBox(name="sw{}".format(i + 1), orches_ip=a, dpid=gen_dpid(str(i + 1)).format(i + 1),
                            ofversion="OpenFlow13"))
 
 
@@ -94,7 +93,7 @@ def run_latency_test(ths, dp, name, loop, macs, output):
         if a.__type__.name == NodeType.SWITCH.name:
             log.info("initializing latency test on node {}".format(a.getName()))
             t = threading.Thread(target=run_latency, args=(a, name + a.getName(), loop, macs, output))
-            os.mkdir(output+"/"+a.getName())
+            os.mkdir(output + "/" + a.getName())
             t.setName(a.getName())
             t.start()
             ths.append(t)
@@ -194,12 +193,12 @@ if __name__ == '__main__':
         for th in threads:
             if not th.isAlive():
                 count = count - 1
+        log.info("threads actives:{}".format(count))
         if count == 0:
             test_on = False
             signal.clear()
             statis.join()
 
-        log.info("threads are working")
         time.sleep(1)
 
     gen_statis(output, stats)

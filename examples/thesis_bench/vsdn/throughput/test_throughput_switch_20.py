@@ -186,12 +186,12 @@ if __name__ == '__main__':
         for th in threads:
             if not th.isAlive():
                 count = count - 1
+        log.info("threads actives:{}".format(count))
         if count == 0:
             test_on = False
             signal.clear()
             statis.join()
 
-        log.info("threads are working")
         time.sleep(1)
 
     gen_statis(output, stats)
