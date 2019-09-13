@@ -66,7 +66,7 @@ def run_throughput(node, name, loop, macs, output):
     cmd = "python3 /root/benchtraffic/benchtraffic.py -l {l} -c {m} -m 1 -n {n} -t {t}"
     ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output))
     log.info("throughput test has finished on {}".format(node.getName()))
-    log.info(json.loads(ret[1]))
+    #log.info(json.loads(ret[1]))
 
 
 def run_latency(node, name, loop, macs, output):
@@ -94,6 +94,7 @@ def run_latency_test(ths, dp, name, loop, macs, output):
         if a.__type__.name == NodeType.SWITCH.name:
             log.info("initializing latency test on node {}".format(a.getName()))
             t = threading.Thread(target=run_latency, args=(a, name + a.getName(), loop, macs, output))
+            os.mkdir(output+"/"+a.getName())
             t.setName(a.getName())
             t.start()
             ths.append(t)
@@ -184,7 +185,7 @@ if __name__ == '__main__':
     signal.set()
     statis = threading.Thread(target=get_statistic_container, args=(stats, 'orch'))
     statis.start()
-    run_throughput_test(ths=threads, dp=dp, loop="20", macs="10000", name="1switch", output=output)
+    run_throughput_test(ths=threads, dp=dp, loop="1", macs="10000", name="1switch", output=output)
 
     test_on = True
 
