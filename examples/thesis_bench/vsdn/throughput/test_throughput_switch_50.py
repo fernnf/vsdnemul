@@ -181,7 +181,7 @@ if __name__ == '__main__':
     logger = get_logger(__name__)
     output = "/root/results/throughput/switches-50"
     try:
-        os.makedirs(output)
+        os.makedirs(output, exist_ok=True)
     except Exception as ex:
         log.error(str(ex))
 
