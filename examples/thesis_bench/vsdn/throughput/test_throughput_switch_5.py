@@ -76,14 +76,14 @@ def create_switches_vsdn(dp, n, a):
 
 
 def run_throughput(node, name, loop, macs, output):
-    cmd = "python3 /root/benchtraffic/benchtraffic.py -l {l} -c {m} -m 1 -n {n} -d {t}"
+    cmd = "python3 /root/benchtraffic/trafficgen.py -l {l} -c {m} -m 1 -n {n} -d {t}"
     ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output))
     log.info("throughput test has finished on {}".format(node.getName()))
     log.info(str(ret[1], encoding="utf-8"))
 
 
 def run_latency(node, name, loop, macs, output):
-    cmd = "python3 /root/benchtraffic/benchtraffic.py -l {l} -c {m} -m 0 -n {n} -d {t}"
+    cmd = "python3 /root/benchtraffic/trafficgen.py -l {l} -c {m} -m 0 -n {n} -d {t}"
     ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output))
     log.info("latency test has finished on {}".format(node.getName()))
     log.info(str(ret[1], encoding="utf-8"))
@@ -178,7 +178,8 @@ def create_slice_vsdn(dp, ctl):
 
 if __name__ == '__main__':
     logger = get_logger(__name__)
-    output = "/root/results/throughput/switches-5"
+
+    output = "/root/results/throughput/switches-1"
     try:
         os.makedirs(output, exist_ok=True)
     except Exception as ex:
@@ -191,7 +192,7 @@ if __name__ == '__main__':
     ctl_addr = "tcp:{}:6653".format(ctl.getControlIp())
     threads = []
     stats = []
-    create_switches_vsdn(dp, 1, ip_orch)
+    create_switches_vsdn(dp, 5, ip_orch)
     create_slice_vsdn(dp, ctl=ctl_addr)
     signal.set()
     statis = threading.Thread(target=get_statistic_container, args=(stats, 'orch'))
