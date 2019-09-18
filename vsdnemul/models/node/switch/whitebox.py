@@ -57,7 +57,7 @@ def _SetOpenflowVersion(db_addr, protocols, bridge):
     ovsdb.set_ovsdb(db_addr=db_addr, table=table, value=args)
 
 
-def _SetController(bridge, target: list, db_addr):
+def _SetController(bridge, target, db_addr):
     try:
         ovsdb.set_bridge_controller(name=bridge, db_addr=db_addr, target_addr=target)
     except Exception as ex:
@@ -106,6 +106,13 @@ def _SetBrDpid(db_addr, bridge, dpid):
     table = ["Bridge"]
     value = [bridge, "other_config:datapath-id={dpid}".format(dpid=dpid)]
     ovsdb.set_ovsdb(db_addr=db_addr, table=table, value=value)
+
+
+def _set_port(db_addr, bridge, port, patch=False, peer=None, ofport=None):
+    try:
+        ovsdb.add_port_bridge(db_addr, bridge, port, patch, peer, ofport)
+    except Exception as ex:
+        raise RuntimeError(ex.args[0])
 
 
 """ End self API"""
@@ -169,7 +176,7 @@ class Whitebox(Node):
         except Exception as ex:
             logger.error(ex.args[0])
 
-    def setController(self, target: list = None, bridge="br_oper0"):
+    def setController(self, target, bridge="br_oper0"):
         try:
             _SetController(db_addr=self.getControlAddr(), target=target, bridge=bridge)
         except Exception as ex:
@@ -193,11 +200,23 @@ class Whitebox(Node):
         except Exception as ex:
             logger.error(ex.args[0])
 
-    def setOpenflowVersion(self, bridge="br_oper0", protocols: list = None):
+    def setOpenflowVersion(self, protocols, bridge="br_oper0", ):
         try:
             _SetOpenflowVersion(db_addr=self.getControlAddr(), protocols=protocols, bridge=bridge)
         except Exception as ex:
             logger.error(ex.args[0])
+
+    def run_command(self, cmd):
+        try:
+            return docker.run_cmd(name=self.getName(), cmd=cmd)
+        except Exception as ex:
+            logger.error(str(ex))
+
+    def set_port(self, bridge, port, peer=None, portnum=None, patch=False):
+        try:
+            _set_port(db_addr=self.getControlAddr(), bridge=bridge, port=port, patch=patch, peer=peer, ofport=portnum)
+        except Exception as ex:
+            logger.error(str(ex))
 
     def setInterface(self, ifname, encap):
         idx = str(self.count_interface.__next__())

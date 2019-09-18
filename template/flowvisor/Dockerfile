@@ -38,9 +38,7 @@ LABEL br.ufpa.label.name="FlowVisor"\
       br.ufpa.label.version="0.2"\
       br.ufpa.label.license="Apache2"
 
-WORKDIR /bin
-
-RUN wget https://raw.githubusercontent.com/fernnf/vsdnemul/master/template/flowvisor/boot.sh
+WORKDIR /bi
 
 COPY boot.sh .
 

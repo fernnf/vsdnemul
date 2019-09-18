@@ -34,8 +34,8 @@ class BenchController(app_manager.RyuApp):
         ofp = dp.ofproto
         ofp_parser = dp.ofproto_parser
 
-        actions = [ofp_parser.OFPActionOutput(msg.in_port+1)]
-        out = ofp_parser.OFPPacketOut(
+        actions = [ofp_parser.OFPActionOutput()]
+        out = ofp_parser. OFPPacketOut(
             datapath=dp, buffer_id=msg.buffer_id, in_port=msg.in_port,
             actions=actions)
         dp.send_msg(out)
