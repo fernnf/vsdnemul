@@ -26,6 +26,7 @@
       <option name="ignoredIdentifiers">
         <list>
           <option value="vsdnemul.cli.raw_input" />
+          <option value="ryu.controller.ofp_event.EventOFPPacketIn" />
         </list>
       </option>
     </inspection_tool>
