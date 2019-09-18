@@ -179,7 +179,7 @@ def create_slice_vsdn(dp, ctl):
 if __name__ == '__main__':
     logger = get_logger(__name__)
 
-    output = "/root/results/throughput/switches-1"
+    output = "/root/results/throughput/switches-20"
     try:
         os.makedirs(output, exist_ok=True)
     except Exception as ex:
