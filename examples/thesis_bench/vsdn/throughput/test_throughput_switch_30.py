@@ -179,7 +179,7 @@ def create_slice_vsdn(dp, ctl):
 if __name__ == '__main__':
     logger = get_logger(__name__)
 
-    output = "/root/results/vsdn/throughput/switches-50"
+    output = "/root/results/vsdn/throughput/switches-30"
     try:
         os.makedirs(output, exist_ok=True)
     except Exception as ex:
@@ -192,7 +192,7 @@ if __name__ == '__main__':
     ctl_addr = "tcp:{}:6653".format(ctl.getControlIp())
     threads = []
     stats = []
-    create_switches_vsdn(dp, 50, ip_orch)
+    create_switches_vsdn(dp, 30, ip_orch)
     create_slice_vsdn(dp, ctl=ctl_addr)
     signal.set()
     statis = threading.Thread(target=get_statistic_container, args=(stats, 'orch'))

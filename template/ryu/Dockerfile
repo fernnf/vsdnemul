@@ -30,4 +30,4 @@ WORKDIR /opt/ryu
 
 
 # Define default command.
-CMD ["ryu-manager", "ryu.app.simple_switch_13"]
+CMD ["ryu-manager", "ryu.app.simple_switch"]
