@@ -38,11 +38,13 @@ LABEL br.ufpa.label.name="FlowVisor"\
       br.ufpa.label.version="0.2"\
       br.ufpa.label.license="Apache2"
 
-WORKDIR /bi
+WORKDIR /bin
 
 COPY boot.sh .
 
-WORKDIR /
+WORKDIR /root
+
+RUN echo "flowvisor" > pass
 
 ENTRYPOINT [ "/bin/sh" ]
 

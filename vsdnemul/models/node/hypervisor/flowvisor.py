@@ -125,11 +125,9 @@ def _makeConnect(addr, data, cmd):
     headers = urllib3.util.make_headers(basic_auth="fvadmin:flowvisor", )
     headers.update({'content-type': 'application/json'})
 
-    p = {"id": "fvctl", "method": cmd, "jsonrpc": "2.0"}
+    p = {"id": "fvctl", "method": cmd, "jsonrpc": "2.0", "params": data}
 
-    p["params"] = data
-
-    return conn.request("POST", url=url, body=json.dumps(p), headers=headers)
+    return conn.request("POST", url=url, body=json.dumps(p), headers=headers, verify=False)
 
 
 class FlowVisor(Node):
@@ -151,17 +149,28 @@ class FlowVisor(Node):
             req = _makeReqFlowSpace(name=name, dpid=dpid, match=_makeMatch(match), priority=prio, slice=slice,
                                     slice_perm=slice_perm)
             logger.info("Creating FlowSpace")
-            return _makeConnect(addr=self.getControlIp(), data=req, cmd="add-flowspace")
+            ret = _makeConnect(addr=self.getControlIp(), data=req, cmd="add-flowspace")
+            logger.info(str(ret.read()))
+            return ret
         except Exception as ex:
-            logger.error(ex)
+            logger.error(str(ex))
 
     def setSlice(self, name, ctl_url):
         try:
             req = _makeReqSlice(name=name, controller_url=ctl_url)
             logger.info("Creating Slice ({name})".format(name=name))
-            return _makeConnect(addr=self.getControlIp(), data=req, cmd="add-slice")
+            logger.info("{}".format(req))
+            ret = _makeConnect(addr=self.getControlIp(), data=req, cmd="add-slice")
+            logger.info(str(ret.read()))
+            return ret
         except Exception as ex:
-            logger.error(ex)
+            logger.error(str(ex))
+
+    def run_command(self, cmd):
+        try:
+            return docker.run_cmd(name=self.getName(), cmd=cmd)
+        except Exception as ex:
+            logger.error(str(ex))
 
     def setInterface(self, ifname, encap):
         pass

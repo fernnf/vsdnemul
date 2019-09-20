@@ -4,6 +4,4 @@ fvconfig load /etc/flowvisor/config.json
 
 chown -R flowvisor:flowvisor /usr/share/db/flowvisor/
 
-sudo -u flowvisor flowvisor
-
-/bin/sh
+sudo -u flowvisor flowvisor -l
