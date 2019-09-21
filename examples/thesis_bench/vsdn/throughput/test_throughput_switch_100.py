@@ -41,6 +41,20 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+#
+#  GERCOM - Federal University of Pará - Brazil
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 
 import csv
 import logging
@@ -179,7 +193,7 @@ def create_slice_vsdn(dp, ctl):
 if __name__ == '__main__':
     logger = get_logger(__name__)
 
-    output = "/root/results/vsdn/throughput/switches-40"
+    output = "/root/results/vsdn/throughput/switches-100"
 
     try:
         os.makedirs(output, exist_ok=True)
@@ -193,7 +207,7 @@ if __name__ == '__main__':
     ctl_addr = "tcp:{}:6653".format(ctl.getControlIp())
     threads = []
     stats = []
-    create_switches_vsdn(dp, 40, ip_orch)
+    create_switches_vsdn(dp, 100, ip_orch)
     create_slice_vsdn(dp, ctl=ctl_addr)
     signal.set()
     statis = threading.Thread(target=get_statistic_container, args=(stats, 'orch'))
