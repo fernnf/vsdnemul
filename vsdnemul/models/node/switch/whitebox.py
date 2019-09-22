@@ -122,7 +122,8 @@ class Whitebox(Node):
     __cap_add__ = ["ALL"]
     __image__ = "vsdn/whitebox"
     __type__ = NodeType.SWITCH
-    __volumes__ = {"/sys/fs/cgroup": {"bind": "/sys/fs/cgroup", "mode": "ro"}}
+    __volumes__ = {"/sys/fs/cgroup": {"bind": "/sys/fs/cgroup", "mode": "ro"},
+                   "/root/results": {"bind": "/root/results", "mode": "rw"}}
     __ports__ = None
 
     def __init__(self, name, bridge_oper="br_oper0", dpid=None, ofversion=None):
