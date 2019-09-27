@@ -235,11 +235,12 @@ class OpenVirtex(Node):
             link = json.loads(ret.data)["result"].get("linkId")
 
             logger.info(
-                "new virtual link created tenant={t} switch={s1}/{p1}<->{s2}/{p2} vlink={v}".format(t=tnt, s1=src_vdpid,
-                                                                                                    p1=src_vport,
-                                                                                                    s2=dst_vdpid,
-                                                                                                    p2=dst_vport,
-                                                                                                    v=link))
+                "new virtual link has created tenant={t} switch={s1}/{p1}<->{s2}/{p2} vlink={v}".format(t=tnt,
+                                                                                                        s1=src_vdpid,
+                                                                                                        p1=src_vport,
+                                                                                                        s2=dst_vdpid,
+                                                                                                        p2=dst_vport,
+                                                                                                        v=link))
             return link
 
         except Exception as ex:
@@ -256,8 +257,8 @@ class OpenVirtex(Node):
             req = _makeReqHost(tnt, vdp, vpt, mc)
             ret = _makeReqConnect(self.getControlIp(), req, "tenant", "connectHost")
             logger.info(
-                "new virtual host created tenant={t} switch={s} port={p} mac={m}".format(t=tnt, s=vdpid, p=vport,
-                                                                                         m=mac))
+                "new virtual host has created tenant={t} switch={s} port={p} mac={m}".format(t=tnt, s=vdpid, p=vport,
+                                                                                             m=mac))
             return json.loads(ret.data)["result"]
 
         except Exception as ex:
@@ -272,7 +273,7 @@ class OpenVirtex(Node):
             ret = _makeReqConnect(self.getControlIp(), req, "tenant", "startNetwork")
             start = json.loads(ret.data)["result"].get("isBooted")
             logger.info(
-                "new virtual host created tenant={t} start={s}".format(t=tenant, s=start))
+                "new virtual network has created tenant={t} start={s}".format(t=tenant, s=start))
             return bool(start)
 
         except Exception as ex:
@@ -310,7 +311,7 @@ class OpenVirtex(Node):
             vdp = int(vdpid.replace(":", ""), 16)
             vp = int(vport)
 
-            req =  _makeReqPortStart(tnt,vdp,vp)
+            req = _makeReqPortStart(tnt, vdp, vp)
             ret = _makeReqConnect(self.getControlIp(), req, "tenant", "startPort")
 
             error = json.loads(ret.data).get("error")

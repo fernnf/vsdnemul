@@ -18,6 +18,7 @@ RUN apk add supervisor
 
 RUN mkdir -p /data/db
 
+
 RUN echo $'[unix_http_server] \n\
 file=/run/supervisord.sock \n\
 \n\

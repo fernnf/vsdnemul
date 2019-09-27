@@ -42,19 +42,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-#  GERCOM - Federal University of Pará - Brazil
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
 
 import csv
 import logging
@@ -63,11 +50,10 @@ import subprocess
 import threading
 import time
 
-from vsdnemul.cli import Cli
 from vsdnemul.dataplane import Dataplane
 from vsdnemul.lib.log import get_logger
 from vsdnemul.models.node.controller.ryuctl import Ryuctl
-from vsdnemul.models.node.hypervisor.flowvisor import FlowVisor
+from vsdnemul.models.node.hypervisor.openvirtex import OpenVirtex
 from vsdnemul.models.node.switch.whitebox import Whitebox
 from vsdnemul.node import NodeType
 
@@ -95,25 +81,25 @@ def gen_dpid(i):
     return o
 
 
-def run_throughput(node, name, loop, macs, output):
-    cmd = "python3 /root/benchtraffic/trafficgen.py -l {l} -c {m} -m 1 -n {n} -d {t}"
-    ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output))
+def run_throughput(node, name, loop, macs, output, l3addr, l2addr):
+    cmd = "python3 /root/benchtraffic/trafficgen.py -l {l} -c {m} -m 1 -n {n} -d {t} -a {a} -p {p}"
+    ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output, a=l3addr, p=l2addr))
     log.info("throughput test has finished on {}".format(node.getName()))
     log.info(str(ret[1], encoding="utf-8"))
 
 
-def run_latency(node, name, loop, macs, output):
-    cmd = "python3 /root/benchtraffic/trafficgen.py -l {l} -c {m} -m 0 -n {n} -d {t}"
-    ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output))
+def run_latency(node, name, loop, macs, output, l3addr, l2addr):
+    cmd = "python3 /root/benchtraffic/trafficgen.py -l {l} -c {m} -m 0 -n {n} -d {t} -a {a} -p {p}"
+    ret = node.run_command(cmd=cmd.format(l=loop, m=macs, n=name, t=output, a=l3addr, p=l2addr))
     log.info("latency test has finished on {}".format(node.getName()))
     log.info(str(ret[1], encoding="utf-8"))
 
 
-def run_throughput_test(ths, dp, loop, macs, output):
+def run_throughput_test(ths, dp, loop, macs, output, l3addr, l2addr):
     for a in dp.getNodes().values():
         if a.__type__.name == NodeType.SWITCH.name:
             log.info("initializing throughput test on node {}".format(a.getName()))
-            t = threading.Thread(target=run_throughput, args=(a, a.getName(), loop, macs, output))
+            t = threading.Thread(target=run_throughput, args=(a, a.getName(), loop, macs, output, l3addr, l2addr))
             t.setName(a.getName())
             t.start()
             ths.append(t)
@@ -121,11 +107,11 @@ def run_throughput_test(ths, dp, loop, macs, output):
             log.info("Node is not switch")
 
 
-def run_latency_test(ths, dp, loop, macs, output):
+def run_latency_test(ths, dp, loop, macs, output, l3addr, l2addr):
     for a in dp.getNodes().values():
         if a.__type__.name == NodeType.SWITCH.name:
             log.info("initializing latency test on node {}".format(a.getName()))
-            t = threading.Thread(target=run_latency, args=(a, a.getName(), loop, macs, output))
+            t = threading.Thread(target=run_latency, args=(a, a.getName(), loop, macs, output, l3addr, l2addr))
             t.setName(a.getName())
             t.start()
             ths.append(t)
@@ -184,40 +170,55 @@ def config_switches(dp, ctl):
 
 
 def config_slice(dp, hyp, ctl):
-    slice = "slice1"
-    add_slice(node=hyp, name=slice, ctl=ctl)
+    slice_space = ("10.0.0.0", "24")
+    tnt = hyp.createNetwork(ctl_url=ctl, net_addr=slice_space[0], net_mask=slice_space[1])
 
     for n in dp.getNodes().values():
         if n.__type__.name == NodeType.SWITCH.name:
-            log.info("{}:{}".format(n.getName(), n.getDpid(bridge="tswitch0")[0][0]))
-            add_flowspace(hyp, name=n.getName(), dpid=n.getDpid("tswitch0")[0][0], prio=10, slice=slice,
-                          match="dl_vlan=20", perm=7)
+            sw = hyp.createSwitch(tenant=tnt, dpids=n.getDpid(bridge="tswitch0")[0][0])
+            log.info("created virtual switch ({})".format(sw))
+
+            sw_p1 = hyp.createPort(tenant=tnt, dpid=n.getDpid(bridge="tswitch0")[0][0], port="1")
+            log.info("created virtual port 1 ({})".format(sw_p1))
+
+            sw_p2 = hyp.createPort(tenant=tnt, dpid=n.getDpid(bridge="tswitch0")[0][0], port="2")
+            log.info("created virtual port 2 ({})".format(sw_p2))
+
+            h1 = hyp.connectHost(tenant=tnt, vdpid=sw, vport=sw_p1, mac="00:00:00:00:00:01")
+            log.info("created virtual host 1 ({})".format(h1))
+            h2 = hyp.connectHost(tenant=tnt, vdpid=sw, vport=sw_p2, mac="00:00:00:00:00:02")
+            log.info("created virtual host 2 ({})".format(h2))
+
+    hyp.startNetwork(tenant=tnt)
+    log.info("virtual switch has started")
 
 
 if __name__ == '__main__':
     logger = get_logger(__name__)
 
-    output = "/root/results/flowvisor/throughput/switches-10))"
+    output = "/root/results/openvirtex/latency/switches-20"
     try:
         os.makedirs(output, exist_ok=True)
     except Exception as ex:
         log.error(str(ex))
 
     dp = Dataplane()
-    ctl = dp.addNode(Ryuctl("clt1"))
-    hyp = dp.addNode(FlowVisor("hyp1"))
+    ctl = dp.addNode(Ryuctl("ctl1"))
+    hyp = dp.addNode(OpenVirtex("hyp1"))
     time.sleep(2)
     ctl_addr = "tcp:{ip}:6653".format(ip=ctl.getControlIp())
     hyp_addr = "tcp:{ip}:6633".format(ip=hyp.getControlIp())
     threads = []
     stats = []
-    create_switches(dp, 10)
+    create_switches(dp, 20)
     config_switches(dp, ctl=hyp_addr)
+
     config_slice(dp, hyp=hyp, ctl=ctl_addr)
     signal.set()
     statis = threading.Thread(target=get_statistic_container, args=(stats, 'hyp1'))
     statis.start()
-    run_throughput_test(ths=threads, dp=dp, loop="15", macs="10000", output=output)
+    run_latency_test(ths=threads, dp=dp, loop="15", macs="10000", output=output, l3addr="10.0.0.0/24",
+                        l2addr="00:00:00:00:00:01")
 
     test_on = True
 
@@ -236,7 +237,7 @@ if __name__ == '__main__':
 
     gen_statis(output, stats)
     """
-    cli = Cli(dp) 
+    cli = Cli(dp)
     cli.cmdloop()
     """
     dp.stop()

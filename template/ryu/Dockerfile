@@ -28,6 +28,7 @@ EXPOSE 6653
 # Define working directory.
 WORKDIR /opt/ryu
 
-
+COPY trafficgenctl.py .
+COPY trafficgenctl_13.py .
 # Define default command.
-CMD ["ryu-manager", "ryu.app.simple_switch"]
+CMD ["ryu-manager", "trafficgenctl_13.py"]
