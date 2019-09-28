@@ -58,6 +58,7 @@ class TrafficGenCtl(app_manager.RyuApp):
         dp.send_msg(out)
         self.logger.info("flood packet-in")
 
+
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _handle_pkt_in(self, ev):
         msg = ev.msg
