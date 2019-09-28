@@ -62,9 +62,9 @@ class TrafficGenCtl(app_manager.RyuApp):
     def _handle_pkt_in(self, ev):
         msg = ev.msg
         # self.logger.info("new packet")
-        # self.send_pkt(msg)
-        th = threading.Thread(target=self.send_pkt, args=(msg,))
-        th.start()
+        self.send_pkt(msg)
+        #th = threading.Thread(target=self.send_pkt, args=(msg,))
+        #th.start()
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
