@@ -217,7 +217,7 @@ if __name__ == '__main__':
     signal.set()
     statis = threading.Thread(target=get_statistic_container, args=(stats, 'hyp1'))
     statis.start()
-    run_latency_test(ths=threads, dp=dp, loop="15", macs="10000", output=output, l3addr="10.0.0.0/24",
+    run_latency_test(ths=threads, dp=dp, loop="15", macs="1000", output=output, l3addr="10.0.0.0/24",
                         l2addr="00:00:00:00:00:01")
 
     test_on = True
